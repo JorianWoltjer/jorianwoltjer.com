@@ -20,6 +20,12 @@ Run mysql server for testing
 docker run --name mysql-dev -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -d mysql
 ```
 
+Run and create tables on local database
+
+```Shell
+sqlx database drop && sqlx database create && sqlx migrate run
+```
+
 ## Resources
 
 * http://www.craigwardman.com/Blogging/BlogEntry/ssg-isr-and-environment-variables-in-next-js-and-docker
@@ -27,19 +33,13 @@ docker run --name mysql-dev -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -d mysq
 
 ## TODO
 
-1. frontend depends on backend
-2. at frontend startup, revalidate all endpoints once (afterward backend will use /api/revalidate)
-
-* OK ACTUAL SOLUTION THIS TIME (PROMISE):
-  1. go back to separate docker-compose
-  2. Use "moch" server while building docker for NextJS (if `fetch()` fails, use `[]`)
-  3. after backend is done building and startup is done, send a POST to NextJS running `/api/revalidate` with localhost check
-  4. Now everything is up to date
+* Add redirects to invalid pages
+  * `/blog/p` -> `/blog`, same for `f`
+  * `/blog/p/ctf/folder` (p instead of f) -> `/blog/f/ctf/folder` if not found on `/p`
+    * `/blog/f/ctf/wrong` -> 404
 
 * change unwrap in backend to ? with error handling to return 500
 
-* combination of revalidate for generated pages that are EDITED/CREATED
-  * + FALLBACK for pages that are not generated yet in this build with loading page
-  * Rust will send updated/created slug to NextJS which will handle updating index, folder, post
-
 * REDIRECTS table for slug changes
+
+* For admin functionality, have a client-side `authorized` boolean (defined by cookies set or not) that will fetch admin API endpoints with cookies, and if a page requires admin, redirect to login

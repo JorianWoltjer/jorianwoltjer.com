@@ -1,12 +1,12 @@
 use std::env;
 
 use axum::{
-    routing::{get, post},
+    routing::get,
     Router,
 };
 use axum_sessions::{async_session, SessionLayer};
 use backend::{
-    handler::{create_post, get_posts, health_check},
+    handler::{*},
     AppState,
 };
 use rand::RngCore;
@@ -16,6 +16,7 @@ use tracing::Level;
 
 #[tokio::main]
 async fn main() {
+    println!("Starting server...");
     let port = env::var("PORT").unwrap_or(String::from("8000"));
     let database_url =
         env::var("DATABASE_URL").unwrap_or(String::from("mysql://root@127.0.0.1:3306/website"));
@@ -44,8 +45,10 @@ async fn main() {
     // Routes and layers
     let app = Router::new()
         .route("/health", get(health_check))
-        .route("/query", get(get_posts))
-        .route("/create", post(create_post))
+        .route("/blog/posts", get(get_posts).post(create_post))
+        .route("/blog/post/*slug", get(get_post_by_slug))
+        .route("/blog/folders", get(get_folders).post(create_folder))
+        .route("/blog/folder/*slug", get(get_folder_by_slug))
         .with_state(AppState { db })
         .layer(
             TraceLayer::new_for_http()

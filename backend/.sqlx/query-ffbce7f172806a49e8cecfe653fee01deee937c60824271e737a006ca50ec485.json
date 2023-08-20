@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT slug FROM folders WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ffbce7f172806a49e8cecfe653fee01deee937c60824271e737a006ca50ec485"
+}

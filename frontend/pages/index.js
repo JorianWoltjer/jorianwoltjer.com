@@ -1,20 +1,11 @@
 import { BACKEND } from "@/config";
+import Link from "next/link";
 
 export default function Home({ content }) {
   return (
     <>
       <h1>Hello, world!</h1>
-      <pre><code>{content}</code></pre>
+      <Link href="/blog">Blog</Link>
     </>
   )
-}
-
-export async function getStaticProps() {
-  let content = await fetch(BACKEND + "/query").then(res => res.text());
-
-  return {
-    props: {
-      content
-    }
-  }
 }
