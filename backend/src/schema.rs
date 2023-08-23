@@ -1,6 +1,11 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize)]
+pub struct Login {
+    pub password: String,
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct Post {
     pub id: i32,
@@ -45,6 +50,7 @@ pub struct Folder {
 #[derive(Serialize)]
 pub struct FolderContents {
     pub id: i32,
+    pub slug: String,
     pub title: String,
     pub description: String,
     pub img: String,

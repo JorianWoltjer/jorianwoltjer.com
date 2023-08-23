@@ -33,6 +33,9 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 ## TODO
 
+* For admin functionality, have a client-side `authorized` boolean? (defined by cookies set or not) that will fetch admin API endpoints with cookies, and if a page requires admin, redirect to login
+  * decide on manual `axum-session` or `axum-login`
+
 * Add redirects to invalid pages
   * `/blog/p` -> `/blog`, same for `f`
   * `/blog/p/ctf/folder` (p instead of f) -> `/blog/f/ctf/folder` if not found on `/p`
@@ -41,5 +44,3 @@ sqlx database drop && sqlx database create && sqlx migrate run
 * change unwrap in backend to ? with error handling to return 500
 
 * REDIRECTS table for slug changes
-
-* For admin functionality, have a client-side `authorized` boolean (defined by cookies set or not) that will fetch admin API endpoints with cookies, and if a page requires admin, redirect to login

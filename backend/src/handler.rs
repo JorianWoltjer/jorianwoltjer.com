@@ -1,14 +1,67 @@
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
-    Json,
+    http::{Request, StatusCode},
+    response::Response,
+    Json, RequestPartsExt,
 };
+use axum_sessions::extractors::{ReadableSession, WritableSession};
 
 use crate::{internal_error, revalidate, schema::*, slugify, AppState, Slug};
 
 pub async fn health_check() -> StatusCode {
     StatusCode::NO_CONTENT
 }
+
+// Authentication
+
+pub async fn auth_required_middleware<B>(
+    req: Request<B>,
+    next: axum::middleware::Next<B>,
+) -> Result<Response, StatusCode> {
+    let (mut parts, body) = req.into_parts();
+
+    let session = parts
+        .extract::<ReadableSession>()
+        .await
+        .map_err(|_| StatusCode::UNAUTHORIZED)?;
+
+    if !session.get::<bool>("logged_in").unwrap_or(false) {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+
+    Ok(next.run(Request::from_parts(parts, body)).await)
+}
+
+pub async fn login_check() -> StatusCode {
+    StatusCode::NO_CONTENT
+}
+
+pub async fn login(
+    mut session: WritableSession,
+    State(state): State<AppState>,
+    Json(login): Json<Login>,
+) -> Result<StatusCode, StatusCode> {
+    let password_hash = sqlx::query!("SELECT password_hash FROM users")
+        .fetch_one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .password_hash;
+
+    match bcrypt::verify(login.password, &password_hash) {
+        Ok(true) => {
+            session.insert("logged_in", true).map_err(internal_error)?;
+            Ok(StatusCode::NO_CONTENT)
+        }
+        _ => Err(StatusCode::UNAUTHORIZED),
+    }
+}
+
+pub async fn logout(mut session: WritableSession) -> StatusCode {
+    session.destroy();
+    StatusCode::NO_CONTENT
+}
+
+// Blog
 
 pub async fn get_posts(
     State(state): State<AppState>,
@@ -129,6 +182,7 @@ pub async fn get_folder_by_slug(
 
     Ok(Json(FolderContents {
         id: folder.id,
+        slug: folder.slug,
         title: folder.title,
         description: folder.description,
         img: folder.img,

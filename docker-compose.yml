@@ -9,6 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - BACKEND=http://backend
+      - NEXT_PUBLIC_BACKEND_API=/api
       - PORT=80
     networks:
       - website
@@ -22,6 +23,7 @@ services:
     hostname: backend
     environment:
       - DATABASE_URL=mysql://root@db:3306/website
+      - FRONTEND=http://frontend
       - PORT=80
     networks:
       - website

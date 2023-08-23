@@ -1,3 +1,5 @@
+use std::env;
+
 use regex::Regex;
 use reqwest::StatusCode;
 use serde::Serialize;
@@ -34,9 +36,9 @@ pub enum Slug {
 
 /// Revalidate a slug in NextJS static pages
 pub async fn revalidate(slug: Slug) -> Result<(), reqwest::Error> {
-    let client = reqwest::Client::new();
-    client
-        .post("http://frontend/api/revalidate")
+    let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
+    reqwest::Client::new()
+        .post(format!("{frontend}/api/revalidate"))
         .json(&slug)
         .send()
         .await?;

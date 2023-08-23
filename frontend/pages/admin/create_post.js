@@ -1,4 +1,4 @@
-import { BACKEND } from "@/config";
+import { BACKEND, BACKEND_API } from "@/config";
 
 export default function CreatePost({ content }) {
     const handleSubmit = async (e) => {
@@ -6,7 +6,7 @@ export default function CreatePost({ content }) {
 
         const { folder, title, description, img, markdown } = e.target;
 
-        const res = await fetch("/api/blog/posts", {
+        const res = await fetch(BACKEND_API + "/blog/posts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -37,7 +37,7 @@ export default function CreatePost({ content }) {
                     ))}
                 </select><br />
                 <textarea name="description" placeholder="Description" /><br />
-                <input name="img" type="text" placeholder="Image URL" value="placeholder.png" /><br />
+                <input name="img" type="text" placeholder="Image URL" defaultValue="placeholder.png" /><br />
                 <textarea name="markdown" placeholder="Body" /><br />
                 <button type="submit">Submit</button>
             </form>

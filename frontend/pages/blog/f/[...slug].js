@@ -1,5 +1,6 @@
+import { BACKEND, SLUG_REGEX } from "@/config";
 import { useRouter } from 'next/router'
-import { BACKEND } from "@/config";
+import Link from 'next/link';
 
 export default function Post({ content }) {
     const router = useRouter()
@@ -9,16 +10,23 @@ export default function Post({ content }) {
     }
 
     return <>
-        <h1>Folder - {content.title}</h1>
+        <div className='breadcrumbs'>
+            <Link href='/blog'>~</Link>
+            {content.slug.split("/").slice(0, -1).map((slug, i) => {
+                const path = content.slug.split("/").slice(0, i + 1).join("/")
+                return <Link key={i} href={`/blog/f/${path}`}>{slug}</Link>
+            })}
+            <h1>{content.title}</h1>
+        </div>
         <ul>
             {content.folders.map(folder => (
                 <li key={folder.slug}>
-                    <a href={`/blog/f/${folder.slug}`}>Folder - {folder.title}</a>
+                    <Link href={`/blog/f/${folder.slug}`}>Folder - {folder.title}</Link>
                 </li>
             ))}
             {content.posts.map(post => (
                 <li key={post.slug}>
-                    <a href={`/blog/p/${post.slug}`}>Post - {post.title}</a>
+                    <Link href={`/blog/p/${post.slug}`}>Post - {post.title}</Link>
                 </li>
             ))}
         </ul>
@@ -40,7 +48,11 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
     try {
-        const res = await fetch(BACKEND + "/blog/folder/" + params.slug.join("/"))
+        const slug = params.slug.join("/")
+        if (!SLUG_REGEX.test(slug)) {  // Sanity check
+            throw new Error("Invalid slug: " + slug)
+        }
+        const res = await fetch(BACKEND + "/blog/folder/" + slug)
         const content = await res.json()
 
         return {
@@ -49,6 +61,7 @@ export async function getStaticProps({ params }) {
             }
         }
     } catch (err) {
+        console.error(err)
         return {
             notFound: true
         }

@@ -1,17 +1,20 @@
 use std::env;
 
 use axum::{
-    routing::get,
+    http::HeaderValue,
+    routing::{get, post},
     Router,
 };
-use axum_sessions::{async_session, SessionLayer};
-use backend::{
-    handler::{*},
-    AppState,
-};
-use rand::RngCore;
+use axum_sessions::{async_session::MemoryStore, SessionLayer};
+use backend::{handler::*, AppState};
+use rand::Rng;
+
+use reqwest::Method;
 use sqlx::mysql::MySqlPoolOptions;
-use tower_http::trace::{self, TraceLayer};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::{self, TraceLayer},
+};
 use tracing::Level;
 
 #[tokio::main]
@@ -31,10 +34,10 @@ async fn main() {
     sqlx::migrate!().run(&db).await.unwrap();
 
     // Session setup
-    let store = async_session::MemoryStore::new();
-    let mut secret = [0u8; 64];
-    rand::thread_rng().fill_bytes(&mut secret);
-    let _session_layer = SessionLayer::new(store, &secret);
+    let mut secret = [0; 64];
+    rand::thread_rng().fill(&mut secret);
+    let store = MemoryStore::new();
+    let session_layer = SessionLayer::new(store, &secret);
 
     // Logging
     tracing_subscriber::fmt()
@@ -42,19 +45,33 @@ async fn main() {
         .compact()
         .init();
 
-    // Routes and layers
+    // Router setup
     let app = Router::new()
+        .route("/login", get(login_check))
+        .route("/blog/posts", post(create_post))
+        .route("/blog/folders", post(create_folder))
+        .route_layer(axum::middleware::from_fn(auth_required_middleware))
         .route("/health", get(health_check))
-        .route("/blog/posts", get(get_posts).post(create_post))
+        .route("/login", post(login))
+        .route("/logout", get(logout))
+        .route("/blog/posts", get(get_posts))
         .route("/blog/post/*slug", get(get_post_by_slug))
-        .route("/blog/folders", get(get_folders).post(create_folder))
+        .route("/blog/folders", get(get_folders))
         .route("/blog/folder/*slug", get(get_folder_by_slug))
         .with_state(AppState { db })
+        .layer(
+            // for local development
+            CorsLayer::new()
+                .allow_methods(vec![Method::GET, Method::POST])
+                .allow_headers(Any)
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
+        )
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
                 .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-        );
+        )
+        .layer(session_layer);
 
     println!("Listening on :{port}...");
     axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
