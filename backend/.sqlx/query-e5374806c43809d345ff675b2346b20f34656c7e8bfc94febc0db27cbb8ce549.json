@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders",
+  "query": "SELECT id, folder, slug, title, description, img, timestamp FROM posts",
   "describe": {
     "columns": [
       {
@@ -15,10 +15,10 @@
       },
       {
         "ordinal": 1,
-        "name": "parent",
+        "name": "folder",
         "type_info": {
           "type": "Long",
-          "flags": "MULTIPLE_KEY",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
           "char_set": 63,
           "max_size": 11
         }
@@ -79,7 +79,7 @@
     },
     "nullable": [
       false,
-      true,
+      false,
       false,
       false,
       false,
@@ -87,5 +87,5 @@
       false
     ]
   },
-  "hash": "fbbba8fcaadda7f991d5bc1188171ebaea65341b7086808167dcb9ff1908c9ea"
+  "hash": "e5374806c43809d345ff675b2346b20f34656c7e8bfc94febc0db27cbb8ce549"
 }

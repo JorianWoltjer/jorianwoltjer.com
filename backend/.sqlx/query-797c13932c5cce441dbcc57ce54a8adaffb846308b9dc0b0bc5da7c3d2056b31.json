@@ -28,7 +28,7 @@
         "name": "slug",
         "type_info": {
           "type": "VarString",
-          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "flags": "NOT_NULL | UNIQUE_KEY | MULTIPLE_KEY | NO_DEFAULT_VALUE",
           "char_set": 224,
           "max_size": 1020
         }

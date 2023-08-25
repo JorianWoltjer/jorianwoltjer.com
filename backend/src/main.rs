@@ -1,8 +1,8 @@
-use std::env;
+use std::{env, net::SocketAddr};
 
 use axum::{
     http::HeaderValue,
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use axum_sessions::{async_session::MemoryStore, SessionLayer};
@@ -47,17 +47,30 @@ async fn main() {
 
     // Router setup
     let app = Router::new()
-        .route("/login", get(login_check))
-        .route("/blog/posts", post(create_post))
-        .route("/blog/folders", post(create_folder))
-        .route_layer(axum::middleware::from_fn(auth_required_middleware))
-        .route("/health", get(health_check))
-        .route("/login", post(login))
-        .route("/logout", get(logout))
-        .route("/blog/posts", get(get_posts))
-        .route("/blog/post/*slug", get(get_post_by_slug))
-        .route("/blog/folders", get(get_folders))
-        .route("/blog/folder/*slug", get(get_folder_by_slug))
+        .merge(
+            Router::new() // Public
+                .route("/health", get(health_check))
+                .route("/login", post(login))
+                .route("/logout", get(logout))
+                .route("/blog/posts", get(get_posts))
+                .route("/blog/folders", get(get_folders))
+                .route("/blog/post/*slug_or_id", get(get_post))
+                .route("/blog/folder/*slug_or_id", get(get_folder)),
+        )
+        .merge(
+            Router::new() // Localhost only
+                .route("/render", post(render))
+                .route_layer(axum::middleware::from_fn(localhost_only_middleware)),
+        )
+        .merge(
+            Router::new() // Authentication required
+                .route("/login", get(login_check))
+                .route("/blog/posts", post(create_post))
+                .route("/blog/folders", post(create_folder))
+                .route("/blog/post/*slug_or_id", put(edit_post))
+                .route("/blog/folder/*slug_or_id", put(edit_folder))
+                .route_layer(axum::middleware::from_fn(auth_required_middleware)),
+        )
         .with_state(AppState { db })
         .layer(
             // for local development
@@ -75,7 +88,7 @@ async fn main() {
 
     println!("Listening on :{port}...");
     axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
-        .serve(app.into_make_service())
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
         .await
         .unwrap();
 }

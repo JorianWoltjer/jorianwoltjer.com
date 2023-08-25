@@ -1,36 +1,13 @@
-import { BACKEND, BACKEND_API } from "@/config";
+import { BACKEND } from "@/config";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-export default function Blog({ content }) {
-  // TODO: move this to global thing
-  const [admin_interface, set_admin_interface] = useState(false);
-
-  useEffect(() => {
-    if (document.cookie.includes("admin_interface=true")) {
-      set_admin_interface(true);
-    }
-  }, [])
-
-  const logout = async () => {
-    await fetch(BACKEND_API + "/logout", {
-      method: "GET",
-      credentials: "same-origin"
-    })
-    document.cookie = "admin_interface=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-    set_admin_interface(false);
-  }
-
+export default function Blog({ content, admin_interface }) {
   return (
     <>
-      {admin_interface && (<>
-        <a onClick={logout} href="#">Logout</a>
-      </>)}
       <h1>Blog</h1>
       {admin_interface && (<>
-        <Link href="/admin/create_post">Create Post</Link>
-        <Link href="/admin/create_folder">Create Folder</Link>
+        <Link href="/admin/post">Create Post</Link>
+        <Link href="/admin/folder">Create Folder</Link>
       </>)}
       <ul>
         {content.map(folder => {

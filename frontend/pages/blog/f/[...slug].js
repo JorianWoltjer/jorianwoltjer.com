@@ -1,8 +1,9 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
 
-export default function Post({ content }) {
+export default function Folder({ content, admin_interface }) {
     const router = useRouter()
 
     if (router.isFallback) {
@@ -10,14 +11,12 @@ export default function Post({ content }) {
     }
 
     return <>
-        <div className='breadcrumbs'>
-            <Link href='/blog'>~</Link>
-            {content.slug.split("/").slice(0, -1).map((slug, i) => {
-                const path = content.slug.split("/").slice(0, i + 1).join("/")
-                return <Link key={i} href={`/blog/f/${path}`}>{slug}</Link>
-            })}
-            <h1>{content.title}</h1>
-        </div>
+        <Breadcrumbs slug={content.slug} title={content.title} />
+        {admin_interface && <>
+            <Link href={`/admin/post?folder=${content.id}`}>New Post</Link>
+            <Link href={`/admin/folder?folder=${content.id}`}>New Folder</Link>
+            <Link href={`/admin/folder/${content.id}`}>Edit</Link>
+        </>}
         <ul>
             {content.folders.map(folder => (
                 <li key={folder.slug}>

@@ -20,9 +20,6 @@ export default async function handler(req, res) {
 
     } else if (type === "Folder") {  // Folder needs self and parent
       await res.revalidate(`/blog/f/${slug}`)
-      // New folder to choose from
-      await res.revalidate(`/admin/create_post`)
-      await res.revalidate(`/admin/create_folder`)
 
       const dirname = path.dirname(slug)
       if (dirname !== ".") {

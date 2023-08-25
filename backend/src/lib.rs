@@ -6,6 +6,7 @@ use serde::Serialize;
 use sqlx::MySqlPool;
 
 pub mod handler;
+pub mod render;
 pub mod schema;
 
 #[derive(Clone)]
@@ -18,6 +19,13 @@ pub fn internal_error(e: impl std::fmt::Display) -> StatusCode {
     StatusCode::INTERNAL_SERVER_ERROR
 }
 
+pub fn sql_not_found(e: sqlx::Error) -> StatusCode {
+    match e {
+        sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
+        _ => internal_error(e),
+    }
+}
+
 pub fn slugify(title: &str) -> String {
     Regex::new(r"((&.*?;)|[^\w])+")
         .unwrap()
@@ -25,6 +33,19 @@ pub fn slugify(title: &str) -> String {
         .trim_matches('-')
         .to_string()
         .to_lowercase()
+}
+
+pub async fn build_slug(
+    folder_id: i32,
+    title: &str,
+    state: &AppState,
+) -> Result<String, sqlx::Error> {
+    let parent_slug = sqlx::query!("SELECT slug FROM folders WHERE id = ?", folder_id)
+        .fetch_one(&state.db)
+        .await?
+        .slug;
+
+    Ok(format!("{parent_slug}/{}", slugify(title)))
 }
 
 #[derive(Serialize)]

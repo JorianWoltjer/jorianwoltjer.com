@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "SELECT id, slug, title, description, img, timestamp FROM posts",
+  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -15,16 +15,26 @@
       },
       {
         "ordinal": 1,
+        "name": "parent",
+        "type_info": {
+          "type": "Long",
+          "flags": "MULTIPLE_KEY",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 2,
         "name": "slug",
         "type_info": {
           "type": "VarString",
-          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "flags": "NOT_NULL | UNIQUE_KEY | MULTIPLE_KEY | NO_DEFAULT_VALUE",
           "char_set": 224,
           "max_size": 1020
         }
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "title",
         "type_info": {
           "type": "VarString",
@@ -34,7 +44,7 @@
         }
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "description",
         "type_info": {
           "type": "Blob",
@@ -44,7 +54,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "img",
         "type_info": {
           "type": "VarString",
@@ -54,7 +64,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "timestamp",
         "type_info": {
           "type": "Timestamp",
@@ -65,10 +75,11 @@
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
+      true,
       false,
       false,
       false,
@@ -76,5 +87,5 @@
       false
     ]
   },
-  "hash": "2e8495f7d64ea502a22b2583b1ee2310c38d4d3b595610c9675ac5384997e428"
+  "hash": "ea46d3516bbd320e8ca291f94500ec339f58dfdc283c4971dc6070fe82ec3cb9"
 }

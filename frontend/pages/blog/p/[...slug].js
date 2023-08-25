@@ -1,8 +1,9 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
 
-export default function Post({ content }) {
+export default function Post({ content, admin_interface }) {
     const router = useRouter()
 
     if (router.isFallback) {
@@ -10,15 +11,9 @@ export default function Post({ content }) {
     }
 
     return <>
-        <div className='breadcrumbs'>
-            <Link href='/blog'>~</Link>
-            {content.slug.split("/").slice(0, -1).map((slug, i) => {
-                const path = content.slug.split("/").slice(0, i + 1).join("/")
-                return <Link key={i} href={`/blog/f/${path}`}>{slug}</Link>
-            })}
-            <h1>{content.title}</h1>
-        </div>
-        <pre><code>{content.markdown}</code></pre>
+        <Breadcrumbs slug={content.slug} title={content.title} />
+        {admin_interface && <Link href={`/admin/post/${content.id}`}>Edit</Link>}
+        <div className='post-content' dangerouslySetInnerHTML={{ __html: content.html }} />
     </>
 }
 
@@ -43,6 +38,12 @@ export async function getStaticProps({ params }) {
         }
         const res = await fetch(BACKEND + "/blog/post/" + slug)
         const content = await res.json()
+
+        const res_html = await fetch(BACKEND + "/render", {
+            method: "POST",
+            body: content.markdown
+        })
+        content.html = await res_html.text()
 
         return {
             props: {

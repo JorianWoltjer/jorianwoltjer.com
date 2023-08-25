@@ -1,6 +1,10 @@
 import { BACKEND, BACKEND_API } from "@/config";
+import { useRouter } from 'next/router'
 
-export default function CreatePost({ content }) {
+export default function CreatePost({ all_folders }) {
+    const router = useRouter()
+    const { folder } = router.query
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -31,27 +35,27 @@ export default function CreatePost({ content }) {
             <h1>Create</h1>
             <form onSubmit={handleSubmit}>
                 <input name="title" type="text" placeholder="Title" /><br />
-                <select name="folder">
-                    {content.map(folder => (
+                <select name="folder" defaultValue={folder}>
+                    {all_folders.map(folder => (
                         <option key={folder.id} value={folder.id}>{folder.title}</option>
                     ))}
                 </select><br />
                 <textarea name="description" placeholder="Description" /><br />
                 <input name="img" type="text" placeholder="Image URL" defaultValue="placeholder.png" /><br />
-                <textarea name="markdown" placeholder="Body" /><br />
+                <textarea name="markdown" placeholder="Markdown" /><br />
                 <button type="submit">Submit</button>
             </form>
         </>
     )
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
     const res = await fetch(BACKEND + "/blog/folders")
-    const content = await res.json()
+    const all_folders = await res.json()
 
     return {
         props: {
-            content
+            all_folders
         }
     }
 }

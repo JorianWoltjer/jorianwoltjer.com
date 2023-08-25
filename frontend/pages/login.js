@@ -19,7 +19,9 @@ export default function Login() {
             })
         }).then(res => {
             if (res.ok) {
-                document.cookie = "admin_interface=true; path=/;"
+                const expires = new Date();
+                expires.setDate(expires.getDate() + 1);  // Should align with sid= cookie expiration
+                document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
                 document.location.href = router.query.next || "/blog";
             }
         });
