@@ -242,6 +242,7 @@ dependencies = [
  "axum-sessions",
  "bcrypt",
  "chrono",
+ "lazy_static",
  "markdown",
  "rand",
  "regex",

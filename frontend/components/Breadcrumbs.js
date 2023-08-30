@@ -1,13 +1,15 @@
 import Link from 'next/link';
 
 export default function Breadcrumbs({ slug, title }) {
-    return <div className='breadcrumbs'>
-        <Link href='/blog'>~</Link>
-        {slug.split("/").slice(0, -1).map((slug, i) => {
-            const path = slug.split("/").slice(0, i + 1).join("/")
+    return <nav aria-label='breadcrumb'>
+        <ol className='breadcrumb my-4'>
+            <li className='breadcrumb-item'><Link href='/blog' style={{ padding: "10px", margin: "-10px" }}>~</Link></li>
+            {slug.split("/").slice(0, -1).map((part, i) => {
+                const path = slug.split("/").slice(0, i + 1).join("/")
 
-            return <Link key={i} href={`/blog/f/${path}`}>{slug}</Link>
-        })}
-        <h1>{title}</h1>
-    </div>
+                return <li key={i} className='breadcrumb-item'><Link href={`/blog/f/${path}`}>{part}</Link></li>
+            })}
+            <li className='breadcrumb-item active' aria-current='page'><h1>{title}</h1></li>
+        </ol>
+    </nav>
 }

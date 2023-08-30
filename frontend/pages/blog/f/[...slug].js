@@ -1,7 +1,11 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FolderItem from "@/components/FolderItem";
+import PostItem from "@/components/PostItem";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit, faFolderPlus, faPlus } from "@fortawesome/free-solid-svg-icons";
 
 export default function Folder({ content, admin_interface }) {
     const router = useRouter()
@@ -12,23 +16,19 @@ export default function Folder({ content, admin_interface }) {
 
     return <>
         <Breadcrumbs slug={content.slug} title={content.title} />
+        <hr />
+        <p className="lead">{content.description}</p>
         {admin_interface && <>
-            <Link href={`/admin/post?folder=${content.id}`}>New Post</Link>
-            <Link href={`/admin/folder?folder=${content.id}`}>New Folder</Link>
-            <Link href={`/admin/folder/${content.id}`}>Edit</Link>
+            <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
+            <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
+            <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
         </>}
-        <ul>
-            {content.folders.map(folder => (
-                <li key={folder.slug}>
-                    <Link href={`/blog/f/${folder.slug}`}>Folder - {folder.title}</Link>
-                </li>
-            ))}
-            {content.posts.map(post => (
-                <li key={post.slug}>
-                    <Link href={`/blog/p/${post.slug}`}>Post - {post.title}</Link>
-                </li>
-            ))}
-        </ul>
+        {content.folders.map(folder => (
+            <FolderItem key={folder.id} {...folder} />
+        ))}
+        {content.posts.map(post => (
+            <PostItem key={post.id} {...post} />
+        ))}
     </>
 }
 

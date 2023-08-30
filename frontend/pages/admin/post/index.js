@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 
 export default function CreatePost({ all_folders }) {
     const router = useRouter()
-    const { folder } = router.query
+    const { parent } = router.query
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -35,7 +35,7 @@ export default function CreatePost({ all_folders }) {
             <h1>Create</h1>
             <form onSubmit={handleSubmit}>
                 <input name="title" type="text" placeholder="Title" /><br />
-                <select name="folder" defaultValue={folder}>
+                <select name="folder" defaultValue={parent}>
                     {all_folders.map(folder => (
                         <option key={folder.id} value={folder.id}>{folder.title}</option>
                     ))}

@@ -21,3 +21,4 @@ tower-http = { version = "0.4.3", features = ["trace", "cors"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
 markdown = "1.0.0-alpha.12"
+lazy_static = "1.4.0"

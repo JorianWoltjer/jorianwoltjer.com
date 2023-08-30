@@ -43,4 +43,11 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 * change unwrap in backend to ? with error handling to return 500
 
-* REDIRECTS table for slug changes
+Redirects table:
+- columns: slug, destination_id
+- on POST UPDATE: change post slug + insert prev into redirects
+	- revalidate: prev folder slug and current folder slug (404-handling)
+- on FOLDER UPDATE: change folder slug + insert prev into redirects
+  - SQL UPDATE: recursively starting-with+'/'-replace() previous slug string for every folder/post globally
+    - For each updated record, add to redirects table
+  - revalidate: my parent's slug (404-handling)
