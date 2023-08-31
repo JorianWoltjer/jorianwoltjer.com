@@ -1,7 +1,6 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import FolderItem from "@/components/FolderItem";
-import PostItem from "@/components/PostItem";
+import { Breadcrumbs, FolderItem, PostItem, Loading } from "@/components";
+import { useEffect } from "react";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,8 +9,17 @@ import { faEdit, faFolderPlus, faPlus } from "@fortawesome/free-solid-svg-icons"
 export default function Folder({ content, admin_interface }) {
     const router = useRouter()
 
+    useEffect(() => {
+        if (!router.isFallback) {
+            // Replace URL if slug is not correct
+            if (content.slug !== router.query.slug.join("/")) {
+                router.replace("/blog/f/" + content.slug)
+            }
+        }
+    }, [content, router]);
+
     if (router.isFallback) {
-        return <div>Loading...</div>
+        return <Loading />
     }
 
     return <>

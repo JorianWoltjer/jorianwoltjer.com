@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE folders SET title = ?, slug = ?, description = ?, img = ?, parent = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "ff36e954f22839a8d34917a19c885635817c600f47e92dc0c9088b2da36d32fb"
+}

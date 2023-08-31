@@ -65,6 +65,7 @@ async fn main() {
         .merge(
             Router::new() // Authentication required
                 .route("/login", get(login_check))
+                .route("/blog/preview", post(preview))
                 .route("/blog/posts", post(create_post))
                 .route("/blog/folders", post(create_folder))
                 .route("/blog/post/*slug_or_id", put(edit_post))
@@ -75,7 +76,7 @@ async fn main() {
         .layer(
             // for local development
             CorsLayer::new()
-                .allow_methods(vec![Method::GET, Method::POST])
+                .allow_methods(vec![Method::GET, Method::POST, Method::PUT])
                 .allow_headers(Any)
                 .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
         )

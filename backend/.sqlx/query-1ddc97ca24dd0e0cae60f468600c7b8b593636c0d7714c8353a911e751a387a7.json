@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT slug FROM post_redirects WHERE post_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1ddc97ca24dd0e0cae60f468600c7b8b593636c0d7714c8353a911e751a387a7"
+}

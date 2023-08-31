@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE folders SET slug=CONCAT(?, substring(slug, locate(?, slug)+length(?))) WHERE locate(?, slug) = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "fed9f89bd8eef5c08fc4fd02d104563c98b2ea0a8c84c87b8d43c64fd8653ef5"
+}

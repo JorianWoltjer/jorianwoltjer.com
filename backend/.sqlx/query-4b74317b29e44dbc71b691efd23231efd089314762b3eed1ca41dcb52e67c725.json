@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE posts SET folder = ?, title = ?, slug = ?, description = ?, img = ?, markdown = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "4b74317b29e44dbc71b691efd23231efd089314762b3eed1ca41dcb52e67c725"
+}

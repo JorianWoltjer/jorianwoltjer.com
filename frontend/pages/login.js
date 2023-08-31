@@ -1,11 +1,14 @@
 import { BACKEND_API } from "@/config";
 import { useRouter } from 'next/router'
+import { useState } from "react";
 
 export default function Login() {
     const router = useRouter();
+    const [alert, setAlert] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setAlert(null);
 
         const { password } = e.target;
         fetch(BACKEND_API + "/login", {
@@ -23,16 +26,24 @@ export default function Login() {
                 expires.setDate(expires.getDate() + 1);  // Should align with sid= cookie expiration
                 document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
                 document.location.href = router.query.next || "/blog";
+            } else {
+                setAlert(<div class="alert alert-danger" role="alert">Incorrect password</div>);
             }
         });
     }
 
     return <>
-        <h1>Login</h1>
-
-        <form onSubmit={handleSubmit}>
-            <input name="password" type="password" placeholder="Password" /><br />
-            <button type="submit">Submit</button>
-        </form>
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="boxed center">
+                <h1>Admin login</h1>
+                <br />
+                {alert}
+                <form method="post" onSubmit={handleSubmit}>
+                    <input class="form-control" type="password" id="password" name="password" placeholder="Password..." />
+                    <br />
+                    <input class="btn btn-secondary" type="submit" value="Submit" />
+                </form>
+            </div>
+        </div>
     </>
 }

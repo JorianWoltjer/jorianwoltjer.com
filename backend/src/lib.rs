@@ -1,7 +1,6 @@
 use std::env;
 
 use regex::Regex;
-use reqwest::StatusCode;
 use serde::Serialize;
 use sqlx::MySqlPool;
 
@@ -12,18 +11,6 @@ pub mod schema;
 #[derive(Clone)]
 pub struct AppState {
     pub db: MySqlPool,
-}
-
-pub fn internal_error(e: impl std::fmt::Display) -> StatusCode {
-    eprintln!("500 Internal Server Error: {}", e);
-    StatusCode::INTERNAL_SERVER_ERROR
-}
-
-pub fn sql_not_found(e: sqlx::Error) -> StatusCode {
-    match e {
-        sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
-        _ => internal_error(e),
-    }
 }
 
 pub fn slugify(title: &str) -> String {
@@ -54,17 +41,22 @@ pub enum Slug {
     Post { slug: String },
     Folder { slug: String },
 }
+#[derive(Serialize)]
+pub struct RevalidationRequest {
+    pub slugs: Vec<Slug>,
+}
+impl RevalidationRequest {
+    /// Revalidate a slug in NextJS static pages
+    pub async fn execute(self) -> Result<(), reqwest::Error> {
+        let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
+        reqwest::Client::new()
+            .post(format!("{frontend}/api/revalidate"))
+            .json(&self.slugs)
+            .send()
+            .await?;
 
-/// Revalidate a slug in NextJS static pages
-pub async fn revalidate(slug: Slug) -> Result<(), reqwest::Error> {
-    let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
-    reqwest::Client::new()
-        .post(format!("{frontend}/api/revalidate"))
-        .json(&slug)
-        .send()
-        .await?;
-
-    Ok(())
+        Ok(())
+    }
 }
 
 #[cfg(test)]

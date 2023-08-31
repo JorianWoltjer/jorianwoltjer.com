@@ -7,30 +7,43 @@ export default async function handler(req, res) {
   } else if (req.method !== "POST") {  // Only POST
     return res.status(405).json({ message: "Method not allowed" });
   }
-  const { type, slug } = req.body;
-  if (!path || !type) {  // Require parameters
-    return res.status(400).json({ message: "Missing parameters" });
-  }
-  console.log("Revalidating", { type, slug })
 
-  try {
+  const revalidations = new Set();
+
+  for (const request of req.body) {
+    const { type, slug } = request;
+    if (!path || !type) {  // Require parameters
+      return res.status(400).json({ message: "Missing parameters" });
+    }
+    console.log("Revalidation request:", { type, slug })
+
     if (type === "Post") {  // Post needs self and folder
-      await res.revalidate(`/blog/p/${slug}`)
-      await res.revalidate(`/blog/f/${path.dirname(slug)}`)
+      revalidations.add(`/blog/p/${slug}`)
+      revalidations.add(`/blog/f/${path.dirname(slug)}`)
 
     } else if (type === "Folder") {  // Folder needs self and parent
-      await res.revalidate(`/blog/f/${slug}`)
+      revalidations.add(`/blog/f/${slug}`)
 
       const dirname = path.dirname(slug)
       if (dirname !== ".") {
-        await res.revalidate(`/blog/f/${dirname}`)
+        revalidations.add(`/blog/f/${dirname}`)
       } else {  // Root folder
-        await res.revalidate(`/blog`)
+        revalidations.add(`/blog`)
       }
     }
-    return res.status(204).end()
+  }
+
+  console.time("Revalidation")
+  try {
+    for (const url of revalidations) {
+      console.log("Revalidating:", url)
+      await res.revalidate(url)
+    }
   } catch (err) {
     console.error(err)
     return res.status(500).json({ message: err.message })
   }
+  console.timeEnd("Revalidation")
+
+  return res.status(204).end()
 }

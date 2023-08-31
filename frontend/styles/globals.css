@@ -53,6 +53,14 @@ body {
   margin-top: 5.6484375rem;
 }
 
+div.center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
 h1,
 h2,
 h3,
@@ -60,14 +68,18 @@ h4,
 h5,
 h6 {
   color: var(--main-color);
-  /* font-size: calc(1.375rem + 1vw); */
   font-family: var(--font-code);
   font-weight: 500;
 }
 
+h1:not(.breadcrumb-title) {
+  /* my-4 */
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
 p,
 .post-content {
-  /* font-family: var(--bs-font-sans-serif); */
   font-size: 98%;
 }
 
@@ -152,7 +164,7 @@ pre code {
 }
 
 .btn {
-  margin: 0 5px;
+  margin-right: 10px;
 }
 
 /* Scrollbar */
@@ -185,11 +197,11 @@ pre code {
 }
 
 /* Centered buttons */
-.buttons {
+.c-buttons {
   display: inline-grid;
 }
 
-div.button {
+div.c-button {
   display: inline-flex;
   border-radius: 15px;
   overflow: hidden;
@@ -197,12 +209,12 @@ div.button {
   margin: 13px 0;
 }
 
-.buttons a {
+.c-buttons a {
   color: inherit;
   text-decoration: inherit;
 }
 
-.button-icon {
+.c-button-icon {
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -212,7 +224,7 @@ div.button {
   color: var(--background);
 }
 
-.button-text {
+.c-button-text {
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -226,82 +238,82 @@ div.button {
   transition: 0.5s ease;
 }
 
-.button-text:hover {
+.c-button-text:hover {
   color: var(--background);
 }
 
-.button.red {
+.c-button.red {
   background: var(--red);
   box-shadow: 0 0 0 3px var(--red);
 }
-.button.red .button-text:hover {
+.c-button.red .c-button-text:hover {
   background: var(--red);
 }
-.button.orange {
+.c-button.orange {
   background: var(--orange);
   box-shadow: 0 0 0 3px var(--orange);
 }
-.button.orange .button-text:hover {
+.c-button.orange .c-button-text:hover {
   background: var(--orange);
 }
-.button.yellow {
+.c-button.yellow {
   background: var(--light-yellow);
   box-shadow: 0 0 0 3px var(--light-yellow);
 }
-.button.yellow .button-text:hover {
+.c-button.yellow .c-button-text:hover {
   background: var(--light-yellow);
 }
-.button.green {
+.c-button.green {
   background: var(--green);
   box-shadow: 0 0 0 3px var(--green);
 }
-.button.green .button-text:hover {
+.c-button.green .c-button-text:hover {
   background: var(--green);
 }
-.button.blue {
+.c-button.blue {
   background: var(--blue);
   box-shadow: 0 0 0 3px var(--blue);
 }
-.button.blue .button-text:hover {
+.c-button.blue .c-button-text:hover {
   background: var(--blue);
 }
-.button.purple {
+.c-button.purple {
   background: var(--purple);
   box-shadow: 0 0 0 3px var(--purple);
 }
-.button.purple .button-text:hover {
+.c-button.purple .c-button-text:hover {
   background: var(--purple);
 }
-.button.gray {
+.c-button.gray {
   background: var(--light-gray);
   box-shadow: 0 0 0 3px var(--light-gray);
 }
-.button.gray .button-text:hover {
+.c-button.gray .c-button-text:hover {
   background: var(--light-gray);
 }
 
-.button.discord-blue {
+.c-button.discord-blue {
   background: var(--discord-blue);
   box-shadow: 0 0 0 3px var(--discord-blue);
 }
-.button.discord-blue .button-text:hover {
+.c-button.discord-blue .c-button-text:hover {
   background: var(--discord-blue);
 }
-.button.light-green {
+.c-button.light-green {
   background: var(--light-green);
   box-shadow: 0 0 0 3px var(--light-green);
 }
-.button.light-green .button-text:hover {
+.c-button.light-green .c-button-text:hover {
   background: var(--light-green);
 }
 
-p.button {
+p.c-button {
   margin: 10px 0;
   font-size: 24px;
   font-weight: bold;
 }
 
-p.button svg {
+p.c-button svg {
   font-size: 36px;
   transform: translate(-15px, 7px);
 }
@@ -390,7 +402,8 @@ p.button svg {
 }
 
 .card-text {
-  font-family: var(--font-main);
+  font-family: var(--font-light);
+  color: var(--text);
 }
 
 .card-center .card-text {
@@ -521,6 +534,7 @@ a.big-button {
   text-decoration: none;
   padding: 20px;
   margin-right: 20px;
+  margin-bottom: 20px;
   font-weight: bold;
   color: white;
   white-space: nowrap;
@@ -722,19 +736,28 @@ blockquote code {
 }
 
 /* Forms */
-.form-control {
+.form-control,
+.form-select {
   background-color: var(--background) !important;
-  border: 1px solid #404040;
-  color: var(--foreground-light) !important;
+  /* border: 1px solid #404040; */
+  /* color: var(--foreground-light) !important; */
+}
+.form-control::placeholder {
+  color: var(--background-lighter) !important;
+}
+
+option:checked {
+  background-color: var(--background-light);
+}
+
+.text-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .form-check-input[type="checkbox"]:not(:checked) {
   background-color: var(--background);
   border-color: var(--dark-gray);
-}
-
-label {
-  margin-right: 10px;
 }
 
 .btn-primary {
@@ -768,6 +791,14 @@ label {
 .boxed input[type="text"] {
   max-width: 300px;
   text-align: center;
+}
+
+.editor {
+  resize: vertical;
+  overflow: auto;
+  border: 1px solid var(--dark-gray);
+  border-radius: 5px;
+  background-color: #1e1e1e;
 }
 
 /* Specific classes */

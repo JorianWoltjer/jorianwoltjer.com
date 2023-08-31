@@ -33,21 +33,20 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 ## TODO
 
-* For admin functionality, have a client-side `authorized` boolean? (defined by cookies set or not) that will fetch admin API endpoints with cookies, and if a page requires admin, redirect to login
-  * decide on manual `axum-session` or `axum-login`
+* Search using websockets
+* Add all fields to post/folder
+* Make a development mode using ENV variables for backend, which will enable CORS and disable auth
+* Error pages (404, 500, etc.)
+* Add other static pages
 
-* Add redirects to invalid pages
+* Security:
+  * Set DB password
+  * disable CORS
+  * run all as www-data instead of root
+
+* Add redirects to invalid pages using nginx
   * `/blog/p` -> `/blog`, same for `f`
   * `/blog/p/ctf/folder` (p instead of f) -> `/blog/f/ctf/folder` if not found on `/p`
     * `/blog/f/ctf/wrong` -> 404
 
-* change unwrap in backend to ? with error handling to return 500
-
-Redirects table:
-- columns: slug, destination_id
-- on POST UPDATE: change post slug + insert prev into redirects
-	- revalidate: prev folder slug and current folder slug (404-handling)
-- on FOLDER UPDATE: change folder slug + insert prev into redirects
-  - SQL UPDATE: recursively starting-with+'/'-replace() previous slug string for every folder/post globally
-    - For each updated record, add to redirects table
-  - revalidate: my parent's slug (404-handling)
+* Have fun with [`__filename`](https://stackoverflow.com/a/3133313/10508498) to dynamically link footer Github to source code

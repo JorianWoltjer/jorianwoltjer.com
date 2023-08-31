@@ -1,7 +1,7 @@
 use axum::{extract::State, http::StatusCode, Json};
 use axum_sessions::extractors::WritableSession;
 
-use crate::{internal_error, schema::*, AppState};
+use crate::{handler::internal_error, schema::*, AppState};
 
 pub async fn login_check() -> StatusCode {
     StatusCode::NO_CONTENT

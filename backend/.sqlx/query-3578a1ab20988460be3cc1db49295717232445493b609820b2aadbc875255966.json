@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT f.slug FROM folders f JOIN folder_redirects fr ON f.id = fr.folder_id WHERE fr.slug = ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3578a1ab20988460be3cc1db49295717232445493b609820b2aadbc875255966"
+}

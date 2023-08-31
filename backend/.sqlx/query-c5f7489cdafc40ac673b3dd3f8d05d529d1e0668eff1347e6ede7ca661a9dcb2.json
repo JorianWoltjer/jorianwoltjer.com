@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT IGNORE INTO folder_redirects (slug, folder_id) SELECT slug, id FROM folders WHERE locate(?, slug) = 1 OR slug = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c5f7489cdafc40ac673b3dd3f8d05d529d1e0668eff1347e6ede7ca661a9dcb2"
+}

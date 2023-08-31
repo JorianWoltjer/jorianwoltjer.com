@@ -8,7 +8,7 @@ pub struct Login {
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Post {
     pub id: i32,
     pub folder: i32,
@@ -19,7 +19,6 @@ pub struct Post {
     pub markdown: String,
     pub timestamp: DateTime<Utc>,
 }
-
 #[derive(Deserialize, Serialize)]
 pub struct PostSummary {
     pub id: i32,
@@ -30,7 +29,6 @@ pub struct PostSummary {
     pub img: String,
     pub timestamp: DateTime<Utc>,
 }
-
 #[derive(Deserialize, Serialize)]
 pub struct CreatePost {
     pub folder: i32,
@@ -40,7 +38,7 @@ pub struct CreatePost {
     pub markdown: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Folder {
     pub id: i32,
     pub parent: Option<i32>,
@@ -50,10 +48,10 @@ pub struct Folder {
     pub img: String,
     pub timestamp: DateTime<Utc>,
 }
-
 #[derive(Serialize)]
 pub struct FolderContents {
     pub id: i32,
+    pub parent: Option<i32>,
     pub slug: String,
     pub title: String,
     pub description: String,
@@ -82,6 +80,7 @@ impl FolderContents {
 
         Ok(Self {
             id: folder.id,
+            parent: folder.parent,
             slug: folder.slug,
             title: folder.title,
             description: folder.description,
@@ -92,7 +91,6 @@ impl FolderContents {
         })
     }
 }
-
 #[derive(Deserialize, Serialize)]
 pub struct CreateFolder {
     pub parent: Option<i32>,

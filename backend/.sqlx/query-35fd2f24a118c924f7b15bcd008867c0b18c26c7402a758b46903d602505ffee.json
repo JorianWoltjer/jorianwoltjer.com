@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT slug FROM folder_redirects WHERE folder_id IN (SELECT id FROM folders WHERE locate(?, slug) = 1) UNION SELECT slug FROM folders WHERE locate(?, slug) = 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "35fd2f24a118c924f7b15bcd008867c0b18c26c7402a758b46903d602505ffee"
+}

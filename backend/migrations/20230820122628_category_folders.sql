@@ -17,5 +17,5 @@ VALUES
         'coding',
         'Coding',
         'Showcases and Tutorials about Coding projects I do, or tools I make. To show how a tool works, or how I made it. Everything is mostly done in Python because of its ease of use.',
-        'laptop-code'
+        'laptop'
     );

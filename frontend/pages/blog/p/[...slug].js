@@ -1,30 +1,33 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { Breadcrumbs, Loading } from "@/components";
 import { useEffect } from "react";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css'
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import PostContent from "@/components/PostContent";
 
 export default function Post({ content, admin_interface }) {
     const router = useRouter()
 
     useEffect(() => {
-        hljs.initHighlighting();
-    }, []);
+        if (!router.isFallback) {
+            // Replace URL if slug is not correct
+            if (content.slug !== router.query.slug.join("/")) {
+                router.replace("/blog/p/" + content.slug)
+            }
+        }
+    }, [content, router]);
 
     if (router.isFallback) {
-        return <div>Loading...</div>
+        return <Loading />
     }
 
     return <>
-        <Breadcrumbs slug={content.slug} title={content.title} />
-        {admin_interface &&
+        <PostContent content={content} admin_interface={admin_interface} admin_components={
             <Link className="big-button" href={`/admin/post/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
-        }
-        <div className='post-content' dangerouslySetInnerHTML={{ __html: content.html }} />
+        } />
     </>
 }
 
@@ -61,7 +64,7 @@ export async function getStaticProps({ params }) {
                 content
             }
         }
-    } catch (err) {
+    } catch (err) {  // Not found
         console.error(err)
         return {
             notFound: true

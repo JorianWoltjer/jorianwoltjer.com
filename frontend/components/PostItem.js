@@ -3,11 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye } from '@fortawesome/free-regular-svg-icons'
 import Link from 'next/link'
 
-export default function FolderItem({ title, description, img, slug, timestamp }) {
+export default function PostItem({ title, description, img, slug, timestamp }) {
+    const href = slug ? `/blog/p/${slug}` : "#"
+    timestamp = timestamp || Date.now()
+
     return <div className="card card-horizontal">
         <div className="row no-gutters">
             <div className="col-sm-3">
-                <Link href={`/blog/p/${slug}`}>
+                <Link href={href}>
                     {/* eslint-disable @next/next/no-img-element */}
                     <img src={`/img/blog/${img || '../placeholder.png'}`} className="card-img-top h-100" alt="Post thumbnail" />
                 </Link>
@@ -16,7 +19,7 @@ export default function FolderItem({ title, description, img, slug, timestamp })
                 <div className="card-body">
                     <p className="card-text tags"></p>
                     <h3 className="card-title">
-                        <Link href={`/blog/p/${slug}`}><code>{title}</code></Link>
+                        <Link href={href}><code>{title}</code></Link>
                     </h3>
                     <p className="card-text">{description}</p>
                 </div>

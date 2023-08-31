@@ -1,0 +1,25 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT p.slug FROM posts p JOIN post_redirects pr ON p.id = pr.post_id WHERE pr.slug = ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "char_set": 224,
+          "max_size": 1020
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "06877160851877f079c8b4b1187b5a0752302966e2bb645b50cb4ce393b5d12f"
+}
