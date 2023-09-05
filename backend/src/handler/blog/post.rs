@@ -30,7 +30,7 @@ pub async fn get_posts(
 ) -> Result<Json<Vec<PostSummary>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        "SELECT id, folder, slug, title, description, img, timestamp FROM posts"
+        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts"
     )
     .fetch_all(&state.db)
     .await
@@ -44,7 +44,7 @@ pub async fn get_post(
 ) -> Result<PostResponse, StatusCode> {
     if let Ok(post) = sqlx::query_as!(
         Post,
-        "SELECT id, folder, slug, title, description, img, markdown, timestamp FROM posts WHERE id = ? OR slug = ?",
+        "SELECT id, folder, slug, title, description, img, markdown, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ? OR slug = ?",
         slug_or_id,
         slug_or_id
     )
@@ -72,12 +72,14 @@ pub async fn create_post(
         .map_err(internal_error)?;
 
     sqlx::query!(
-        "INSERT INTO posts (folder, title, slug, description, img, markdown) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO posts (folder, title, slug, description, img, points, featured, markdown) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         post.folder,
         post.title,
         slug,
         post.description,
         post.img,
+        post.points,
+        post.featured,
         post.markdown
     )
     .execute(&state.db)
@@ -93,7 +95,7 @@ pub async fn create_post(
 
     sqlx::query_as!(
         PostSummary,
-        "SELECT id, folder, slug, title, description, img, timestamp FROM posts WHERE slug = ?",
+        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE slug = ?",
         slug
     )
     .fetch_one(&state.db)
@@ -113,7 +115,7 @@ pub async fn edit_post(
 
     let original_post = sqlx::query_as!(
         Post,
-        "SELECT id, folder, slug, title, description, img, markdown, timestamp FROM posts WHERE id = ? OR slug = ?",
+        "SELECT id, folder, slug, title, description, img, markdown, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ? OR slug = ?",
         slug_or_id,
         slug_or_id
     )
@@ -154,12 +156,14 @@ pub async fn edit_post(
     }
 
     sqlx::query!(
-        "UPDATE posts SET folder = ?, title = ?, slug = ?, description = ?, img = ?, markdown = ? WHERE id = ?",
+        "UPDATE posts SET folder = ?, title = ?, slug = ?, description = ?, img = ?, points = ?, featured = ?, markdown = ? WHERE id = ?",
         post.folder,
         post.title,
         slug,
         post.description,
         post.img,
+        post.points,
+        post.featured,
         post.markdown,
         original_post.id
     )
@@ -176,7 +180,7 @@ pub async fn edit_post(
 
     sqlx::query_as!(
         PostSummary,
-        "SELECT id, folder, slug, title, description, img, timestamp FROM posts WHERE id = ?",
+        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ?",
         original_post.id
     )
     .fetch_one(&state.db)

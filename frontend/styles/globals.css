@@ -735,12 +735,15 @@ blockquote code {
   text-decoration: underline;
 }
 
+.round-shadow {
+  border-radius: 9999px;
+  box-shadow: 0 0 50px 0px #0a0a0a;
+}
+
 /* Forms */
 .form-control,
 .form-select {
   background-color: var(--background) !important;
-  /* border: 1px solid #404040; */
-  /* color: var(--foreground-light) !important; */
 }
 .form-control::placeholder {
   color: var(--background-lighter) !important;
@@ -799,25 +802,6 @@ option:checked {
   border: 1px solid var(--dark-gray);
   border-radius: 5px;
   background-color: #1e1e1e;
-}
-
-/* Specific classes */
-.center-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  text-align: -webkit-center;
-}
-
-#particles-js {
-  z-index: -1000;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--background);
 }
 
 .grecaptcha-badge {

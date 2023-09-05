@@ -1,4 +1,4 @@
-import PostContent from '@/components/PostContent'
+import { PostContent } from '@/components'
 import { BACKEND_API } from '@/config';
 import { useEffect, useRef, useState } from 'react'
 

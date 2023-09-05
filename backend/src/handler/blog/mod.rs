@@ -32,6 +32,9 @@ pub async fn preview(
         description: post.description,
         img: post.img,
         markdown: post.markdown,
+        points: post.points,
+        views: 0,
+        featured: post.featured,
         timestamp: Utc::now(),
     }))
 }

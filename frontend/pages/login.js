@@ -27,21 +27,21 @@ export default function Login() {
                 document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
                 document.location.href = router.query.next || "/blog";
             } else {
-                setAlert(<div class="alert alert-danger" role="alert">Incorrect password</div>);
+                setAlert(<div className="alert alert-danger" role="alert">Incorrect password</div>);
             }
         });
     }
 
     return <>
-        <div class="d-flex align-items-center justify-content-center">
-            <div class="boxed center">
+        <div className="d-flex align-items-center justify-content-center">
+            <div className="boxed center">
                 <h1>Admin login</h1>
                 <br />
                 {alert}
                 <form method="post" onSubmit={handleSubmit}>
-                    <input class="form-control" type="password" id="password" name="password" placeholder="Password..." />
+                    <input className="form-control" type="password" id="password" name="password" placeholder="Password..." />
                     <br />
-                    <input class="btn btn-secondary" type="submit" value="Submit" />
+                    <input className="btn btn-secondary" type="submit" value="Submit" />
                 </form>
             </div>
         </div>

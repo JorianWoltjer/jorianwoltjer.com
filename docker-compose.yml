@@ -24,6 +24,7 @@ services:
     environment:
       - DATABASE_URL=mysql://root@db:3306/website
       - FRONTEND=http://frontend
+      - PRODUCTION=true
       - PORT=80
     networks:
       - website

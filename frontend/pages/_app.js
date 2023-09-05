@@ -40,7 +40,7 @@ export default function App({ Component, pageProps }) {
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div className="container">
         <Link className="navbar-brand" href="/">
-          <Image src="/img/JW.png" alt="JW Logo" width={71} height={60} />
+          <Image src="/img/jw.png" alt="JW Logo" width={71} height={60} />
         </Link>
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
           aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

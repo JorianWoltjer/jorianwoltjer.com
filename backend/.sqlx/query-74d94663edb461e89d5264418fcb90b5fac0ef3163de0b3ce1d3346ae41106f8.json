@@ -1,6 +1,6 @@
 {
   "db_name": "MySQL",
-  "query": "SELECT id, folder, slug, title, description, img, timestamp FROM posts WHERE folder = ?",
+  "query": "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -65,6 +65,36 @@
       },
       {
         "ordinal": 6,
+        "name": "points",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "views",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "char_set": 63,
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "featured: bool",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL",
+          "char_set": 63,
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 9,
         "name": "timestamp",
         "type_info": {
           "type": "Timestamp",
@@ -84,8 +114,11 @@
       false,
       false,
       false,
+      false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "caf6d0b73d2f7f89f96cc61b8a105ba9022ff6281b2a61082c073a6e10dc119a"
+  "hash": "74d94663edb461e89d5264418fcb90b5fac0ef3163de0b3ce1d3346ae41106f8"
 }

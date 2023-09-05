@@ -1,4 +1,4 @@
-import PostForm from "@/components/PostForm";
+import { PostForm } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config"
 
 export default function EditPost({ content, all_folders }) {

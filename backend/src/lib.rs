@@ -35,6 +35,13 @@ pub async fn build_slug(
     Ok(format!("{parent_slug}/{}", slugify(title)))
 }
 
+pub fn is_production() -> bool {
+    env::var("PRODUCTION")
+        .unwrap_or(String::from("false"))
+        .parse()
+        .unwrap()
+}
+
 #[derive(Serialize)]
 #[serde(tag = "type")]
 pub enum Slug {

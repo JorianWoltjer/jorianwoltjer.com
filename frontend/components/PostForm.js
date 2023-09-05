@@ -10,7 +10,9 @@ export default function PostForm({ content, all_folders, handleSubmit }) {
     const [img, setImg] = useState(content.img || "");
     const [folder, setFolder] = useState(parseInt(content.folder));
     const [markdown, setMarkdown] = useState(content.markdown || "");
-    content = { title, description, img, folder, markdown };
+    const [points, setPoints] = useState(content.points || 0);
+    const [featured, setFeatured] = useState(content.featured || false);
+    content = { title, description, img, folder, markdown, points, featured };
 
     const [previewWindow, setPreviewWindow] = useState(null);
 
@@ -66,6 +68,15 @@ export default function PostForm({ content, all_folders, handleSubmit }) {
         </div>
         <PostItem {...content} />
         <MarkdownEditor markdown={markdown} onChange={setMarkdown} />
+        <br />
+        <div className="input-group mb-3 w-25">
+            <span className="input-group-text">Points</span>
+            <input className="form-control" name="points" type="number" value={points} onChange={e => setPoints(parseInt(e.target.value) || 0)} />
+        </div>
+        <div className="form-check form-switch">
+            <label className="form-check-label" htmlFor="featured">Featured</label>
+            <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked)} />
+        </div>
         <br />
         <div className="float-end">
             <button className="btn btn-primary" type="submit"

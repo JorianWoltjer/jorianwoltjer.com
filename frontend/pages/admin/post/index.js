@@ -1,4 +1,4 @@
-import PostForm from "@/components/PostForm";
+import { PostForm } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config";
 import { useRouter } from 'next/router'
 

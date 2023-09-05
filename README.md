@@ -35,6 +35,7 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 * Search using websockets
 * Add all fields to post/folder
+* Hidden posts using serversideprops
 * Make a development mode using ENV variables for backend, which will enable CORS and disable auth
 * Error pages (404, 500, etc.)
 * Add other static pages

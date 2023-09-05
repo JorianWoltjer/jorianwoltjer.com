@@ -1,4 +1,4 @@
-import FolderForm from "@/components/FolderForm";
+import { FolderForm } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config";
 import { useRouter } from 'next/router'
 

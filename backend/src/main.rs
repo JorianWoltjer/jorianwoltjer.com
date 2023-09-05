@@ -1,15 +1,13 @@
 use std::{env, net::SocketAddr};
 
 use axum::{
-    http::HeaderValue,
     routing::{get, post, put},
     Router,
 };
 use axum_sessions::{async_session::MemoryStore, SessionLayer};
-use backend::{handler::*, AppState};
+use backend::{handler::*, is_production, AppState};
 use rand::Rng;
 
-use reqwest::Method;
 use sqlx::mysql::MySqlPoolOptions;
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -46,7 +44,7 @@ async fn main() {
         .init();
 
     // Router setup
-    let app = Router::new()
+    let mut app = Router::new()
         .merge(
             Router::new() // Public
                 .route("/health", get(health_check))
@@ -74,18 +72,21 @@ async fn main() {
         )
         .with_state(AppState { db })
         .layer(
-            // for local development
-            CorsLayer::new()
-                .allow_methods(vec![Method::GET, Method::POST, Method::PUT])
-                .allow_headers(Any)
-                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
-        )
-        .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
                 .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
         )
         .layer(session_layer);
+
+    if !is_production() {
+        println!("WARNING: Running in development mode, disabling security features.");
+        app = app.layer(
+            CorsLayer::new()
+                .allow_methods(Any)
+                .allow_headers(Any)
+                .allow_origin(Any),
+        );
+    }
 
     println!("Listening on :{port}...");
     axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())

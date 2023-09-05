@@ -9,6 +9,12 @@ pub struct Login {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+pub struct Tag {
+    pub name: String,
+    pub color: String,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Post {
     pub id: i32,
     pub folder: i32,
@@ -17,7 +23,11 @@ pub struct Post {
     pub description: String,
     pub img: String,
     pub markdown: String,
+    pub points: i32,
+    pub views: i32,
+    pub featured: bool,
     pub timestamp: DateTime<Utc>,
+    pub tags: Vec<Tag>,
 }
 #[derive(Deserialize, Serialize)]
 pub struct PostSummary {
@@ -27,7 +37,11 @@ pub struct PostSummary {
     pub title: String,
     pub description: String,
     pub img: String,
+    pub points: i32,
+    pub views: i32,
+    pub featured: bool,
     pub timestamp: DateTime<Utc>,
+    pub tags: Vec<Tag>,
 }
 #[derive(Deserialize, Serialize)]
 pub struct CreatePost {
@@ -35,7 +49,10 @@ pub struct CreatePost {
     pub title: String,
     pub description: String,
     pub img: String,
+    pub points: i32,
+    pub featured: bool,
     pub markdown: String,
+    pub tags: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -72,7 +89,7 @@ impl FolderContents {
 
         let contents_posts = sqlx::query_as!(
             PostSummary,
-            "SELECT id, folder, slug, title, description, img, timestamp FROM posts WHERE folder = ?",
+            "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE folder = ?",
             folder.id
         )
         .fetch_all(&state.db)
