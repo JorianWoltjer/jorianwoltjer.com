@@ -72,6 +72,16 @@ h6 {
   font-weight: 500;
 }
 
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+  color: revert;
+  font-family: var(--font-header);
+}
+
 h1:not(.breadcrumb-title) {
   /* my-4 */
   margin-top: 1.5rem;
@@ -133,6 +143,7 @@ blockquote {
   border-radius: 4px;
   line-height: 1.6;
   position: relative;
+  font-size: 90%;
   background: var(--background-light);
 }
 blockquote p,
@@ -427,6 +438,12 @@ p.c-button svg {
   filter: brightness(1.2);
 }
 
+/* Fix next/image */
+.card-img-top,
+.card-img-top img {
+  position: static !important;
+}
+
 .card-horizontal .col-sm-9 {
   padding-left: 0;
 }
@@ -445,7 +462,7 @@ p.c-button svg {
 
 /* Blog navigation */
 .tags {
-  font-family: var(--font-main);
+  font-family: var(--font-light);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -493,6 +510,9 @@ p.c-button svg {
 .tag-add:hover {
   background-color: var(--background-light);
 }
+.tag-add:focus {
+  width: calc(15ch + 1.5rem);
+}
 .tag-add::-webkit-calendar-picker-indicator {
   display: none !important;
 }
@@ -503,6 +523,8 @@ p.c-button svg {
   transform: translate(0.3rem, 0.1rem);
   color: var(--background-light);
   opacity: 60%;
+  padding: 0.3rem;
+  margin: -0.3rem;
   transition: 0.25s ease;
 }
 .tag-delete:hover {
@@ -679,6 +701,9 @@ svg.text-icon {
 }
 blockquote code {
   background-color: var(--background) !important;
+}
+code {
+  color: var(--foreground-light);
 }
 
 .post-content img {

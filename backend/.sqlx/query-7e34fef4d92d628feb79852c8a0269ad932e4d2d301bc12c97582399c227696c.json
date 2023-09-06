@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE folders SET slug=$1 || substring(slug, POSITION($2 IN slug)+length($2)) WHERE POSITION($3 IN slug) = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7e34fef4d92d628feb79852c8a0269ad932e4d2d301bc12c97582399c227696c"
+}

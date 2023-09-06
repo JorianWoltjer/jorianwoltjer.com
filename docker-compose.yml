@@ -22,7 +22,7 @@ services:
     container_name: jw-backend
     hostname: backend
     environment:
-      - DATABASE_URL=mysql://root@db:3306/website
+      - DATABASE_URL=postgresql://postgres:postgres@db
       - FRONTEND=http://frontend
       - PRODUCTION=true
       - PORT=80
@@ -30,17 +30,16 @@ services:
       - website
 
   db:
-    image: mysql
+    image: postgres:latest
     container_name: jw-db
     hostname: db
     restart: always
     environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-      - MYSQL_DATABASE=website
+      - POSTGRES_PASSWORD=postgres
     networks:
       - website
     volumes:
-      - mysql:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
 
   nginx:
     image: nginx:latest
@@ -56,4 +55,4 @@ services:
 networks:
   website:
 volumes:
-  mysql:
+  postgres-data:

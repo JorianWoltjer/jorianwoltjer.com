@@ -25,12 +25,28 @@ impl IntoResponse for PostResponse {
     }
 }
 
+async fn get_post_summary(id: i32, state: &AppState) -> Result<PostSummary, sqlx::Error> {
+    sqlx::query_as!(
+        PostSummary,
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
+            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
+            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE p.id = $1
+            GROUP BY p.id"#,
+        id
+    )
+    .fetch_one(&state.db)
+    .await
+}
+
 pub async fn get_posts(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<PostSummary>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts"
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
+            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p
+            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id
+            GROUP BY p.id"#
     )
     .fetch_all(&state.db)
     .await
@@ -44,8 +60,10 @@ pub async fn get_post(
 ) -> Result<PostResponse, StatusCode> {
     if let Ok(post) = sqlx::query_as!(
         Post,
-        "SELECT id, folder, slug, title, description, img, markdown, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ? OR slug = ?",
-        slug_or_id,
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, timestamp, 
+            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
+            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE p.id::varchar = $1 OR slug = $1
+            GROUP BY p.id"#,
         slug_or_id
     )
     .fetch_one(&state.db)
@@ -53,7 +71,7 @@ pub async fn get_post(
         Ok(PostResponse::Post(Json(post)))
     } else {
         sqlx::query!(
-            "SELECT p.slug FROM posts p JOIN post_redirects pr ON p.id = pr.post_id WHERE pr.slug = ?",
+            "SELECT p.slug FROM posts p JOIN post_redirects pr ON p.id = pr.post_id WHERE pr.slug = $1",
             slug_or_id
         )
         .fetch_one(&state.db)
@@ -71,8 +89,9 @@ pub async fn create_post(
         .await
         .map_err(internal_error)?;
 
-    sqlx::query!(
-        "INSERT INTO posts (folder, title, slug, description, img, points, featured, markdown) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    let id = sqlx::query!(
+        "INSERT INTO posts (folder, title, slug, description, img, points, featured, markdown) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id",
         post.folder,
         post.title,
         slug,
@@ -82,10 +101,22 @@ pub async fn create_post(
         post.featured,
         post.markdown
     )
+    .fetch_one(&state.db)
+    .await
+    .map_err(internal_error)?
+    .id;
+
+    let tag_ids = post.tags.iter().map(|tag| tag.id).collect::<Vec<_>>();
+    sqlx::query!(
+        "INSERT INTO post_tags (post_id, tag_id) SELECT $1, id FROM tags WHERE id = ANY($2)",
+        id,
+        &tag_ids
+    )
     .execute(&state.db)
     .await
     .map_err(internal_error)?;
 
+    // Everything has changed now, revalidate NextJS
     RevalidationRequest {
         slugs: vec![Slug::Post { slug: slug.clone() }],
     }
@@ -93,15 +124,10 @@ pub async fn create_post(
     .await
     .map_err(internal_error)?;
 
-    sqlx::query_as!(
-        PostSummary,
-        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE slug = ?",
-        slug
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
+    get_post_summary(id, &state)
+        .await
+        .map_err(internal_error)
+        .map(Json)
 }
 
 pub async fn edit_post(
@@ -113,10 +139,8 @@ pub async fn edit_post(
         .await
         .map_err(internal_error)?;
 
-    let original_post = sqlx::query_as!(
-        Post,
-        "SELECT id, folder, slug, title, description, img, markdown, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ? OR slug = ?",
-        slug_or_id,
+    let original_post = sqlx::query!(
+        "SELECT id, slug FROM posts WHERE id::varchar = $1 OR slug = $1",
         slug_or_id
     )
     .fetch_one(&state.db)
@@ -133,7 +157,7 @@ pub async fn edit_post(
     if original_post.slug != slug {
         // Add old to redirects table
         sqlx::query!(
-            "INSERT IGNORE INTO post_redirects (slug, post_id) VALUES (?, ?)",
+            "INSERT INTO post_redirects (slug, post_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
             original_post.slug,
             original_post.id
         )
@@ -142,7 +166,7 @@ pub async fn edit_post(
         .map_err(internal_error)?;
 
         let post_revalidations = sqlx::query!(
-            "SELECT slug FROM post_redirects WHERE post_id = ?",
+            "SELECT slug FROM post_redirects WHERE post_id = $1",
             original_post.id
         )
         .fetch_all(&state.db)
@@ -156,7 +180,7 @@ pub async fn edit_post(
     }
 
     sqlx::query!(
-        "UPDATE posts SET folder = ?, title = ?, slug = ?, description = ?, img = ?, points = ?, featured = ?, markdown = ? WHERE id = ?",
+        "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, markdown = $8 WHERE id = $9",
         post.folder,
         post.title,
         slug,
@@ -171,6 +195,21 @@ pub async fn edit_post(
     .await
     .map_err(internal_error)?;
 
+    sqlx::query!("DELETE FROM post_tags WHERE post_id = $1", original_post.id)
+        .execute(&state.db)
+        .await
+        .map_err(internal_error)?;
+    let tag_ids = post.tags.iter().map(|tag| tag.id).collect::<Vec<_>>();
+    sqlx::query!(
+        "INSERT INTO post_tags (post_id, tag_id) SELECT $1, id FROM tags WHERE id = ANY($2)",
+        original_post.id,
+        &tag_ids
+    )
+    .execute(&state.db)
+    .await
+    .map_err(internal_error)?;
+
+    // Everything has changed now, revalidate NextJS
     RevalidationRequest {
         slugs: revalidations,
     }
@@ -178,13 +217,33 @@ pub async fn edit_post(
     .await
     .map_err(internal_error)?;
 
+    get_post_summary(original_post.id, &state)
+        .await
+        .map_err(internal_error)
+        .map(Json)
+}
+
+pub async fn get_featured_posts(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<PostSummary>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE id = ?",
-        original_post.id
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
+            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p
+            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id
+            WHERE featured = true
+            GROUP BY p.id"#
     )
-    .fetch_one(&state.db)
+    .fetch_all(&state.db)
     .await
     .map_err(internal_error)
     .map(Json)
+}
+
+pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<Tag>>, StatusCode> {
+    sqlx::query_as!(Tag, "SELECT * FROM tags")
+        .fetch_all(&state.db)
+        .await
+        .map_err(internal_error)
+        .map(Json)
 }

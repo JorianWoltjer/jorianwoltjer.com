@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_redirects (slug, post_id) SELECT slug, id FROM posts WHERE POSITION($1 IN slug) = 1 ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "313049725b96818adc682485da4414100b06725e5b3156b459b708cd8c315d81"
+}

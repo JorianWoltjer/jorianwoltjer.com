@@ -9,6 +9,7 @@ use reqwest::StatusCode;
 use crate::build_slug;
 use crate::schema::CreatePost;
 use crate::schema::Post;
+use crate::schema::Tag;
 use crate::AppState;
 
 pub use self::folder::*;
@@ -24,6 +25,12 @@ pub async fn preview(
         .await
         .map_err(internal_error)?;
 
+    let tag_ids = post.tags.iter().map(|tag| tag.id).collect::<Vec<_>>();
+    let tags = sqlx::query_as!(Tag, "SELECT * FROM tags WHERE id = ANY($1)", &tag_ids)
+        .fetch_all(&state.db)
+        .await
+        .map_err(internal_error)?;
+
     Ok(Json(Post {
         id: 0,
         folder: post.folder,
@@ -36,5 +43,6 @@ pub async fn preview(
         views: 0,
         featured: post.featured,
         timestamp: Utc::now(),
+        tags,
     }))
 }

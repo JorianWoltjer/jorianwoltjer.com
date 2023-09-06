@@ -1,20 +1,28 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { MarkdownEditor } from "@/components";
 import { useState } from "react";
-import { faFolder } from "@fortawesome/free-solid-svg-icons";
+import { faFolder, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { PostItem } from ".";
+import { BACKEND_API } from "@/config";
+import useSWR from "swr";
 
-export default function PostForm({ content, all_folders, handleSubmit }) {
-    const [title, setTitle] = useState(content.title || "");
-    const [description, setDescription] = useState(content.description || "");
-    const [img, setImg] = useState(content.img || "");
-    const [folder, setFolder] = useState(parseInt(content.folder));
-    const [markdown, setMarkdown] = useState(content.markdown || "");
-    const [points, setPoints] = useState(content.points || 0);
-    const [featured, setFeatured] = useState(content.featured || false);
-    content = { title, description, img, folder, markdown, points, featured };
+const fetcher = (url) => fetch(url).then((res) => res.json());
+const noSubmit = (e) => e.key == "Enter" ? e.preventDefault() : null;
+
+export default function PostForm({ content: content_, all_folders, handleSubmit }) {
+    const [title, setTitle] = useState(content_.title || "");
+    const [description, setDescription] = useState(content_.description || "");
+    const [img, setImg] = useState(content_.img || "");
+    const [folder, setFolder] = useState(parseInt(content_.folder));
+    const [markdown, setMarkdown] = useState(content_.markdown || "");
+    const [points, setPoints] = useState(content_.points || 0);
+    const [featured, setFeatured] = useState(content_.featured || false);
+    const [hidden, setHidden] = useState(content_.hidden || false);  // TODO: not yet used
+    const [tags, setTags] = useState(content_.tags || []);
+    const content = { title, description, img, folder, markdown, points, featured, tags };
 
     const [previewWindow, setPreviewWindow] = useState(null);
+    const { data: all_tags } = useSWR(BACKEND_API + "/blog/tags", fetcher);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -51,12 +59,14 @@ export default function PostForm({ content, all_folders, handleSubmit }) {
 
     return <form onSubmit={onSubmit} id="form">
         <div className="form-floating mb-3">
-            <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
+            <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title}
+                onChange={e => setTitle(e.target.value)} onKeyDown={noSubmit} />
             <label htmlFor="title">Title</label>
         </div>
         <textarea className="form-control" name="description" placeholder="Description..." value={description} onChange={e => setDescription(e.target.value)} />
         <br />
-        <input className="form-control" name="img" type="text" placeholder="Image URL..." value={img} onChange={e => setImg(e.target.value)} />
+        <input className="form-control" name="img" type="text" placeholder="Image URL..." value={img}
+            onChange={e => setImg(e.target.value)} onKeyDown={noSubmit} />
         <br />
         <div className="input-group mb-3">
             <label className="input-group-text" htmlFor="folder"><FontAwesomeIcon icon={faFolder} /></label>
@@ -66,16 +76,50 @@ export default function PostForm({ content, all_folders, handleSubmit }) {
                 ))}
             </select>
         </div>
-        <PostItem {...content} />
+        <PostItem {...content} timestamp={content_.timestamp} views={content_.views} />
         <MarkdownEditor markdown={markdown} onChange={setMarkdown} />
         <br />
         <div className="input-group mb-3 w-25">
             <span className="input-group-text">Points</span>
-            <input className="form-control" name="points" type="number" value={points} onChange={e => setPoints(parseInt(e.target.value) || 0)} />
+            <input className="form-control" name="points" type="number" value={points}
+                onChange={e => setPoints(parseInt(e.target.value) || 0)} onKeyDown={noSubmit} />
+        </div>
+        <div className="tags">
+            <label htmlFor="tag-add" className="pe-2">Tags:</label>
+            {tags.map(tag =>
+                <span key={tag.name} className={`tag tag-${tag.color}`}>{tag.name}
+                    <FontAwesomeIcon icon={faTimesCircle} className="tag-delete"
+                        onClick={() => setTags(tags.filter(t => t.name != tag.name))} />
+                </span>
+            )}
+            <input className="tag tag-add" id="tag-add" list="all-tags" placeholder="+ Add" autoComplete="off" onChange={e => {
+                let new_tag = all_tags.find(tag => tag.name == e.target.value);
+                if (new_tag === undefined || tags.find(tag => tag.id == new_tag.id)) return;
+                setTags([...tags, new_tag]);
+                e.target.value = "";
+            }} onKeyDown={e => {
+                if (e.key == "Enter") {
+                    e.preventDefault();
+                    let new_tag = all_tags.find(tag => tag.name.toLowerCase().startsWith(e.target.value.toLowerCase()));
+                    if (new_tag === undefined || tags.find(tag => tag.id == new_tag.id)) return;
+                    setTags([...tags, new_tag]);
+                    e.target.value = "";
+                }
+            }} />
+            <datalist id="all-tags"
+                onChange={e => setTags(Array.from(e.target.selectedOptions, option => all_tags.find(tag => tag.name == option.value)))}>
+                {all_tags?.filter(tag => !tags.find(t => t.id == tag.id)).map(tag => (
+                    <option key={tag.name} value={tag.name} />
+                ))}
+            </datalist>
         </div>
         <div className="form-check form-switch">
             <label className="form-check-label" htmlFor="featured">Featured</label>
-            <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked)} />
+            <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked) || setHidden(false)} />
+        </div>
+        <div className="form-check form-switch">
+            <label className="form-check-label" htmlFor="hidden">Hidden</label>
+            <input className="form-check-input" id="hidden" type="checkbox" name="hidden" checked={hidden} onChange={e => setHidden(e.target.checked) || setFeatured(false)} />
         </div>
         <br />
         <div className="float-end">

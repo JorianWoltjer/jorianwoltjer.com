@@ -42,8 +42,7 @@ pub async fn get_folder(
 ) -> Result<FolderResponse, StatusCode> {
     let folder = sqlx::query_as!(
                 Folder,
-                "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = ? OR slug = ?",
-                slug_or_id,
+                "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id::varchar = $1 OR slug = $1",
                 slug_or_id
             )
             .fetch_one(&state.db)
@@ -58,7 +57,7 @@ pub async fn get_folder(
         ))
     } else {
         sqlx::query!(
-            "SELECT f.slug FROM folders f JOIN folder_redirects fr ON f.id = fr.folder_id WHERE fr.slug = ?",
+            "SELECT f.slug FROM folders f JOIN folder_redirects fr ON f.id = fr.folder_id WHERE fr.slug = $1",
             slug_or_id
         )
         .fetch_one(&state.db)
@@ -80,7 +79,7 @@ pub async fn create_folder(
     };
 
     sqlx::query!(
-        "INSERT INTO folders (title, slug, description, img, parent) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO folders (title, slug, description, img, parent) VALUES ($1, $2, $3, $4, $5)",
         folder.title,
         slug,
         folder.description,
@@ -100,7 +99,7 @@ pub async fn create_folder(
 
     sqlx::query_as!(
         Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE slug = ?",
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE slug = $1",
         slug
     )
     .fetch_one(&state.db)
@@ -116,8 +115,7 @@ pub async fn edit_folder(
 ) -> Result<Json<Folder>, StatusCode> {
     let original_folder = sqlx::query_as!(
         Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = ? OR slug = ?",
-        slug_or_id,
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id::varchar = $1 OR slug = $1",
         slug_or_id
     )
     .fetch_one(&state.db)
@@ -144,34 +142,35 @@ pub async fn edit_folder(
 
         // Add backups to redirects table
         sqlx::query!(
-            "INSERT IGNORE INTO post_redirects (slug, post_id) SELECT slug, id FROM posts WHERE locate(?, slug) = 1",
+            "INSERT INTO post_redirects (slug, post_id) SELECT slug, id FROM posts WHERE POSITION($1 IN slug) = 1 ON CONFLICT DO NOTHING",
             old_slug_full
         ).execute(&state.db).await.map_err(internal_error)?;
 
         sqlx::query!(
-            "INSERT IGNORE INTO folder_redirects (slug, folder_id) SELECT slug, id FROM folders WHERE locate(?, slug) = 1 OR slug = ?",
+            "INSERT INTO folder_redirects (slug, folder_id) SELECT slug, id FROM folders WHERE POSITION($1 IN slug) = 1 OR slug = $2 ON CONFLICT DO NOTHING",
             old_slug_full,
             original_folder.slug
         ).execute(&state.db).await.map_err(internal_error)?;
 
         // Replace slug in posts and folders
         sqlx::query!(
-            "UPDATE posts SET slug=CONCAT(?, substring(slug, locate(?, slug)+length(?))) WHERE locate(?, slug) = 1",
+            "UPDATE posts SET slug=$1 || substring(slug, POSITION($2 IN slug)+length($2)) WHERE POSITION($3 IN slug) = 1",
             slug,
-            original_folder.slug, original_folder.slug,
+            original_folder.slug,
             old_slug_full
         ).execute(&state.db).await.map_err(internal_error)?;
 
         sqlx::query!(
-            "UPDATE folders SET slug=CONCAT(?, substring(slug, locate(?, slug)+length(?))) WHERE locate(?, slug) = 1",
+            "UPDATE folders SET slug=$1 || substring(slug, POSITION($2 IN slug)+length($2)) WHERE POSITION($3 IN slug) = 1",
             slug,
-            original_folder.slug, original_folder.slug,
+            original_folder.slug,
             old_slug_full
         ).execute(&state.db).await.map_err(internal_error)?;
 
         // Create revalidations for NextJS of what was updated
-        let post_revalidations = sqlx::query!("SELECT slug FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE locate(?, slug) = 1) UNION SELECT slug FROM posts WHERE locate(?, slug) = 1", 
-            new_slug_full, new_slug_full
+        // let post_revalidations = sqlx::query!("SELECT slug FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM posts WHERE POSITION($1 IN slug) = 1",
+        let post_revalidations = sqlx::query!(r#"SELECT slug as "slug!" FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM posts WHERE POSITION($1 IN slug) = 1"#, 
+            new_slug_full
         ).fetch_all(&state.db).await.map_err(internal_error)?;
         revalidations.extend(
             post_revalidations
@@ -179,8 +178,8 @@ pub async fn edit_folder(
                 .map(|record| Slug::Post { slug: record.slug }),
         );
 
-        let folder_revalidations = sqlx::query!("SELECT slug FROM folder_redirects WHERE folder_id IN (SELECT id FROM folders WHERE locate(?, slug) = 1) UNION SELECT slug FROM folders WHERE locate(?, slug) = 1", 
-            new_slug_full, new_slug_full
+        let folder_revalidations = sqlx::query!(r#"SELECT slug as "slug!" FROM folder_redirects WHERE folder_id IN (SELECT id FROM folders WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM folders WHERE POSITION($1 IN slug) = 1"#, 
+            new_slug_full
         ).fetch_all(&state.db).await.map_err(internal_error)?;
         revalidations.extend(
             folder_revalidations
@@ -191,7 +190,7 @@ pub async fn edit_folder(
 
     // Update the post
     sqlx::query!(
-        "UPDATE folders SET title = ?, slug = ?, description = ?, img = ?, parent = ? WHERE id = ?",
+        "UPDATE folders SET title = $1, slug = $2, description = $3, img = $4, parent = $5 WHERE id = $6",
         folder.title,
         slug,
         folder.description,
@@ -212,7 +211,7 @@ pub async fn edit_folder(
 
     sqlx::query_as!(
         Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = ?",
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = $1",
         original_folder.id
     )
     .fetch_one(&state.db)

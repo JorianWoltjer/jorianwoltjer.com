@@ -3,12 +3,12 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
 
-export default function FolderForm({ content, all_folders, handleSubmit }) {
-    const [title, setTitle] = useState(content.title || "");
-    const [description, setDescription] = useState(content.description || "");
-    const [img, setImg] = useState(content.img || "");
-    const [parent, setParent] = useState(parseInt(content.parent) || null);
-    content = { title, description, img, parent };
+export default function FolderForm({ content: content_, all_folders, handleSubmit }) {
+    const [title, setTitle] = useState(content_.title || "");
+    const [description, setDescription] = useState(content_.description || "");
+    const [img, setImg] = useState(content_.img || "");
+    const [parent, setParent] = useState(parseInt(content_.parent) || null);
+    const content = { title, description, img, parent };
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -33,7 +33,9 @@ export default function FolderForm({ content, all_folders, handleSubmit }) {
                 ))}
             </select>
         </div>
-        {(parent === null) ? <div className="mb-4"><CategoryFolder {...content} /></div> : <FolderItem {...content} />}
+        {(parent === null) ?
+            <div className="mb-4"><CategoryFolder {...content} /></div> :
+            <FolderItem {...content} timestamp={content_.timestamp} views={content_.views} />}
         <div className="float-end">
             <input className="btn btn-primary" type="submit" value="Save"
                 onClick={e => confirm("Are you sure you want to save?") ? null : e.preventDefault()} />

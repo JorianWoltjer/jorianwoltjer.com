@@ -1,10 +1,13 @@
 export { default as Breadcrumbs } from './Breadcrumbs';
 export { default as CategoryFolder } from './CategoryFolder';
+export { default as ErrorPage } from './ErrorPage';
 export { default as FolderForm } from './FolderForm';
 export { default as FolderItem } from './FolderItem';
 export { default as Loading } from './Loading';
 export { default as MarkdownEditor } from './MarkdownEditor';
-import { default as ParticlesBG } from './ParticlesBG';
+export { default as ParticlesBG } from './ParticlesBG';
 export { default as PostContent } from './PostContent';
 export { default as PostForm } from './PostForm';
 export { default as PostItem } from './PostItem';
+export { default as RelativeTime } from './RelativeTime';
+export { default as Tags } from './Tags';

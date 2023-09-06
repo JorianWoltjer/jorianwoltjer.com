@@ -8,8 +8,9 @@ pub struct Login {
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, sqlx::Type)]
 pub struct Tag {
+    pub id: i32,
     pub name: String,
     pub color: String,
 }
@@ -52,13 +53,13 @@ pub struct CreatePost {
     pub points: i32,
     pub featured: bool,
     pub markdown: String,
-    pub tags: Vec<String>,
+    pub tags: Vec<Tag>, // Only ids are used
 }
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Folder {
     pub id: i32,
-    pub parent: Option<i32>,
+    pub parent: Option<i32>, // May be None for root folder
     pub slug: String,
     pub title: String,
     pub description: String,
@@ -81,7 +82,7 @@ impl FolderContents {
     pub async fn from_folder(folder: Folder, state: &AppState) -> Result<Self, sqlx::Error> {
         let contents_folders = sqlx::query_as!(
             Folder,
-            "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = ?",
+            "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = $1",
             folder.id
         )
         .fetch_all(&state.db)
@@ -89,7 +90,10 @@ impl FolderContents {
 
         let contents_posts = sqlx::query_as!(
             PostSummary,
-            "SELECT id, folder, slug, title, description, img, points, views, featured as `featured: bool`, timestamp FROM posts WHERE folder = ?",
+            r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
+                array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
+                JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE folder = $1
+                GROUP BY p.id"#,
             folder.id
         )
         .fetch_all(&state.db)

@@ -1,21 +1,16 @@
 {
-  "db_name": "MySQL",
+  "db_name": "PostgreSQL",
   "query": "SELECT password_hash FROM users",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "password_hash",
-        "type_info": {
-          "type": "VarString",
-          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
-          "char_set": 224,
-          "max_size": 1020
-        }
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Left": []
     },
     "nullable": [
       false

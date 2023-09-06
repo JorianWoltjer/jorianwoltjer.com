@@ -19,7 +19,7 @@ export default function EditPost({ content, all_folders }) {
 
     return (
         <>
-            <h1>Edit</h1>
+            <h1>Edit Post</h1>
             <PostForm content={content} all_folders={all_folders} handleSubmit={handleSubmit} />
         </>
     )

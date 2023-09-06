@@ -23,7 +23,7 @@ export default function CreateFolder({ all_folders }) {
 
     return (
         <>
-            <h1>Create</h1>
+            <h1>Create Folder</h1>
             <FolderForm content={{ parent }} all_folders={all_folders} handleSubmit={handleSubmit} />
         </>
     )

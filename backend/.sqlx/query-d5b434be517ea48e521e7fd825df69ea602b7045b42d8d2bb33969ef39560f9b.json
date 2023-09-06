@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO folder_redirects (slug, folder_id) SELECT slug, id FROM folders WHERE POSITION($1 IN slug) = 1 OR slug = $2 ON CONFLICT DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d5b434be517ea48e521e7fd825df69ea602b7045b42d8d2bb33969ef39560f9b"
+}

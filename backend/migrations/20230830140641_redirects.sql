@@ -1,13 +1,11 @@
 CREATE TABLE IF NOT EXISTS post_redirects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     slug VARCHAR(255) NOT NULL UNIQUE,
-    post_id INT NOT NULL,
-    FOREIGN KEY (post_id) REFERENCES posts(id)
+    post_id INT NOT NULL REFERENCES posts(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS folder_redirects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     slug VARCHAR(255) NOT NULL UNIQUE,
-    folder_id INT NOT NULL,
-    FOREIGN KEY (folder_id) REFERENCES folders(id)
-)
+    folder_id INT NOT NULL REFERENCES folders(id) ON DELETE CASCADE
+);

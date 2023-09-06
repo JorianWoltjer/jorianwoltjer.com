@@ -1,5 +1,4 @@
-import { Breadcrumbs } from '@/components'
-import timeAgo from '@/utils/timeAgo';
+import { Breadcrumbs, RelativeTime, Tags } from '@/components'
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css'
 import { useEffect } from 'react';
@@ -16,13 +15,12 @@ export default function PostContent({ content, admin_interface, admin_components
 
     return <>
         <Breadcrumbs slug={content.slug} title={content.title} />
-        <p class="tags">
-            {content.points ? `+${content.points}` : ''}
-        </p>
-        <div class="text-muted">
-            {timeAgo(content.timestamp)} - <span class="darken"><FontAwesomeIcon icon={faEye} /> {content.views} views</span>
+        <br />
+        <Tags tags={content.tags} points={content.points} />
+        <div className="text-muted">
+            {<RelativeTime timestamp={content.timestamp} />} - <span className="darken"><FontAwesomeIcon icon={faEye} /> {content.views || 0} views</span>
         </div>
-        {admin_interface && admin_components}
+        {admin_interface && <div className="mb-4">{admin_components}</div>}
         <div className='post-content' dangerouslySetInnerHTML={{ __html: content.html }} />
     </>
 }

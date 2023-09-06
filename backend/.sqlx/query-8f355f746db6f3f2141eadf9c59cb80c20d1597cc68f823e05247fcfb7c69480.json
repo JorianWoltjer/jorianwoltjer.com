@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET slug=$1 || substring(slug, POSITION($2 IN slug)+length($2)) WHERE POSITION($3 IN slug) = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f355f746db6f3f2141eadf9c59cb80c20d1597cc68f823e05247fcfb7c69480"
+}

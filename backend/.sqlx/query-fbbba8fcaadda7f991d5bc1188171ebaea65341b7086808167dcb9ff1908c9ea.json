@@ -1,81 +1,46 @@
 {
-  "db_name": "MySQL",
+  "db_name": "PostgreSQL",
   "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "id",
-        "type_info": {
-          "type": "Long",
-          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
-          "char_set": 63,
-          "max_size": 11
-        }
+        "type_info": "Int4"
       },
       {
         "ordinal": 1,
         "name": "parent",
-        "type_info": {
-          "type": "Long",
-          "flags": "MULTIPLE_KEY",
-          "char_set": 63,
-          "max_size": 11
-        }
+        "type_info": "Int4"
       },
       {
         "ordinal": 2,
         "name": "slug",
-        "type_info": {
-          "type": "VarString",
-          "flags": "NOT_NULL | UNIQUE_KEY | MULTIPLE_KEY | NO_DEFAULT_VALUE",
-          "char_set": 224,
-          "max_size": 1020
-        }
+        "type_info": "Varchar"
       },
       {
         "ordinal": 3,
         "name": "title",
-        "type_info": {
-          "type": "VarString",
-          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
-          "char_set": 224,
-          "max_size": 1020
-        }
+        "type_info": "Varchar"
       },
       {
         "ordinal": 4,
         "name": "description",
-        "type_info": {
-          "type": "Blob",
-          "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
-          "char_set": 224,
-          "max_size": 262140
-        }
+        "type_info": "Text"
       },
       {
         "ordinal": 5,
         "name": "img",
-        "type_info": {
-          "type": "VarString",
-          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
-          "char_set": 224,
-          "max_size": 1020
-        }
+        "type_info": "Varchar"
       },
       {
         "ordinal": 6,
         "name": "timestamp",
-        "type_info": {
-          "type": "Timestamp",
-          "flags": "NOT_NULL | BINARY | TIMESTAMP",
-          "char_set": 63,
-          "max_size": 19
-        }
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Left": []
     },
     "nullable": [
       false,

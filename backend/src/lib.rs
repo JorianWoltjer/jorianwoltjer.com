@@ -2,7 +2,7 @@ use std::env;
 
 use regex::Regex;
 use serde::Serialize;
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 
 pub mod handler;
 pub mod render;
@@ -10,7 +10,7 @@ pub mod schema;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: MySqlPool,
+    pub db: PgPool,
 }
 
 pub fn slugify(title: &str) -> String {
@@ -27,7 +27,7 @@ pub async fn build_slug(
     title: &str,
     state: &AppState,
 ) -> Result<String, sqlx::Error> {
-    let parent_slug = sqlx::query!("SELECT slug FROM folders WHERE id = ?", folder_id)
+    let parent_slug = sqlx::query!("SELECT slug FROM folders WHERE id = $1", folder_id)
         .fetch_one(&state.db)
         .await?
         .slug;

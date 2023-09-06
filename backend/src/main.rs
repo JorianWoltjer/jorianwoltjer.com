@@ -8,7 +8,7 @@ use axum_sessions::{async_session::MemoryStore, SessionLayer};
 use backend::{handler::*, is_production, AppState};
 use rand::Rng;
 
-use sqlx::mysql::MySqlPoolOptions;
+use sqlx::postgres::PgPoolOptions;
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::{self, TraceLayer},
@@ -17,13 +17,15 @@ use tracing::Level;
 
 #[tokio::main]
 async fn main() {
+    dotenvy::dotenv().ok();
+
     println!("Starting server...");
     let port = env::var("PORT").unwrap_or(String::from("8000"));
-    let database_url =
-        env::var("DATABASE_URL").unwrap_or(String::from("mysql://root@127.0.0.1:3306/website"));
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     // Database setup
-    let db = MySqlPoolOptions::new()
+    let db = PgPoolOptions::new()
         .max_connections(50)
         .connect(&database_url)
         .await
@@ -53,7 +55,9 @@ async fn main() {
                 .route("/blog/posts", get(get_posts))
                 .route("/blog/folders", get(get_folders))
                 .route("/blog/post/*slug_or_id", get(get_post))
-                .route("/blog/folder/*slug_or_id", get(get_folder)),
+                .route("/blog/folder/*slug_or_id", get(get_folder))
+                .route("/blog/featured", get(get_featured_posts))
+                .route("/blog/tags", get(get_tags)),
         )
         .merge(
             Router::new() // Localhost only

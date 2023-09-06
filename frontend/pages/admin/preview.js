@@ -6,9 +6,11 @@ export default function Preview() {
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
     const [html, setHtml] = useState("");
+    const [points, setPoints] = useState(0);
+    const [tags, setTags] = useState([]);
     const hljsRef = useRef();
 
-    const content = { title, slug, html };
+    const content = { title, slug, html, points, tags };
 
     useEffect(() => {
         // Add postmessage listener
@@ -28,6 +30,8 @@ export default function Preview() {
             const content = await res.json()
             setTitle(content.title);
             setSlug(content.slug);
+            setPoints(content.points);
+            setTags(content.tags);
 
             const res_html = await fetch(BACKEND_API + "/render", {
                 method: "POST",
