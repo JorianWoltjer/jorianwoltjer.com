@@ -60,7 +60,7 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     return <form onSubmit={onSubmit} id="form">
         <div className="form-floating mb-3">
             <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title}
-                onChange={e => setTitle(e.target.value)} onKeyDown={noSubmit} />
+                onChange={e => setTitle(e.target.value)} onKeyDown={noSubmit} autoFocus />
             <label htmlFor="title">Title</label>
         </div>
         <textarea className="form-control" name="description" placeholder="Description..." value={description} onChange={e => setDescription(e.target.value)} />

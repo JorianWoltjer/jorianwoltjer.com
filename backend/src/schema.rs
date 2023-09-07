@@ -8,6 +8,16 @@ pub struct Login {
     pub password: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct Project {
+    pub id: i32,
+    pub title: String,
+    pub text: String,
+    pub img: String,
+    pub href: String,
+    pub category: String,
+}
+
 #[derive(Deserialize, Serialize, Clone, sqlx::Type)]
 pub struct Tag {
     pub id: i32,

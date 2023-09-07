@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, \n            array_agg((t.id, t.name, t.color)) as \"tags!: Vec<Tag>\" FROM posts p \n            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE p.id = $1\n            GROUP BY p.id",
+  "query": "SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE p.id::varchar = $1 OR slug = $1",
   "describe": {
     "columns": [
       {
@@ -35,33 +35,38 @@
       },
       {
         "ordinal": 6,
+        "name": "markdown",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
         "name": "points",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "views",
         "type_info": "Int4"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "featured",
         "type_info": "Bool"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "timestamp",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "tags!: Vec<Tag>",
         "type_info": "RecordArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4"
+        "Text"
       ]
     },
     "nullable": [
@@ -75,8 +80,9 @@
       false,
       false,
       false,
+      false,
       null
     ]
   },
-  "hash": "aed08219b4569b71d3e1ebdad075759f542b4e7839e5d8e1a0036c830924861b"
+  "hash": "85f7178be799c5960848cd55902a91afd2498fdf42ec8b74d7212d119d18157b"
 }

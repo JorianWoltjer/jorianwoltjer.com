@@ -588,6 +588,18 @@ svg.text-icon {
   margin-right: 10px;
 }
 
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  animation: spin 1.3s linear infinite;
+}
+
 .breadcrumb {
   background: none;
   padding-left: 0;
@@ -852,8 +864,10 @@ option:checked {
   width: 35ch;
 }
 
-span.highlight {
+mark {
   background-color: rgb(255 255 255 / 15%);
+  color: inherit;
+  padding: inherit;
 }
 
 ::target-text {

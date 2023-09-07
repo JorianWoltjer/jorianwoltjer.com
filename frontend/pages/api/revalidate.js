@@ -30,6 +30,9 @@ export default async function handler(req, res) {
       } else {  // Root folder
         revalidations.add(`/blog`)
       }
+    } else if (type === "Custom") {
+      // For manually revalidating pages: [{"type": "Custom", "slug": "/projects"}]
+      revalidations.add(slug)
     }
   }
 

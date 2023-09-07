@@ -9,5 +9,6 @@ export { default as ParticlesBG } from './ParticlesBG';
 export { default as PostContent } from './PostContent';
 export { default as PostForm } from './PostForm';
 export { default as PostItem } from './PostItem';
+export { default as Project } from './Project';
 export { default as RelativeTime } from './RelativeTime';
 export { default as Tags } from './Tags';

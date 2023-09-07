@@ -17,7 +17,8 @@ export default function FolderForm({ content: content_, all_folders, handleSubmi
 
     return <form onSubmit={onSubmit} id="form">
         <div className="form-floating mb-3">
-            <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
+            <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title}
+                onChange={e => setTitle(e.target.value)} autoFocus />
             <label htmlFor="title">Title</label>
         </div>
         <textarea className="form-control" name="description" placeholder="Description..." value={description} onChange={e => setDescription(e.target.value)} />

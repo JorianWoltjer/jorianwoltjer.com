@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, \n            array_agg((t.id, t.name, t.color)) as \"tags!: Vec<Tag>\" FROM posts p\n            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id\n            WHERE featured = true\n            GROUP BY p.id",
+  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE featured = true",
   "describe": {
     "columns": [
       {
@@ -76,5 +76,5 @@
       null
     ]
   },
-  "hash": "1e50f9f1a15b3f7ebfd48db389cafc8dad6090c0fb0ba777b7b3a1cae061f25a"
+  "hash": "192025163c2655e9a722e16ab12e37ec911c6d93d02a6685032810afae5e77b1"
 }

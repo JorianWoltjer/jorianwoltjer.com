@@ -1,5 +1,8 @@
 use axum::{
-    extract::{Path, State},
+    extract::{
+        ws::{Message, WebSocket},
+        Path, State, WebSocketUpgrade,
+    },
     http::StatusCode,
     response::{IntoResponse, Redirect, Response},
     Json,
@@ -29,9 +32,8 @@ async fn get_post_summary(id: i32, state: &AppState) -> Result<PostSummary, sqlx
     sqlx::query_as!(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
-            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
-            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE p.id = $1
-            GROUP BY p.id"#,
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE p.id = $1"#,
         id
     )
     .fetch_one(&state.db)
@@ -44,9 +46,8 @@ pub async fn get_posts(
     sqlx::query_as!(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
-            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p
-            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id
-            GROUP BY p.id"#
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p"#
     )
     .fetch_all(&state.db)
     .await
@@ -61,9 +62,8 @@ pub async fn get_post(
     if let Ok(post) = sqlx::query_as!(
         Post,
         r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, timestamp, 
-            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
-            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE p.id::varchar = $1 OR slug = $1
-            GROUP BY p.id"#,
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE p.id::varchar = $1 OR slug = $1"#,
         slug_or_id
     )
     .fetch_one(&state.db)
@@ -229,10 +229,8 @@ pub async fn get_featured_posts(
     sqlx::query_as!(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
-            array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p
-            JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id
-            WHERE featured = true
-            GROUP BY p.id"#
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE featured = true"#
     )
     .fetch_all(&state.db)
     .await
@@ -246,4 +244,46 @@ pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<Tag>>, S
         .await
         .map_err(internal_error)
         .map(Json)
+}
+
+pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl IntoResponse {
+    println!("WebSocket: Incoming connection");
+    ws.on_upgrade(|socket| async move {
+        println!("WebSocket: handling...");
+        handle_ws_search(socket, state).await
+    })
+}
+
+/// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.
+pub async fn handle_ws_search(mut socket: WebSocket, State(state): State<AppState>) {
+    while let Some(Ok(msg)) = socket.recv().await {
+        println!("WebSocket: Received {msg:?}");
+        if let Message::Text(query) = msg {
+            println!("           -> Query: {}", query);
+            match sqlx::query_as!(Post, r#"SELECT p.id, folder, slug, 
+                    ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
+                    ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
+                    ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
+                    img, points, views, featured, timestamp, 
+                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+                    FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)
+                    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
+                query)
+                .fetch_all(&state.db)
+                .await {
+                    Ok(results) => {
+                        println!("           -> Sending {} results", results.len());
+                        let response = Message::Text(serde_json::to_string(&results).unwrap());
+            
+                        if socket.send(response).await.is_err() {
+                            break; // Connection closed
+                        };
+                    },
+                    Err(e) => {
+                        eprintln!("WebSocket Error: {}", e);
+                        break;
+                    }
+                }
+        }
+    }
 }

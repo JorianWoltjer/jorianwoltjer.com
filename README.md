@@ -34,12 +34,11 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 ## TODO
 
-* Search using websockets
-* Add all fields to post/folder
-* Hidden posts using serversideprops
-* RSS + sitemap
-* Image upload
 * Add other static pages
+* Metadata in all pages
+* Hidden posts using serversideprops
+* Image upload
+* Highlight current page in navbar
 
 * Security:
   * Set DB password

@@ -7,6 +7,7 @@ use chrono::Utc;
 use reqwest::StatusCode;
 
 use crate::build_slug;
+use crate::render::markdown_to_html;
 use crate::schema::CreatePost;
 use crate::schema::Post;
 use crate::schema::Tag;
@@ -45,4 +46,9 @@ pub async fn preview(
         timestamp: Utc::now(),
         tags,
     }))
+}
+
+/// Render Markdown to HTML (returns text/plain)
+pub async fn render(markdown: String) -> Result<String, String> {
+    markdown_to_html(&markdown)
 }

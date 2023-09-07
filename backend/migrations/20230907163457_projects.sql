@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS projects (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    text TEXT NOT NULL,
+    img VARCHAR(255) NOT NULL,
+    href VARCHAR(255) NOT NULL,
+    category VARCHAR(255) NOT NULL
+)

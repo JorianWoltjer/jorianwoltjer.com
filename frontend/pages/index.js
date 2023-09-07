@@ -20,7 +20,7 @@ export default function Home() {
         }
       `}</style>
       <ParticlesBG />
-      <div className="center">
+      <div className="center vw-100">
         <h1>Hello, I am <code>Jorian Woltjer</code></h1>
         <Image className="round-shadow" src="/img/logo.png" width="250" height="250" alt="Logo" />
         <h2 className="my-4">Welcome to my website!</h2>

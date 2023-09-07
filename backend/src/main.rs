@@ -52,16 +52,18 @@ async fn main() {
                 .route("/health", get(health_check))
                 .route("/login", post(login))
                 .route("/logout", get(logout))
+                .route("/projects", get(get_projects))
                 .route("/blog/posts", get(get_posts))
                 .route("/blog/folders", get(get_folders))
                 .route("/blog/post/*slug_or_id", get(get_post))
                 .route("/blog/folder/*slug_or_id", get(get_folder))
                 .route("/blog/featured", get(get_featured_posts))
-                .route("/blog/tags", get(get_tags)),
+                .route("/blog/tags", get(get_tags))
+                .route("/blog/search", get(ws_search)),
         )
         .merge(
             Router::new() // Localhost only
-                .route("/render", post(render))
+                .route("/blog/render", post(render))
                 .route_layer(axum::middleware::from_fn(localhost_only_middleware)),
         )
         .merge(
