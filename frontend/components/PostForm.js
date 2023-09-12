@@ -6,8 +6,8 @@ import { PostItem } from ".";
 import { BACKEND_API } from "@/config";
 import useSWR from "swr";
 
-const fetcher = (url) => fetch(url).then((res) => res.json());
-const noSubmit = (e) => e.key == "Enter" ? e.preventDefault() : null;
+const fetcher = url => fetch(url).then(res => res.json());
+const noSubmit = e => e.key == "Enter" ? e.preventDefault() : null;
 
 export default function PostForm({ content: content_, all_folders, handleSubmit }) {
     const [title, setTitle] = useState(content_.title || "");
@@ -17,9 +17,9 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     const [markdown, setMarkdown] = useState(content_.markdown || "");
     const [points, setPoints] = useState(content_.points || 0);
     const [featured, setFeatured] = useState(content_.featured || false);
-    const [hidden, setHidden] = useState(content_.hidden || false);  // TODO: not yet used
+    const [hidden, setHidden] = useState(content_.hidden || false);
     const [tags, setTags] = useState(content_.tags || []);
-    const content = { title, description, img, folder, markdown, points, featured, tags };
+    const content = { title, description, img, folder, markdown, points, featured, hidden, tags };
 
     const [previewWindow, setPreviewWindow] = useState(null);
     const { data: all_tags } = useSWR(BACKEND_API + "/blog/tags", fetcher);

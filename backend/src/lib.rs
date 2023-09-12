@@ -11,10 +11,11 @@ pub mod schema;
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
+    pub hmac_key: [u8; 32],
 }
 
 pub fn slugify(title: &str) -> String {
-    Regex::new(r"((&.*?;)|[^\w])+")
+    Regex::new(r"((<.*?>)|(&.*?;)|[^\w])+")
         .unwrap()
         .replace_all(title, "-")
         .trim_matches('-')

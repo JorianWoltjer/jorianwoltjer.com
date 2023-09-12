@@ -33,6 +33,17 @@ async fn main() {
 
     sqlx::migrate!().run(&db).await.unwrap();
 
+    let hmac_key = hex::decode(
+        sqlx::query!("SELECT value FROM secrets WHERE name = 'hmac_key'")
+            .fetch_one(&db)
+            .await
+            .expect("Failed to retrieve hmac_key")
+            .value,
+    )
+    .expect("Invalid hex string for hmac_key")
+    .try_into()
+    .expect("Should be 32 bytes (64 hex chars)");
+
     // Session setup
     let mut secret = [0; 64];
     rand::thread_rng().fill(&mut secret);
@@ -53,30 +64,33 @@ async fn main() {
                 .route("/login", post(login))
                 .route("/logout", get(logout))
                 .route("/projects", get(get_projects))
-                .route("/blog/posts", get(get_posts))
                 .route("/blog/folders", get(get_folders))
-                .route("/blog/post/*slug_or_id", get(get_post))
+                .route("/blog/posts", get(get_posts))
                 .route("/blog/folder/*slug_or_id", get(get_folder))
+                .route("/blog/post/*slug_or_id", get(get_post))
+                .route("/blog/hidden/*slug_or_id", get(get_hidden_post))
+                .route("/blog/add_view", post(add_view))
                 .route("/blog/featured", get(get_featured_posts))
                 .route("/blog/tags", get(get_tags))
                 .route("/blog/search", get(ws_search)),
         )
         .merge(
-            Router::new() // Localhost only
-                .route("/blog/render", post(render))
+            Router::new() // Localhost-only
+                .route("/render", post(render))
                 .route_layer(axum::middleware::from_fn(localhost_only_middleware)),
         )
         .merge(
             Router::new() // Authentication required
                 .route("/login", get(login_check))
                 .route("/blog/preview", post(preview))
-                .route("/blog/posts", post(create_post))
                 .route("/blog/folders", post(create_folder))
-                .route("/blog/post/*slug_or_id", put(edit_post))
+                .route("/blog/posts", post(create_post))
+                .route("/blog/hidden", get(get_hidden_posts))
                 .route("/blog/folder/*slug_or_id", put(edit_folder))
+                .route("/blog/post/*slug_or_id", put(edit_post))
                 .route_layer(axum::middleware::from_fn(auth_required_middleware)),
         )
-        .with_state(AppState { db })
+        .with_state(AppState { db, hmac_key })
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))

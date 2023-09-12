@@ -12,11 +12,11 @@ pub async fn login(
     State(state): State<AppState>,
     Json(login): Json<Login>,
 ) -> Result<StatusCode, StatusCode> {
-    let password_hash = sqlx::query!("SELECT password_hash FROM users")
+    let password_hash = sqlx::query!("SELECT value FROM secrets WHERE name = 'password_hash'")
         .fetch_one(&state.db)
         .await
         .map_err(internal_error)?
-        .password_hash;
+        .value;
 
     match bcrypt::verify(login.password, &password_hash) {
         Ok(true) => {

@@ -9,7 +9,7 @@ export default function Breadcrumbs({ slug, title }) {
 
                 return <li key={i} className='breadcrumb-item'><Link href={`/blog/f/${path}`}>{part}</Link></li>
             })}
-            <li className='breadcrumb-item active' aria-current='page'><h1 className='breadcrumb-title'>{title}</h1></li>
+            <li className='breadcrumb-item active' aria-current='page'><h1 id="title" className='breadcrumb-title'>{title}</h1></li>
         </ol>
     </nav>
 }

@@ -1,11 +1,15 @@
 import { ErrorPage } from "@/components";
-import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export default function NotFound() {
-    const router = useRouter();
+    const [path, setPath] = useState("");
+
+    useEffect(() => {
+        setPath(window.location.pathname);
+    }, []);
 
     return <ErrorPage
         title="Not Found"
-        message={<>The path <code suppressHydrationWarning>{router.asPath}</code> does not exist. </>}
+        message={<>The path <code suppressHydrationWarning>{path}</code> does not exist. </>}
     />
 }

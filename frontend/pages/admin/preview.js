@@ -1,16 +1,16 @@
-import { PostContent } from '@/components'
+import { Metadata, PostContent } from '@/components'
 import { BACKEND_API } from '@/config';
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Preview() {
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
     const [html, setHtml] = useState("");
     const [points, setPoints] = useState(0);
+    const [hidden, setHidden] = useState(false);
     const [tags, setTags] = useState([]);
-    const hljsRef = useRef();
 
-    const content = { title, slug, html, points, tags };
+    const content = { title, slug, html, points, hidden, tags };
 
     useEffect(() => {
         // Add postmessage listener
@@ -31,6 +31,7 @@ export default function Preview() {
             setTitle(content.title);
             setSlug(content.slug);
             setPoints(content.points);
+            setHidden(content.hidden);
             setTags(content.tags);
 
             const res_html = await fetch(BACKEND_API + "/render", {
@@ -38,12 +39,12 @@ export default function Preview() {
                 body: content.markdown
             })
             setHtml(await res_html.text());
-            hljsRef.current.highlightAll();
         });
         window.opener.postMessage({ type: "preview", ready: true }, window.location.origin);
     }, []);
 
     return <>
-        <PostContent content={content} hljsRef={hljsRef} />
+        <Metadata title={"Preview: " + title} />
+        <PostContent content={content} />
     </>
 }

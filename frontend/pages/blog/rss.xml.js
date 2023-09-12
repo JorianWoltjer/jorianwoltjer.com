@@ -32,6 +32,7 @@ function generateRSS(posts) {
 
 function RSSFeed() { }
 
+// Server-Side because NextJS can't return XML content-type :(, good thing Cloudflare caches it
 export async function getServerSideProps({ res }) {
     const res_posts = await fetch(BACKEND + "/blog/posts");
     const posts = await res_posts.json();

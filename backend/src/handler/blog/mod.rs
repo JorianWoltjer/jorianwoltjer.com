@@ -43,6 +43,7 @@ pub async fn preview(
         points: post.points,
         views: 0,
         featured: post.featured,
+        hidden: post.hidden,
         timestamp: Utc::now(),
         tags,
     }))

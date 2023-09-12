@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!\" FROM posts WHERE slug = $1 UNION \n                    SELECT post_id FROM post_redirects WHERE slug = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3a2ebf4b305f008d4c46ce298ba50fa0c05fa36d774a5f466d12cdb04da44744"
+}

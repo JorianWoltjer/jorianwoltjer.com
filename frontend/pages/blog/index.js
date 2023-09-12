@@ -1,14 +1,15 @@
-import { CategoryFolder, Tags, RelativeTime } from "@/components";
+import { CategoryFolder, Tags, RelativeTime, Metadata } from "@/components";
 import { BACKEND } from "@/config";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-regular-svg-icons";
 import Image from "next/image";
-import { faMagnifyingGlass, faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlass, faSquareRss, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
-export default function Blog({ root_folders, featured_posts }) {
+export default function Blog({ root_folders, featured_posts, admin_interface }) {
   return (
     <>
+      <Metadata title="Blog" description="A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations." />
       <h1 className="my-4">Blog</h1>
       <div className="mb-4">
         {root_folders.map(folder => {
@@ -21,6 +22,7 @@ export default function Blog({ root_folders, featured_posts }) {
       <Link className='big-button big-button-wide' href='/blog/search'><FontAwesomeIcon icon={faMagnifyingGlass} />Search</Link>
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a className='big-button big-button-icon' href='/blog/rss.xml' title="RSS Feed"><FontAwesomeIcon icon={faSquareRss} /></a>
+      {admin_interface && <Link href="/admin/hidden" className="big-button"><FontAwesomeIcon icon={faEyeSlash} />Hidden posts</Link>}
 
       <h3 className="my-4">Recent posts</h3>
       <div className="row row-cols-1 row-cols-md-2 g-4">

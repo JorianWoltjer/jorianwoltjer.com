@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::AppState;
+use crate::{handler::sign, AppState};
 
 #[derive(Deserialize)]
 pub struct Login {
@@ -37,6 +37,7 @@ pub struct Post {
     pub points: i32,
     pub views: i32,
     pub featured: bool,
+    pub hidden: bool,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
@@ -51,8 +52,49 @@ pub struct PostSummary {
     pub points: i32,
     pub views: i32,
     pub featured: bool,
+    pub hidden: bool,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
+}
+#[derive(Deserialize, Serialize)]
+pub struct HiddenPost {
+    pub id: i32,
+    pub folder: i32,
+    pub slug: String,
+    pub title: String,
+    pub description: String,
+    pub img: String,
+    pub points: i32,
+    pub views: i32,
+    pub featured: bool,
+    pub hidden: bool,
+    pub timestamp: DateTime<Utc>,
+    pub tags: Vec<Tag>,
+    pub signature: Option<String>,
+}
+impl HiddenPost {
+    pub fn from_summary(post: PostSummary, state: &AppState) -> Self {
+        // let signature = sign(post.id, &state.hmac_key);
+        let signature = match post.hidden {
+            true => Some(sign(post.id, &state.hmac_key)),
+            false => None,
+        };
+        Self {
+            id: post.id,
+            folder: post.folder,
+            slug: post.slug,
+            title: post.title,
+            description: post.description,
+            img: post.img,
+            points: post.points,
+            views: post.views,
+            featured: post.featured,
+            hidden: post.hidden,
+            timestamp: post.timestamp,
+            tags: post.tags,
+            signature,
+        }
+    }
 }
 #[derive(Deserialize, Serialize)]
 pub struct CreatePost {
@@ -62,6 +104,7 @@ pub struct CreatePost {
     pub img: String,
     pub points: i32,
     pub featured: bool,
+    pub hidden: bool,
     pub markdown: String,
     pub tags: Vec<Tag>, // Only ids are used
 }
@@ -100,10 +143,9 @@ impl FolderContents {
 
         let contents_posts = sqlx::query_as!(
             PostSummary,
-            r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, timestamp, 
-                array_agg((t.id, t.name, t.color)) as "tags!: Vec<Tag>" FROM posts p 
-                JOIN post_tags pt on pt.post_id = p.id JOIN tags t ON t.id = pt.tag_id WHERE folder = $1
-                GROUP BY p.id"#,
+            r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+                array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+                FROM posts p WHERE NOT hidden AND (folder = $1)"#,
             folder.id
         )
         .fetch_all(&state.db)

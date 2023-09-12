@@ -1,10 +1,15 @@
-import { ParticlesBG } from "@/components";
+import { Metadata, ParticlesBG } from "@/components";
+import Head from "next/head";
 import Image from "next/image";
 
 
 export default function Home() {
   return (
     <>
+      <Metadata title="Home" description="I'm a Dutch programmer and Ethical Hacker. Interested in cybersecurity and this site contains a blog about it with writeups, tools, and stories. Together with information about me and my projects." />
+      <Head>
+        <link rel="me" href="https://infosec.exchange/@jorian" />
+      </Head>
       <style jsx>{`
         h1, h2 {
           font-family: var(--font-main);

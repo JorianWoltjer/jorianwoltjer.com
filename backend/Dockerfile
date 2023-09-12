@@ -1,5 +1,8 @@
 FROM rust:latest
 
+# Create rust user
+RUN groupadd rust && useradd -g rust rust
+
 WORKDIR /app
 
 COPY . .
@@ -9,5 +12,7 @@ ENV SQLX_OFFLINE true
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/app/target \
     cargo install --path .
+
+USER rust
 
 CMD ["backend"]

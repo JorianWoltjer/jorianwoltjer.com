@@ -168,7 +168,6 @@ pub async fn edit_folder(
         ).execute(&state.db).await.map_err(internal_error)?;
 
         // Create revalidations for NextJS of what was updated
-        // let post_revalidations = sqlx::query!("SELECT slug FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM posts WHERE POSITION($1 IN slug) = 1",
         let post_revalidations = sqlx::query!(r#"SELECT slug as "slug!" FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM posts WHERE POSITION($1 IN slug) = 1"#, 
             new_slug_full
         ).fetch_all(&state.db).await.map_err(internal_error)?;

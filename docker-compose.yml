@@ -13,7 +13,6 @@ services:
       - PORT=80
     networks:
       - website
-    # TODO: add img volume here or at backend for image uploads
 
   backend:
     build: ./backend
@@ -23,7 +22,7 @@ services:
     container_name: jw-backend
     hostname: backend
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db
+      - DATABASE_URL=postgresql://backend:${BACKEND_PASSWORD:-backend}@db/postgres
       - FRONTEND=http://frontend
       - PRODUCTION=true
       - PORT=80
@@ -36,11 +35,13 @@ services:
     hostname: db
     restart: always
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - BACKEND_PASSWORD=${BACKEND_PASSWORD:-backend}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     networks:
       - website
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
 
   nginx:
     image: nginx:latest
@@ -51,11 +52,10 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./config/nginx-default.conf:/etc/nginx/conf.d/default.conf
       - ./img:/usr/share/nginx/html/img
 
 networks:
   website:
 volumes:
   postgres-data:
-  img:

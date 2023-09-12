@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export function timeDifference(current, timestamp) {
   const msDiff = current - timestamp;
@@ -38,9 +38,13 @@ export function timeDifference(current, timestamp) {
 export default function RelativeTime({ timestamp, interval_ms = 1000 }) {
   const [now, setNow] = useState(Date.now())
 
+  useEffect(() => {
+    if (timestamp === undefined) return;
+    setTimeout(() => setNow(Date.now()), interval_ms)
+  }, [timestamp, interval_ms])
+
   if (timestamp === undefined) return "0 seconds ago"
 
-  setTimeout(() => setNow(Date.now()), interval_ms)
   return <span suppressHydrationWarning>
     {timeDifference(now, new Date(timestamp))}
   </span>

@@ -1,5 +1,5 @@
 import { BACKEND, SLUG_REGEX } from "@/config";
-import { Breadcrumbs, FolderItem, PostItem, Loading } from "@/components";
+import { Breadcrumbs, FolderItem, PostItem, Loading, Metadata } from "@/components";
 import { useEffect } from "react";
 import { useRouter } from 'next/router'
 import Link from 'next/link';
@@ -23,6 +23,7 @@ export default function Folder({ content, admin_interface }) {
     }
 
     return <>
+        <Metadata title={"Folder: " + content.title} description={content.description} img={content.img} />
         <Breadcrumbs slug={content.slug} title={content.title} />
         <hr />
         <p className="lead">{content.description}</p>

@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "folder",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "img",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "markdown",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "views",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "featured",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "hidden",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "tags!: Vec<Tag>",
+        "type_info": "RecordArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "7f6e0e6e2467a2e7a26e8b3a8242893000ce340c46462fe9363ea76db9d2e4c2"
+}

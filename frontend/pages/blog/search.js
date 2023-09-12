@@ -1,4 +1,4 @@
-import { PostItem } from '@/components'
+import { Metadata, PostItem } from '@/components'
 import { getWebsocketURL } from '@/config'
 import { faCheck, faRotate, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -43,7 +43,7 @@ export default function Search() {
             console.log(e)
             const results = JSON.parse(e.data).map((post) => {
                 if (post.markdown.includes('{~')) {  // Replace description with highlighted content
-                    post.description = '… ' + post.markdown.replace('...', '…') + ' …'
+                    post.description = '… ' + post.markdown.replaceAll('...', '…') + ' …'
                 }
                 post.title = replaceHighlights(post.title)
                 post.description = replaceHighlights(post.description, post.slug)
@@ -67,6 +67,7 @@ export default function Search() {
     }, [])
 
     return <>
+        <Metadata title="Blog - Search" description="Search through all posts on my blog about cybersecurity. Quickly find what you're looking for by typing in the search bar." />
         <h1>Search</h1>
         <div className="input-group mb-3">
             <span className="input-group-text" style={{ width: "50px" }}>{loading}</span>

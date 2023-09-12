@@ -1,4 +1,3 @@
-/* TODO: go through this code to find what can go away */
 /* Colors */
 :root {
   --red: #e84118;
@@ -695,10 +694,23 @@ svg.text-icon {
   text-decoration: none;
   float: right;
   color: var(--foreground);
+  padding: 0.4em;
+  margin: -0.4em;
   cursor: pointer;
 }
 .code-block .copy:hover {
   color: var(--foreground-light);
+}
+
+.copy-tooltip {
+  border: 1px solid var(--dark-gray);
+  background-color: var(--background-light) !important;
+  font-family: var(--font-main);
+  padding: 0.4em 0.8em !important;
+  transition: 0.25s ease !important;
+}
+.hide {
+  opacity: 0 !important;
 }
 
 .code-block pre {
@@ -709,7 +721,8 @@ svg.text-icon {
   padding: 2px 4px;
   color: white;
   background-color: var(--background-light);
-  border-radius: 3px;
+  font-size: 0.9em;
+  border-radius: 0.5ch;
 }
 blockquote code {
   background-color: var(--background) !important;
@@ -719,22 +732,22 @@ code {
 }
 
 .post-content img {
+  position: relative !important;
   display: block;
   max-width: calc(min(50ch, 100%));
   max-height: 500px;
-  cursor: pointer;
   border: 2px solid var(--background-light);
   border-radius: 10px;
 }
 
-.post-content a:not(.copy, .no-style),
-.post-content a:not(.copy, .no-style) * {
+.post-content a:not(.copy, .no-style, .header-link),
+.post-content a:not(.copy, .no-style, .header-link) * {
   color: var(--main-color-light) !important;
   text-decoration: none;
   transition: 0.2s ease;
 }
-.post-content a:not(.copy, .no-style):hover,
-.post-content a:not(.copy, .no-style):hover * {
+.post-content a:not(.copy, .no-style, .header-link):hover,
+.post-content a:not(.copy, .no-style, .header-link):hover * {
   color: var(--main-color-light) !important;
   text-decoration: underline;
 }
@@ -902,4 +915,21 @@ a.no-style {
 a.no-style:hover {
   text-decoration: underline !important;
   color: var(--foreground-light) !important;
+}
+.header-link {
+  text-decoration: none !important;
+  color: inherit !important;
+  position: relative;
+}
+.header-link::before {
+  content: "#";
+  color: var(--foreground) !important;
+  opacity: 0;
+  position: absolute;
+  transform: translate(-0.5em, 0.1em);
+  transition: 0.25s ease;
+}
+.header-link:hover::before {
+  opacity: 100%;
+  transform: translate(-0.8em, 0.1em);
 }

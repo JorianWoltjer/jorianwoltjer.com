@@ -6,8 +6,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-# RUN npm run build
+# Allow node to create .next/ folder
+RUN chown node:node .
 
-# CMD ["npm", "run", "start"]
+USER node
+
 # Build is delayed to wait for backend to be running
 CMD ["sh", "-c", "npm run build && npm run start"]

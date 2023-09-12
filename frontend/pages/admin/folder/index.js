@@ -1,4 +1,4 @@
-import { FolderForm } from "@/components";
+import { FolderForm, Metadata } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config";
 import { useRouter } from 'next/router'
 
@@ -23,6 +23,7 @@ export default function CreateFolder({ all_folders }) {
 
     return (
         <>
+            <Metadata title="Create Folder" />
             <h1>Create Folder</h1>
             <FolderForm content={{ parent }} all_folders={all_folders} handleSubmit={handleSubmit} />
         </>

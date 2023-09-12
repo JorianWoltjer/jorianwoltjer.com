@@ -29,26 +29,10 @@ sqlx database drop && sqlx database create && sqlx migrate run
 ## Resources
 
 * http://www.craigwardman.com/Blogging/BlogEntry/ssg-isr-and-environment-variables-in-next-js-and-docker
-* https://github.com/launchbadge/realworld-axum-sqlx/tree/main
+* https://github.com/launchbadge/realworld-axum-sqlx
 * https://github.com/launchbadge/sqlx/issues/1014
 
 ## TODO
 
-* Add other static pages
-* Metadata in all pages
-* Hidden posts using serversideprops
-* Image upload
-* Highlight current page in navbar
-
-* Security:
-  * Set DB password
-  * disable CORS
-  * run all as www-data instead of root
-  * CSP
-
-* Add redirects to invalid pages using nginx
-  * `/blog/p` -> `/blog`, same for `f`
-  * `/blog/p/ctf/folder` (p instead of f) -> `/blog/f/ctf/folder` if not found on `/p`
-    * `/blog/f/ctf/wrong` -> 404
-
-* Have fun with [`__filename`](https://stackoverflow.com/a/3133313/10508498) to dynamically link footer Github to source code
+* check performence of text search with all posts
+* clear cloudflare cache on revalidation endpoint

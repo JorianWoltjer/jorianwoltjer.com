@@ -9,10 +9,11 @@ export default async function handler(req, res) {
   }
 
   const revalidations = new Set();
+  revalidations.add(`/blog`)  // For root folders and featured posts
 
   for (const request of req.body) {
     const { type, slug } = request;
-    if (!path || !type) {  // Require parameters
+    if (!path || !type) {  // Required parameters
       return res.status(400).json({ message: "Missing parameters" });
     }
     console.log("Revalidation request:", { type, slug })
@@ -25,11 +26,7 @@ export default async function handler(req, res) {
       revalidations.add(`/blog/f/${slug}`)
 
       const dirname = path.dirname(slug)
-      if (dirname !== ".") {
-        revalidations.add(`/blog/f/${dirname}`)
-      } else {  // Root folder
-        revalidations.add(`/blog`)
-      }
+      revalidations.add(`/blog/f/${dirname}`)
     } else if (type === "Custom") {
       // For manually revalidating pages: [{"type": "Custom", "slug": "/projects"}]
       revalidations.add(slug)
@@ -43,6 +40,7 @@ export default async function handler(req, res) {
       await res.revalidate(url)
     }
   } catch (err) {
+    console.timeEnd("Revalidation")
     console.error(err)
     return res.status(500).json({ message: err.message })
   }

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 async function unauthorized(req) {
     const url = new URL("/login", req.url);
-    url.searchParams.set("next", req.nextUrl.pathname);
+    url.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
 }
 
