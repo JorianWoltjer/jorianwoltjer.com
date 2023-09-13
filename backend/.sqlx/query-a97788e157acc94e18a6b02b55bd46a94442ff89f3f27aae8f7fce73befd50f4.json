@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET cached_views = views",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "a97788e157acc94e18a6b02b55bd46a94442ff89f3f27aae8f7fce73befd50f4"
+}

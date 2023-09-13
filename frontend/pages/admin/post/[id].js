@@ -1,5 +1,5 @@
 import { Metadata, PostForm } from "@/components";
-import { BACKEND, BACKEND_API } from "@/config"
+import { BACKEND, BACKEND_API } from "@/config";
 
 export default function EditPost({ content, all_folders }) {
     const handleSubmit = async (data) => {

@@ -1,8 +1,19 @@
 import { Metadata } from "@/components";
-import { faBook, faCalendarAlt, faChalkboard, faClock, faGraduationCap, faHome, faPoll } from "@fortawesome/free-solid-svg-icons";
 import { CButton } from "@/pages/contact";
+import { faBook, faCalendarAlt, faChalkboard, faClock, faGraduationCap, faHome, faPoll } from "@fortawesome/free-solid-svg-icons";
+import { useEffect } from "react";
 
 export default function SchoolWebsites() {
+    useEffect(() => {
+        // Keyboard shortcuts
+        document.addEventListener("keydown", (e) => {
+            const n = parseInt(e.key);
+            if (n >= 1 && n <= 7) {
+                document.getElementsByClassName("c-button")[n - 1].click();
+            }
+        });
+    });
+
     return <div className="center">
         <Metadata title="School Websites" description="A list of buttons that link to useful school websites for Hanzehogeschool Groningen. Mostly used by me and my friends to quickly get to the websites we use often." />
         <h1>School Websites</h1>

@@ -1,8 +1,8 @@
 import { RelativeTime } from '@/components'
-import Link from 'next/link'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFolderClosed } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function FolderItem({ title, description, img, slug, timestamp }) {
     const href = slug ? `/blog/f/${slug}` : "#"
@@ -12,7 +12,7 @@ export default function FolderItem({ title, description, img, slug, timestamp })
             <div className="col-sm-3">
                 <Link href={href}>
                     <div className="card-img-top h-100">
-                        <Image fill src={`/img/blog/${img || '../placeholder.png'}`} alt="Folder thumbnail" />
+                        <Image fill src={`http://nginx/img/blog/${img || '../placeholder.png'}`} alt="Folder thumbnail" />
                     </div>
                 </Link>
             </div>

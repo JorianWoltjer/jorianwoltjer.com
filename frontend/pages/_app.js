@@ -1,16 +1,16 @@
-import 'bootstrap/dist/css/bootstrap.css'
-import '@/styles/fonts.css'
-import '@/styles/globals.css'
-import '@/styles/react-medium-image-zoom.css'
 import { BACKEND_API } from "@/config";
-import { useEffect, useState } from "react";
+import 'bootstrap/dist/css/bootstrap.css';
+import '@/styles/fonts.css';
+import '@/styles/globals.css';
+import '@/styles/react-medium-image-zoom.css';
+import { config } from '@fortawesome/fontawesome-svg-core';
+import '@fortawesome/fontawesome-svg-core/styles.css';
 import Head from "next/head";
-import Link from "next/link";
 import Image from "next/image";
-import { config } from '@fortawesome/fontawesome-svg-core'
-import '@fortawesome/fontawesome-svg-core/styles.css'
-config.autoAddCss = false
+import Link from "next/link";
 import { useRouter } from 'next/router';
+import { useEffect, useRef, useState } from "react";
+config.autoAddCss = false
 
 function NavbarItem({ href, title }) {
   const router = useRouter();
@@ -37,6 +37,9 @@ function getJavascriptFile(path) {
 
 export default function App({ Component, pageProps }) {
   const [admin_interface, set_admin_interface] = useState(false);
+  const [navbarCollapsed, setNavbarCollapsed] = useState(false);
+  const [navbarTimeout, setNavbarTimeout] = useState(null);
+  const toggleNavbar = useRef(null);
 
   const router = useRouter();
   const executingFile = getJavascriptFile(router.pathname);
@@ -45,7 +48,46 @@ export default function App({ Component, pageProps }) {
     if (document.cookie.includes("admin_interface=true")) {
       set_admin_interface(true);
     }
-  }, [])
+
+    router.events.on('routeChangeComplete', () => {
+      toggleNavbar.current(false);
+    });
+
+    const _toggleNavbar = (force) => {
+      const navbar = document.getElementById("navbarNav");
+
+      if (force === navbarCollapsed) return;
+      const collapsed = force ?? !navbarCollapsed;
+      setNavbarCollapsed(collapsed);
+
+      clearTimeout(navbarTimeout);
+      if (collapsed) {  // Opening
+        navbar.classList.remove("collapse");
+        navbar.classList.add("collapsing");
+        navbar.style.height = "0"
+        navbar.style.height = navbar.scrollHeight + "px"
+
+        setNavbarTimeout(setTimeout(() => {
+          navbar.classList.add("collapse");
+          navbar.classList.remove("collapsing");
+          navbar.classList.add("show");
+          navbar.style.height = navbar.scrollHeight + "px"
+        }, 350));
+      } else {  // Closing
+        navbar.classList.remove("collapse");
+        navbar.classList.add("collapsing");
+        navbar.classList.remove("show");
+        navbar.style.height = "0";
+
+        setNavbarTimeout(setTimeout(() => {
+          navbar.classList.add("collapse");
+          navbar.classList.remove("collapsing");
+          navbar.style.height = ""
+        }, 350));
+      }
+    }
+    toggleNavbar.current = _toggleNavbar;
+  }, [navbarCollapsed, navbarTimeout, router.events])
 
   const logout = async (e) => {
     e.preventDefault();
@@ -69,11 +111,11 @@ export default function App({ Component, pageProps }) {
         <Link className="navbar-brand" href="/">
           <Image src="/img/jw.png" alt="JW Logo" width={71} height={60} />
         </Link>
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button className="custom-toggler navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" onClick={() => toggleNavbar.current()}>
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
+        <div className="navbar-collapse collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             {admin_interface &&
               <li className="nav-item">

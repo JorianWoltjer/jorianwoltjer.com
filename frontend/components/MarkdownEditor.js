@@ -1,5 +1,4 @@
-import Editor from '@monaco-editor/react';
-import { loader } from '@monaco-editor/react';
+import Editor, { loader } from '@monaco-editor/react';
 import Loading from './Loading';
 
 loader.config({

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders",
+  "query": "SELECT * FROM projects ORDER BY id",
   "describe": {
     "columns": [
       {
@@ -10,33 +10,28 @@
       },
       {
         "ordinal": 1,
-        "name": "parent",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 2,
-        "name": "slug",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 3,
         "name": "title",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 4,
-        "name": "description",
+        "ordinal": 2,
+        "name": "text",
         "type_info": "Text"
       },
       {
-        "ordinal": 5,
+        "ordinal": 3,
         "name": "img",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 6,
-        "name": "timestamp",
-        "type_info": "Timestamptz"
+        "ordinal": 4,
+        "name": "href",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "category",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -44,7 +39,6 @@
     },
     "nullable": [
       false,
-      true,
       false,
       false,
       false,
@@ -52,5 +46,5 @@
       false
     ]
   },
-  "hash": "fbbba8fcaadda7f991d5bc1188171ebaea65341b7086808167dcb9ff1908c9ea"
+  "hash": "13a127ef5a96b522e7a285276e3ef3d17b9dd3378ad482d70e471e3a5ec71c47"
 }

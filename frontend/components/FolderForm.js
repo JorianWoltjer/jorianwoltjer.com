@@ -1,7 +1,7 @@
-import { FolderItem, CategoryFolder } from "@/components";
-import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { CategoryFolder, FolderItem } from "@/components";
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
 
 export default function FolderForm({ content: content_, all_folders, handleSubmit }) {
     const [title, setTitle] = useState(content_.title || "");

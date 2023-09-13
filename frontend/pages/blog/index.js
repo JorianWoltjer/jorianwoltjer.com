@@ -1,9 +1,9 @@
-import { CategoryFolder, Tags, RelativeTime, Metadata } from "@/components";
+import { CategoryFolder, Metadata, RelativeTime, Tags } from "@/components";
 import { BACKEND } from "@/config";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-regular-svg-icons";
+import { faEyeSlash, faMagnifyingGlass, faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
-import { faMagnifyingGlass, faSquareRss, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
 export default function Blog({ root_folders, featured_posts, admin_interface }) {
@@ -11,7 +11,7 @@ export default function Blog({ root_folders, featured_posts, admin_interface }) 
     <>
       <Metadata title="Blog" description="A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations." />
       <h1 className="my-4">Blog</h1>
-      <div className="mb-4">
+      <div className="mb-3">
         {root_folders.map(folder => {
           if (folder.parent === null) {
             return <CategoryFolder key={folder.id} {...folder} />
@@ -28,7 +28,7 @@ export default function Blog({ root_folders, featured_posts, admin_interface }) 
       <div className="row row-cols-1 row-cols-md-2 g-4">
         {featured_posts.map(post => <div key={post.id} className="col">
           <div className="card h-100">
-            <a href={`/blog/p/${post.slug}`}><div className="card-img-top"><Image fill src={`/img/blog/${post.img || '../placeholder.png'}`} alt="Thumbnail" /></div></a>
+            <a href={`/blog/p/${post.slug}`}><div className="card-img-top"><Image fill src={`http://nginx/img/blog/${post.img || '../placeholder.png'}`} alt="Thumbnail" /></div></a>
             <div className="card-body">
               <Tags tags={post.tags} />
               <h4 className="card-title">

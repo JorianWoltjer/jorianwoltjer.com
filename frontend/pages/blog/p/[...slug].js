@@ -1,10 +1,10 @@
-import { BACKEND, BACKEND_API, SLUG_REGEX } from "@/config";
 import { Loading, Metadata, PostContent } from "@/components";
-import { useEffect } from "react";
-import { useRouter } from 'next/router'
-import Link from 'next/link';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BACKEND, BACKEND_API, SLUG_REGEX } from "@/config";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from "react";
 
 export default function Post({ content, admin_interface }) {
     const router = useRouter()

@@ -135,7 +135,7 @@ impl FolderContents {
     pub async fn from_folder(folder: Folder, state: &AppState) -> Result<Self, sqlx::Error> {
         let contents_folders = sqlx::query_as!(
             Folder,
-            "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = $1",
+            "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = $1 ORDER BY timestamp DESC",
             folder.id
         )
         .fetch_all(&state.db)
@@ -145,7 +145,7 @@ impl FolderContents {
             PostSummary,
             r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
                 array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-                FROM posts p WHERE NOT hidden AND (folder = $1)"#,
+                FROM posts p WHERE NOT hidden AND (folder = $1) ORDER BY timestamp DESC"#,
             folder.id
         )
         .fetch_all(&state.db)

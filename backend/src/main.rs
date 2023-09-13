@@ -44,6 +44,11 @@ async fn main() {
     .try_into()
     .expect("Should be 32 bytes (64 hex chars)");
 
+    sqlx::query!("UPDATE posts SET cached_views = views")
+        .execute(&db)
+        .await
+        .unwrap();
+
     // Session setup
     let mut secret = [0; 64];
     rand::thread_rng().fill(&mut secret);
@@ -77,6 +82,7 @@ async fn main() {
         .merge(
             Router::new() // Localhost-only
                 .route("/render", post(render))
+                .route("/blog/revalidate_views", post(revalidate_views))
                 .route_layer(axum::middleware::from_fn(localhost_only_middleware)),
         )
         .merge(

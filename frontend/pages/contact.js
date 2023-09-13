@@ -1,8 +1,8 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faYoutube, faTwitter, faDiscord, faGithub } from "@fortawesome/free-brands-svg-icons";
-import { faEnvelope, faFlag } from "@fortawesome/free-solid-svg-icons";
 import { Metadata } from "@/components";
-import { faHackTheBox } from "@/components/CustomIcons"
+import { faHackTheBox } from "@/components/CustomIcons";
+import { faDiscord, faGithub, faTwitter, faYoutube } from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faFlag } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export function CButton({ href, color, icon, size, text }) {
     return <>

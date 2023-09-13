@@ -5,7 +5,7 @@ use crate::{schema::*, AppState};
 use super::internal_error;
 
 pub async fn get_projects(State(state): State<AppState>) -> Result<Json<Vec<Project>>, StatusCode> {
-    let projects = sqlx::query_as!(Project, "SELECT * FROM projects")
+    let projects = sqlx::query_as!(Project, "SELECT * FROM projects ORDER BY id")
         .fetch_all(&state.db)
         .await
         .map_err(internal_error)?;

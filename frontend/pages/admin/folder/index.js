@@ -1,6 +1,6 @@
 import { FolderForm, Metadata } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config";
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 
 export default function CreateFolder({ all_folders }) {
     const router = useRouter()

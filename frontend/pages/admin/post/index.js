@@ -1,6 +1,6 @@
 import { Metadata, PostForm } from "@/components";
 import { BACKEND, BACKEND_API } from "@/config";
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 
 export default function CreatePost({ all_folders }) {
     const router = useRouter()

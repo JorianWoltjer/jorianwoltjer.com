@@ -1,12 +1,12 @@
-import { Breadcrumbs, RelativeTime, Tags, TableOfContents, CodeBlock } from '@/components'
-import 'highlight.js/styles/github-dark.css'
-import { useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Breadcrumbs, CodeBlock, RelativeTime, TableOfContents, Tags } from '@/components';
 import { faEye } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import 'highlight.js/styles/github-dark.css';
 import parse from 'html-react-parser';
-import Zoom from 'react-medium-image-zoom';
 import Image from 'next/image';
-
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import Zoom from 'react-medium-image-zoom';
 
 export function render(html, mounted) {
     const headers = {
@@ -19,24 +19,29 @@ export function render(html, mounted) {
 
     return parse(html, {
         replace: (node) => {
-            if (node.type === 'tag' && node.name === 'img') {  // Image zoom
+            if (node.type === 'tag' && node.name === 'img') {
+                // Image zoom
+                const src = `http://nginx/img/blog/${node.attribs.src}`;
                 // Stupid hydration error doesn't like <div> inside <p>, so have to delay to the client
-                return <>{mounted && <Zoom><Image fill {...node.attribs} alt={node.attribs.alt} /></Zoom>}</>
+                return <>{mounted && <Zoom><Image className='w-unset' fill src={src} alt={node.attribs.alt} /></Zoom>}</>
 
-            } else if (node.type === 'tag' && node.name === 'pre') {  // Code blocks
+            } else if (node.type === 'tag' && node.name === 'pre') {
+                // Code blocks
                 if (node.children[0].name === 'code') {
                     const code = node.children[0].children[0].data;
-                    const lang = node.children[0].attribs.class.split("-")[1];
+                    const lang = node.children[0].attribs.class?.split("-")[1];
                     return <CodeBlock lang={lang} code={code} />
                 }
 
-            } else if (node.type === 'tag' && node.name === 'a') {  // Convert YouTube links to iframes
+            } else if (node.type === 'tag' && node.name === 'a') {
+                // Convert YouTube links to iframes
                 const match = /(?:https?:\/\/(?:www\.)?youtube\.com\/watch\?v=|https?:\/\/youtu\.be\/)([A-Za-z0-9_\-]+)/.exec(node.attribs.href);
                 if (node.attribs.href === node.children[0].data && match) {
                     return <iframe width="560" height="315" src={`https://www.youtube-nocookie.com/embed/${match[1]}`} title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                 }
 
-            } else if (node.type === 'tag' && Object.keys(headers).includes(node.name)) {  // Add anchor links to headings
+            } else if (node.type === 'tag' && Object.keys(headers).includes(node.name)) {
+                // Add anchor links to headings
                 const id = node.attribs.id;
                 return headers[node.name]({ id, children: <a className="header-link" href={`#${id}`}>{node.children[0].data}</a> })
             }
@@ -55,12 +60,17 @@ export default function PostContent({ content, admin_interface, admin_components
         <Breadcrumbs slug={content.slug} title={content.title} />
         <br />
         <Tags tags={content.tags} points={content.points} />
-        <div className="text-muted">
+        <div className="text-muted mb-2">
             {<RelativeTime timestamp={content.timestamp} />} - <span className="darken">
                 <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}</span>
         </div>
         {admin_interface && <div className="mb-4">{admin_components}</div>}
         <TableOfContents html={content.html} />
         <div className='post-content'>{render(content.html, mounted)}</div>
+        <div className="pagination">
+            <div className="pagination-center">
+                <p className="text-white-50">The end! If you have any questions feel free to ask me anywhere on my <Link href="/contact" target="_blank">Contacts</Link></p>
+            </div>
+        </div>
     </>
 }

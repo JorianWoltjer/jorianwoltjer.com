@@ -1,0 +1,4 @@
+ALTER TABLE
+    posts
+ADD
+    COLUMN cached_views INT NOT NULL DEFAULT 0;

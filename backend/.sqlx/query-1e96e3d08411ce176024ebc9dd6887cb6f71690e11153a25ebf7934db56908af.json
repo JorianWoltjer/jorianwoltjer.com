@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = $1",
+  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent = $1 ORDER BY timestamp DESC",
   "describe": {
     "columns": [
       {
@@ -54,5 +54,5 @@
       false
     ]
   },
-  "hash": "e651705e8828003d82161fb4c6b1467a0eda0e4517b821200315c2f3667f0644"
+  "hash": "1e96e3d08411ce176024ebc9dd6887cb6f71690e11153a25ebf7934db56908af"
 }

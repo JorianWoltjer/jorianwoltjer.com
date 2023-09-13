@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head />
-      <body className='d-flex' data-bs-theme="dark">
+      <body className='d-flex flex-column' data-bs-theme="dark">
         <Main />
         <NextScript />
       </body>

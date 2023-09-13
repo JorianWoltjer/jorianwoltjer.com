@@ -1,8 +1,8 @@
 import { RelativeTime, Tags } from '@/components'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye } from '@fortawesome/free-regular-svg-icons'
-import Link from 'next/link'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function PostItem({ slug, title, description, img, points, views, timestamp, hidden, tags, signature }) {
     let href;
@@ -21,7 +21,7 @@ export default function PostItem({ slug, title, description, img, points, views,
             <div className="col-sm-3">
                 <Link href={href}>
                     <div className="card-img-top h-100">
-                        <Image fill src={`/img/blog/${img || '../placeholder.png'}`} className="card-img-top h-100" alt="Post thumbnail" />
+                        <Image fill src={`http://nginx/img/blog/${img || '../placeholder.png'}`} className="card-img-top h-100" alt="Post thumbnail" />
                     </div>
                 </Link>
             </div>

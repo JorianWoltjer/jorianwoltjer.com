@@ -1,6 +1,6 @@
 import { Metadata } from "@/components";
 import { BACKEND_API } from "@/config";
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/router';
 import { useState } from "react";
 
 export default function Login() {

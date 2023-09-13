@@ -1,10 +1,9 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { MarkdownEditor } from "@/components";
-import { useState } from "react";
-import { faFolder, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
-import { PostItem } from ".";
+import { MarkdownEditor, PostItem } from "@/components";
 import { BACKEND_API } from "@/config";
-import useSWR from "swr";
+import { faFolder, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
+import useSWRImmutable from 'swr/immutable';
 
 const fetcher = url => fetch(url).then(res => res.json());
 const noSubmit = e => e.key == "Enter" ? e.preventDefault() : null;
@@ -22,7 +21,7 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     const content = { title, description, img, folder, markdown, points, featured, hidden, tags };
 
     const [previewWindow, setPreviewWindow] = useState(null);
-    const { data: all_tags } = useSWR(BACKEND_API + "/blog/tags", fetcher);
+    const { data: all_tags } = useSWRImmutable(BACKEND_API + "/blog/tags", fetcher);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -79,7 +78,7 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
         <PostItem {...content} timestamp={content_.timestamp} views={content_.views} />
         <MarkdownEditor markdown={markdown} onChange={setMarkdown} />
         <br />
-        <div className="input-group mb-3 w-25">
+        <div className="input-group mb-3" style={{ maxWidth: "20ch" }}>
             <span className="input-group-text">Points</span>
             <input className="form-control" name="points" type="number" value={points}
                 onChange={e => setPoints(parseInt(e.target.value) || 0)} onKeyDown={noSubmit} />

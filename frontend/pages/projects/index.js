@@ -1,5 +1,5 @@
 import { Metadata, Project } from "@/components";
-import { BACKEND } from "@/config"
+import { BACKEND } from "@/config";
 
 export default function Projects({ projects }) {
     return <>

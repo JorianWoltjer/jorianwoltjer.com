@@ -52,7 +52,7 @@ export default function ParticlesBG() {
             },
             "move": {
                 "enable": true,
-                "speed": 2,
+                "speed": 1,
                 "direction": "none",
                 "random": false,
                 "straight": false,

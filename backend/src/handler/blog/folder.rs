@@ -28,7 +28,7 @@ impl IntoResponse for FolderResponse {
 pub async fn get_folders(State(state): State<AppState>) -> Result<Json<Vec<Folder>>, StatusCode> {
     sqlx::query_as!(
         Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders"
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders ORDER BY timestamp DESC"
     )
     .fetch_all(&state.db)
     .await

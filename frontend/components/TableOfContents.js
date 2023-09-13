@@ -3,7 +3,7 @@ function html_strip(html) {
 }
 
 export default function TableOfContents({ html }) {
-    const toc = [...html.matchAll(/<h2 id="(.*?)"><a.*?>(?:\d+\.\s*)?(.*?)<\/a><\/h2>/g)];
+    const toc = [...html.matchAll(/<h2 id="(.*?)">(?:\d+\.\s*)?(.*?)<\/h2>/g)];
 
     if (toc.length === 0) {
         return <></>;

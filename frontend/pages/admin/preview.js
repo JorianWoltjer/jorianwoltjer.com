@@ -1,6 +1,6 @@
-import { Metadata, PostContent } from '@/components'
+import { Metadata, PostContent } from '@/components';
 import { BACKEND_API } from '@/config';
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
 export default function Preview() {
     const [title, setTitle] = useState("");

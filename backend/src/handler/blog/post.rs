@@ -84,7 +84,7 @@ pub async fn get_posts(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden"#
+            FROM posts p WHERE NOT hidden ORDER BY timestamp DESC"#
     )
     .fetch_all(&state.db)
     .await
@@ -125,7 +125,7 @@ pub async fn get_hidden_posts(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE hidden"#
+            FROM posts p WHERE hidden ORDER BY timestamp DESC"#
     )
     .fetch_all(&state.db)
     .await
@@ -310,7 +310,7 @@ pub async fn get_featured_posts(
         PostSummary,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND (featured)"#
+            FROM posts p WHERE NOT hidden AND (featured) ORDER BY timestamp DESC"#
     )
     .fetch_all(&state.db)
     .await
@@ -341,8 +341,37 @@ pub async fn add_view(
     Ok(())
 }
 
+pub async fn revalidate_views(State(state): State<AppState>) -> Result<StatusCode, StatusCode> {
+    let needs_revalidation = sqlx::query!(
+        "SELECT slug FROM posts WHERE NOT hidden AND (views != cached_views)"
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal_error)
+    .map(|records| RevalidationRequest {
+        slugs: records
+            .into_iter()
+            .map(|record| Slug::Post { slug: record.slug })
+            .collect(),
+    })?;
+
+    if !needs_revalidation.slugs.is_empty() {
+        println!("Revalidating {} posts", needs_revalidation.slugs.len());
+    } else {
+        return Ok(StatusCode::NO_CONTENT);
+    }
+    needs_revalidation.execute().await.map_err(internal_error)?;
+
+    sqlx::query!("UPDATE posts SET cached_views = views")
+        .execute(&state.db)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(StatusCode::OK)
+}
+
 pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<Tag>>, StatusCode> {
-    sqlx::query_as!(Tag, "SELECT * FROM tags")
+    sqlx::query_as!(Tag, "SELECT * FROM tags ORDER BY id")
         .fetch_all(&state.db)
         .await
         .map_err(internal_error)

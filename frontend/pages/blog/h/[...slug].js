@@ -1,10 +1,10 @@
-import { BACKEND, SLUG_REGEX } from "@/config";
 import { Metadata, PostContent } from "@/components";
-import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { BACKEND, SLUG_REGEX } from "@/config";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export default function HiddenPost({ content, admin_interface, signature }) {
     const router = useRouter()

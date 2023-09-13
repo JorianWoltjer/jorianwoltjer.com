@@ -1,5 +1,5 @@
+import { faFlag, faLaptopCode, faTerminal } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFlag, faTerminal, faLaptopCode } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
 const icons = {

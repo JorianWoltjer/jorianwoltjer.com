@@ -8,12 +8,6 @@ Rebuild only one specific container while running:
 docker-compose up --build --force-recreate --no-deps -d backend
 ```
 
-Manually revalidate frontend
-
-```Shell
-docker exec -it jw-backend curl -X POST http://frontend/api/revalidate -d path=/
-```
-
 Run database server for testing
 
 ```Shell
@@ -26,6 +20,25 @@ Run and create tables on local database
 sqlx database drop && sqlx database create && sqlx migrate run
 ```
 
+Transfer old MySQL data to new PostgreSQL format:
+
+```sql
+SELECT id, parent, url as slug, title, description, COALESCE(icon, img) as img, timestamp FROM folders;
+SELECT id, title, text, img, href, category FROM projects;
+SELECT id, url as slug, title, description, img, markdown, timestamp, parent as folder, points, views, featured, (hidden IS NOT NULL) as hidden FROM posts;
+SELECT post as post_id, tag as tag_id FROM post_tags;
+
+-- replace strings in *.sql files:
+$ sed "s/\\\\'/''/g" | sed 's/\\"/"/g' | sed "s/\\\\r/'||chr(13)||'/g" | sed "s/\\\\n/'||chr(10)||'/g" | sed 's/\\\\/\\/g' | sed 's/\/img\/blog\///g'
+-- *manually remove ` backticks from statements*
+-- *manually set featured and hidden to ::bool*
+```
+
+#### Scripts
+
+* [revalidate.sh](scripts/revalidate.sh): Revalidate a custom URL on the frontend
+* [sign.sh](scripts/sign.sh): Create a HMAC signature for a specific hidden blog post ID
+
 ## Resources
 
 * http://www.craigwardman.com/Blogging/BlogEntry/ssg-isr-and-environment-variables-in-next-js-and-docker
@@ -34,5 +47,5 @@ sqlx database drop && sqlx database create && sqlx migrate run
 
 ## TODO
 
-* check performence of text search with all posts
 * clear cloudflare cache on revalidation endpoint
+* test hotswap with docker-compose on VPS
