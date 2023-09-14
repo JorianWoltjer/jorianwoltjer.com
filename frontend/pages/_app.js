@@ -12,12 +12,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from "react";
 config.autoAddCss = false
 
-function NavbarItem({ href, title }) {
+function NavbarItem({ href, title, new: _new }) {
   const router = useRouter();
   const active = router.pathname.startsWith(href) && (href !== "/" || router.pathname === "/");
 
   return (
     <li className="nav-item">
+      {_new && <span className="new-nav-tag">New</span>}
       <Link className={`nav-link ${active ? 'active' : ''}`} href={href}>{title}</Link>
     </li>
   )
@@ -123,6 +124,7 @@ export default function App({ Component, pageProps }) {
               </li>
             }
             <NavbarItem href="/" title="Home" />
+            <NavbarItem href="https://book.jorianwoltjer.com" title="Book" new={true} />
             <NavbarItem href="/blog" title="Blog" />
             <NavbarItem href="/projects" title="Projects" />
             <NavbarItem href="/contact" title="Contact" />

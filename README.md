@@ -1,5 +1,29 @@
 # jorianwoltjer.com
 
+**Personal blog website with Markdown using a [NextJS](https://nextjs.org/) frontend and [Axum](https://docs.rs/axum/latest/axum/) (Rust) backend**
+
+## Setup
+
+A [`.env`](.env.example) file should be created with two strong passwords for the database.
+
+The following environment variables are required to use [BuildKit](https://docs.docker.com/build/buildkit/#getting-started) with docker-compose:
+
+```Shell
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+```
+
+Then running the following command will build and start the containers (note that it takes a few minutes to fully start up):
+
+```Shell
+docker-compose up -d --build
+
+# View logs temporarely
+docker-compose logs --tail=10 --follow
+```
+
+Finally, use the [password.sh](scripts/password.sh) script to set a strong password for logging in as an Admin.
+
 ## Development
 
 Rebuild only one specific container while running:
@@ -49,3 +73,4 @@ $ sed "s/\\\\'/''/g" | sed 's/\\"/"/g' | sed "s/\\\\r/'||chr(13)||'/g" | sed "s/
 
 * clear cloudflare cache on revalidation endpoint
 * test hotswap with docker-compose on VPS
+  * https://github.com/docker/compose/issues/1786#issuecomment-579794865

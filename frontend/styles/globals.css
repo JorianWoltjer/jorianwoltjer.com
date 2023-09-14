@@ -377,6 +377,17 @@ p.c-button svg {
 #previewImage {
   width: 100%;
 }
+.new-nav-tag {
+  background-color: var(--background-light);
+  border: 2px solid var(--main-color);
+  border-radius: 5px;
+  padding: 1px 4px;
+  font-size: x-small;
+  font-weight: bold;
+  font-family: var(--font-light);
+  text-transform: uppercase;
+  position: absolute;
+}
 
 /* Cards */
 .card {
