@@ -31,7 +31,7 @@ export default function Folder({ content, admin_interface }) {
     const [descriptionFirst, descriptionRest] = splitSentence(content.description);
 
     return <>
-        <Metadata title={"Folder: " + content.title} description={content.description} img={content.img} />
+        <Metadata title={"Folder: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
         <Breadcrumbs slug={content.slug} title={content.title} />
         <hr />
         <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>

@@ -33,7 +33,7 @@ export default function Post({ content, admin_interface }) {
     }
 
     return <>
-        <Metadata title={"Post: " + content.title} description={content.description} img={content.img} />
+        <Metadata title={"Post: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
         <PostContent content={content} admin_interface={admin_interface} admin_components={
             <Link className="big-button" href={`/admin/post/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
         } />

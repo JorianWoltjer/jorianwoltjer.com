@@ -17,7 +17,7 @@ export default function HiddenPost({ content, admin_interface, signature }) {
     }, [content, router]);
 
     return <>
-        <Metadata title={"Hidden: " + content.title} description={content.description} img={content.img} />
+        <Metadata title={"Hidden: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
         <PostContent content={content} admin_interface={admin_interface} admin_components={
             <Link className="big-button" href={`/admin/post/${content.id}?s=${signature}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
         } />
