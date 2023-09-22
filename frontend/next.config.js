@@ -24,7 +24,7 @@ const nextConfig = {
               script-src 'self' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''};
               style-src 'self' 'unsafe-inline';
               object-src 'none';
-              connect-src 'self' http://localhost:8000 ws://localhost:8000;
+              connect-src 'self' http://localhost:8000 ws://localhost:8000 wss://localhost:8000 ws://jorianwoltjer.com wss://jorianwoltjer.com;
               font-src 'self' fonts.gstatic.com;
               img-src 'self' data:;
               frame-src www.youtube-nocookie.com;

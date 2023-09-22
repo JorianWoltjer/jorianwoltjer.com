@@ -355,17 +355,17 @@ pub async fn revalidate_views(State(state): State<AppState>) -> Result<StatusCod
             .collect(),
     })?;
 
-    if !needs_revalidation.slugs.is_empty() {
-        println!("Revalidating {} posts", needs_revalidation.slugs.len());
-    } else {
+    if needs_revalidation.slugs.is_empty() {
         return Ok(StatusCode::NO_CONTENT);
     }
-    needs_revalidation.execute().await.map_err(internal_error)?;
-
+    
     sqlx::query!("UPDATE posts SET cached_views = views")
         .execute(&state.db)
         .await
         .map_err(internal_error)?;
+
+    println!("Revalidating {} posts", needs_revalidation.slugs.len());
+    needs_revalidation.execute().await.map_err(internal_error)?;
 
     Ok(StatusCode::OK)
 }

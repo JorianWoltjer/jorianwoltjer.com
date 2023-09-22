@@ -1,4 +1,4 @@
-# jorianwoltjer.com
+# [jorianwoltjer.com](https://jorianwoltjer.com/)
 
 **Personal blog website with Markdown using a [NextJS](https://nextjs.org/) frontend and [Axum](https://docs.rs/axum/latest/axum/) (Rust) backend**
 
@@ -23,6 +23,8 @@ docker-compose logs --tail=10 --follow
 ```
 
 Finally, use the [password.sh](scripts/password.sh) script to set a strong password for logging in as an Admin.
+
+See [this gist](https://gist.github.com/JorianWoltjer/3409ef1c7b59c7c5e7b80a294f5564d0) to see how I automatically pull changes from GitHub push webhooks.
 
 ## Development
 

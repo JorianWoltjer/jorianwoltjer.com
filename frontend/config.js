@@ -8,6 +8,6 @@ export function getWebsocketURL(path) {
     if (BACKEND_API.startsWith('http')) {
         return BACKEND_API.replace(/^http/, 'ws') + path
     } else {  // Handle relative URLs
-        return 'ws://' + location.host + "/api" + path
+        return 'wss://' + location.host + "/api" + path
     }
 }
