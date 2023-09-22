@@ -64,6 +64,9 @@ export async function getStaticProps({ params }) {
 
         const res_html = await fetch(BACKEND + "/render", {
             method: "POST",
+            headers: {
+                "X-Internal": "true"
+            },
             body: content.markdown
         })
         content.html = await res_html.text()

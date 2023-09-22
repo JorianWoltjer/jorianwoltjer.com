@@ -1,7 +1,4 @@
-use std::net::{IpAddr, SocketAddr};
-
 use axum::{
-    extract::ConnectInfo,
     http::{Request, StatusCode},
     middleware::Next,
     response::Response,
@@ -34,31 +31,24 @@ pub async fn auth_required_middleware<B>(
     Ok(next.run(Request::from_parts(parts, body)).await)
 }
 
-pub async fn localhost_only_middleware<B>(
+pub async fn internal_only_middleware<B>(
     req: Request<B>,
     next: Next<B>,
 ) -> Result<Response, StatusCode> {
-    let (mut parts, body) = req.into_parts();
+    let (parts, body) = req.into_parts();
 
-    // Development mode bypasses localhost-only
+    // Development mode bypasses
     if !is_production() {
         return Ok(next.run(Request::from_parts(parts, body)).await);
     }
 
-    let ip = match parts.headers.get("x-forwarded-for") {
-        Some(ip) => ip.to_str().unwrap().parse().unwrap(),
-        None => parts
-            .extract::<ConnectInfo<SocketAddr>>()
-            .await
-            .map(|h| h.ip())
-            .unwrap(),
+    // X-Internal header is set to "false" by nginx, only internal requests can set it to "true"
+    let is_internal = match parts.headers.get("X-Internal") {
+        Some(header_value) => header_value.to_str().unwrap() == "true",
+        None => false,
     };
-
-    if let IpAddr::V4(ip) = ip {
-        // 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
-        if ip.is_loopback() || ip.is_private() {
-            return Ok(next.run(Request::from_parts(parts, body)).await);
-        }
+    if is_internal {
+        return Ok(next.run(Request::from_parts(parts, body)).await);
     }
 
     // Also bypass if logged in

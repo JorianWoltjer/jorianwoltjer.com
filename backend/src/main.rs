@@ -80,10 +80,10 @@ async fn main() {
                 .route("/blog/search", get(ws_search)),
         )
         .merge(
-            Router::new() // Localhost-only
+            Router::new() // Internal-only
                 .route("/render", post(render))
                 .route("/blog/revalidate_views", post(revalidate_views))
-                .route_layer(axum::middleware::from_fn(localhost_only_middleware)),
+                .route_layer(axum::middleware::from_fn(internal_only_middleware)),
         )
         .merge(
             Router::new() // Authentication required

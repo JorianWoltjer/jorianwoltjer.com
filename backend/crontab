@@ -1,2 +1,2 @@
 # Cron job to revalidate all posts where view counter changed
-* * * * * curl -X POST http://localhost/blog/revalidate_views
+* * * * * curl -X POST http://localhost/blog/revalidate_views -H 'X-Internal: true'
