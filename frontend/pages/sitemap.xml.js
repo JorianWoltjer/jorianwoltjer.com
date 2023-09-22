@@ -2,6 +2,21 @@ import { BACKEND } from "@/config";
 
 const HOST = 'https://jorianwoltjer.com';
 
+export function xmlEscape(obj) {
+    if (typeof obj === 'string') {
+        return obj.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+    } else if (typeof obj === 'object') {
+        for (const key in obj) {
+            obj[key] = xmlEscape(obj[key])
+        }
+    }
+    return obj
+}
+
 function url(path, timestamp) {
     timestamp = timestamp || new Date().toISOString();
     return `<url>
@@ -13,6 +28,8 @@ function url(path, timestamp) {
 }
 
 function generateSitemap(posts, folders) {
+    posts = xmlEscape(posts);
+    folders = xmlEscape(folders);
     return `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
         ${url('/')}

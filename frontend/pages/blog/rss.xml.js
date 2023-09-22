@@ -1,4 +1,5 @@
 import { BACKEND } from "@/config";
+import { xmlEscape } from "@/pages/sitemap.xml";
 
 const HOST = 'https://jorianwoltjer.com';
 
@@ -14,6 +15,7 @@ function item(post) {
 }
 
 function generateRSS(posts) {
+    posts = xmlEscape(posts);
     return `<?xml version="1.0" encoding="UTF-8"?>
     <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
     <channel>
