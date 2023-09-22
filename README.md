@@ -71,8 +71,4 @@ $ sed "s/\\\\'/''/g" | sed 's/\\"/"/g' | sed "s/\\\\r/'||chr(13)||'/g" | sed "s/
 * https://github.com/launchbadge/realworld-axum-sqlx
 * https://github.com/launchbadge/sqlx/issues/1014
 
-## TODO
-
-* clear cloudflare cache on revalidation endpoint
-* test hotswap with docker-compose on VPS
-  * https://github.com/docker/compose/issues/1786#issuecomment-579794865
+This website is a successor to my original [jorianwoltjer.com (PHP)](https://github.com/JorianWoltjer/jorianwoltjer.com-php) repository.
