@@ -26,3 +26,5 @@ dotenvy = "0.15.7"
 hmac = "0.12.1"
 sha2 = "0.10.7"
 hex = "0.4.3"
+aide = { version = "0.12.0", features = ["axum", "axum-ws"] }
+schemars = { version = "0.8.15", features = ["chrono"] }

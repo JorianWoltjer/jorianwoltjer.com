@@ -1,9 +1,13 @@
-use std::{env, net::SocketAddr};
+use std::env;
 
-use axum::{
-    routing::{get, post, put},
-    Router,
+use aide::{
+    axum::{
+        routing::{get, post, put},
+        ApiRouter, IntoApiResponse,
+    },
+    openapi::{Info, OpenApi, Server},
 };
+use axum::{response::Html, Extension, Json};
 use axum_sessions::{async_session::MemoryStore, SessionLayer};
 use backend::{handler::*, is_production, AppState};
 use rand::Rng;
@@ -14,6 +18,13 @@ use tower_http::{
     trace::{self, TraceLayer},
 };
 use tracing::Level;
+
+async fn serve_api(Extension(api): Extension<OpenApi>) -> impl IntoApiResponse {
+    Json(api)
+}
+async fn serve_swagger_ui() -> Html<&'static str> {
+    Html(include_str!("../static/swagger-ui.html"))
+}
 
 #[tokio::main]
 async fn main() {
@@ -62,31 +73,33 @@ async fn main() {
         .init();
 
     // Router setup
-    let mut app = Router::new()
+    let mut app = ApiRouter::new()
+        // Only api_route() routes will be included in documentation
+        .route("/swagger.json", get(serve_api))
+        .route("/", get(serve_swagger_ui))
         .merge(
-            Router::new() // Public
-                .route("/health", get(health_check))
+            ApiRouter::new() // Public
                 .route("/login", post(login))
                 .route("/logout", get(logout))
-                .route("/projects", get(get_projects))
-                .route("/blog/folders", get(get_folders))
-                .route("/blog/posts", get(get_posts))
-                .route("/blog/folder/*slug_or_id", get(get_folder))
-                .route("/blog/post/*slug_or_id", get(get_post))
-                .route("/blog/hidden/*slug_or_id", get(get_hidden_post))
+                .api_route("/projects", get(get_projects))
+                .api_route("/blog/folders", get(get_folders))
+                .api_route("/blog/posts", get(get_posts))
+                .api_route("/blog/folder/*slug_or_id", get(get_folder))
+                .api_route("/blog/post/*slug_or_id", get(get_post))
+                .api_route("/blog/hidden/*slug_or_id", get(get_hidden_post))
                 .route("/blog/add_view", post(add_view))
-                .route("/blog/featured", get(get_featured_posts))
-                .route("/blog/tags", get(get_tags))
-                .route("/blog/search", get(ws_search)),
+                .api_route("/blog/featured", get(get_featured_posts))
+                .api_route("/blog/tags", get(get_tags))
+                .api_route("/blog/search", get(ws_search)),
         )
         .merge(
-            Router::new() // Internal-only
+            ApiRouter::new() // Internal-only
                 .route("/render", post(render))
                 .route("/blog/revalidate_views", post(revalidate_views))
                 .route_layer(axum::middleware::from_fn(internal_only_middleware)),
         )
         .merge(
-            Router::new() // Authentication required
+            ApiRouter::new() // Authentication required
                 .route("/login", get(login_check))
                 .route("/blog/preview", post(preview))
                 .route("/blog/folders", post(create_folder))
@@ -104,6 +117,24 @@ async fn main() {
         )
         .layer(session_layer);
 
+    let mut api = OpenApi {
+        info: Info {
+            description: Some("Blog API (auto-generated)".to_string()),
+            ..Info::default()
+        },
+        servers: vec![
+            Server {
+                url: String::from("https://jorianwoltjer.com/api"),
+                ..Server::default()
+            },
+            Server {
+                url: String::from("http://localhost/api"),
+                ..Server::default()
+            },
+        ],
+        ..OpenApi::default()
+    };
+
     if !is_production() {
         println!("WARNING: Running in development mode, disabling security features.");
         app = app.layer(
@@ -116,7 +147,11 @@ async fn main() {
 
     println!("Listening on :{port}...");
     axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .serve(
+            app.finish_api(&mut api)
+                .layer(Extension(api))
+                .into_make_service(),
+        )
         .await
         .unwrap();
 }

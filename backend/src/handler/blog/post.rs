@@ -1,13 +1,14 @@
+use aide::axum::IntoApiResponse;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
         Path, State, WebSocketUpgrade, Query,
     },
     http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
     Json,
 };
 use hmac::{Hmac, Mac};
+use schemars::JsonSchema;
 use serde::Deserialize;
 use sha2::Sha256;
 
@@ -17,19 +18,6 @@ use crate::{
     schema::*,
     AppState, RevalidationRequest, Slug,
 };
-
-pub enum PostResponse {
-    Post(Json<Post>),
-    Redirect(Redirect),
-}
-impl IntoResponse for PostResponse {
-    fn into_response(self) -> Response {
-        match self {
-            PostResponse::Post(post) => post.into_response(),
-            PostResponse::Redirect(redirect) => redirect.into_response(),
-        }
-    }
-}
 
 async fn get_hidden_post_summary(id: i32, state: &AppState) -> Result<HiddenPost, sqlx::Error> {
     sqlx::query_as!(
@@ -95,7 +83,7 @@ pub async fn get_posts(
 pub async fn get_post(
     State(state): State<AppState>,
     Path(slug_or_id): Path<String>,
-) -> Result<PostResponse, StatusCode> {
+) -> Result<Json<Post>, StatusCode> {
     if let Ok(post) = sqlx::query_as!(
         Post,
         r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, timestamp, 
@@ -105,16 +93,22 @@ pub async fn get_post(
     )
     .fetch_one(&state.db)
     .await {
-        Ok(PostResponse::Post(Json(post)))
+        Ok(Json(post))
     } else {
-        sqlx::query!(
-            "SELECT p.slug FROM posts p JOIN post_redirects pr ON p.id = pr.post_id WHERE NOT hidden AND (pr.slug = $1)",
-            slug_or_id
-        )
-        .fetch_one(&state.db)
-        .await
-        .map_err(sql_not_found)
-        .map(|record| PostResponse::Redirect(Redirect::permanent(&format!("/blog/post/{}", record.slug))))
+        Ok(Json(
+            sqlx::query_as!(
+                Post,
+                r#"SELECT p.id, folder, p.slug, title, description, img, markdown, points, views, featured, hidden, timestamp, 
+                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+                    FROM posts p 
+                    JOIN post_redirects pr ON p.id = pr.post_id 
+                    WHERE NOT hidden AND (pr.slug = $1)"#,
+                slug_or_id
+            )
+            .fetch_one(&state.db)
+            .await
+            .map_err(sql_not_found)?,
+        ))
     }
 }
 
@@ -134,7 +128,7 @@ pub async fn get_hidden_posts(
     .map(Json)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 pub struct HiddenRequest {
     signature: String,
 }
@@ -318,7 +312,7 @@ pub async fn get_featured_posts(
     .map(Json)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 pub struct AddViewRequest {
     id: i32,
     signature: Option<String>,
@@ -378,7 +372,7 @@ pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<Tag>>, S
         .map(Json)
 }
 
-pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl IntoResponse {
+pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl IntoApiResponse {
     println!("WebSocket: Incoming connection");
     ws.on_upgrade(|socket| async move {
         println!("WebSocket: handling...");

@@ -1,14 +1,15 @@
 use chrono::{DateTime, Utc};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{handler::sign, AppState};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, JsonSchema)]
 pub struct Login {
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct Project {
     pub id: i32,
     pub title: String,
@@ -18,14 +19,14 @@ pub struct Project {
     pub category: String,
 }
 
-#[derive(Deserialize, Serialize, Clone, sqlx::Type)]
+#[derive(Deserialize, Serialize, Clone, JsonSchema, sqlx::Type)]
 pub struct Tag {
     pub id: i32,
     pub name: String,
     pub color: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Post {
     pub id: i32,
     pub folder: i32,
@@ -41,7 +42,7 @@ pub struct Post {
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct PostSummary {
     pub id: i32,
     pub folder: i32,
@@ -56,7 +57,7 @@ pub struct PostSummary {
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct HiddenPost {
     pub id: i32,
     pub folder: i32,
@@ -96,7 +97,7 @@ impl HiddenPost {
         }
     }
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct CreatePost {
     pub folder: i32,
     pub title: String,
@@ -109,7 +110,7 @@ pub struct CreatePost {
     pub tags: Vec<Tag>, // Only ids are used
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, JsonSchema)]
 pub struct Folder {
     pub id: i32,
     pub parent: Option<i32>, // May be None for root folder
@@ -119,7 +120,7 @@ pub struct Folder {
     pub img: String,
     pub timestamp: DateTime<Utc>,
 }
-#[derive(Serialize)]
+#[derive(Serialize, JsonSchema)]
 pub struct FolderContents {
     pub id: i32,
     pub parent: Option<i32>,
@@ -164,7 +165,7 @@ impl FolderContents {
         })
     }
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct CreateFolder {
     pub parent: Option<i32>,
     pub title: String,

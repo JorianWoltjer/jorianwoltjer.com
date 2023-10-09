@@ -1,8 +1,9 @@
 import path from 'path';
 
 export default async function handler(req, res) {
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  if (ip !== '127.0.0.1') {  // Only from localhost (backend)
+  // X-Internal header is set to "false" by nginx, only internal requests can set it to "true"
+  const is_internal = req.headers["x-internal"] === "true";
+  if (!is_internal) {
     return res.status(403).json({ message: "Forbidden" });
   } else if (req.method !== "POST") {  // Only POST
     return res.status(405).json({ message: "Method not allowed" });

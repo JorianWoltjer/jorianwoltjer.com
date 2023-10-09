@@ -21,8 +21,3 @@ pub fn sql_not_found(e: sqlx::Error) -> StatusCode {
         _ => internal_error(e),
     }
 }
-
-/// Always return successful response when reachable
-pub async fn health_check() -> StatusCode {
-    StatusCode::NO_CONTENT
-}

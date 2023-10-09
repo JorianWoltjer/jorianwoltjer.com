@@ -59,6 +59,7 @@ impl RevalidationRequest {
         let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
         reqwest::Client::new()
             .post(format!("{frontend}/api/revalidate"))
+            .header("X-Internal", "true")
             .json(&self.slugs)
             .send()
             .await?;

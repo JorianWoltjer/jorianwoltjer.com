@@ -1,7 +1,6 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
     Json,
 };
 
@@ -11,19 +10,6 @@ use crate::{
     schema::*,
     slugify, AppState, RevalidationRequest, Slug,
 };
-
-pub enum FolderResponse {
-    Folder(Json<FolderContents>),
-    Redirect(Redirect),
-}
-impl IntoResponse for FolderResponse {
-    fn into_response(self) -> Response {
-        match self {
-            FolderResponse::Folder(folder) => folder.into_response(),
-            FolderResponse::Redirect(redirect) => redirect.into_response(),
-        }
-    }
-}
 
 pub async fn get_folders(State(state): State<AppState>) -> Result<Json<Vec<Folder>>, StatusCode> {
     sqlx::query_as!(
@@ -39,7 +25,7 @@ pub async fn get_folders(State(state): State<AppState>) -> Result<Json<Vec<Folde
 pub async fn get_folder(
     State(state): State<AppState>,
     Path(slug_or_id): Path<String>,
-) -> Result<FolderResponse, StatusCode> {
+) -> Result<Json<FolderContents>, StatusCode> {
     let folder = sqlx::query_as!(
                 Folder,
                 "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id::varchar = $1 OR slug = $1",
@@ -49,21 +35,29 @@ pub async fn get_folder(
             .await;
 
     if let Ok(folder) = folder {
-        Ok(FolderResponse::Folder(
-            FolderContents::from_folder(folder, &state)
-                .await
-                .map(Json)
-                .map_err(internal_error)?,
-        ))
+        Ok(FolderContents::from_folder(folder, &state)
+            .await
+            .map(Json)
+            .map_err(internal_error)?)
     } else {
-        sqlx::query!(
-            "SELECT f.slug FROM folders f JOIN folder_redirects fr ON f.id = fr.folder_id WHERE fr.slug = $1",
-            slug_or_id
-        )
-        .fetch_one(&state.db)
-        .await
-        .map_err(sql_not_found)
-        .map(|record| FolderResponse::Redirect(Redirect::permanent(&format!("/blog/folder/{}", record.slug))))
+        Ok(Json(
+            FolderContents::from_folder(
+                sqlx::query_as!(
+                    Folder,
+                    "SELECT f.id, parent, f.slug, title, description, img, timestamp 
+                    FROM folders f
+                    JOIN folder_redirects fr ON f.id = fr.folder_id 
+                    WHERE fr.slug = $1",
+                    slug_or_id
+                )
+                .fetch_one(&state.db)
+                .await
+                .map_err(sql_not_found)?,
+                &state,
+            )
+            .await
+            .map_err(internal_error)?,
+        ))
     }
 }
 

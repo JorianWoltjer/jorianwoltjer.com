@@ -1,3 +1,4 @@
+use aide::NoApi;
 use axum::{extract::State, http::StatusCode, Json};
 use axum_sessions::extractors::WritableSession;
 
@@ -8,7 +9,7 @@ pub async fn login_check() -> StatusCode {
 }
 
 pub async fn login(
-    mut session: WritableSession,
+    NoApi(mut session): NoApi<WritableSession>,
     State(state): State<AppState>,
     Json(login): Json<Login>,
 ) -> Result<StatusCode, StatusCode> {
@@ -27,7 +28,7 @@ pub async fn login(
     }
 }
 
-pub async fn logout(mut session: WritableSession) -> StatusCode {
+pub async fn logout(NoApi(mut session): NoApi<WritableSession>) -> StatusCode {
     session.destroy();
     StatusCode::NO_CONTENT
 }
