@@ -40,7 +40,7 @@ export default function RelativeTime({ timestamp, interval_ms = 1000 }) {
 
   useEffect(() => {
     if (timestamp === undefined) return;
-    setTimeout(() => setNow(Date.now()), interval_ms)
+    setInterval(() => setNow(Date.now()), interval_ms)
   }, [timestamp, interval_ms])
 
   if (timestamp === undefined) return "0 seconds ago"

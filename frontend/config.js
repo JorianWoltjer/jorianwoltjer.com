@@ -8,6 +8,7 @@ export function getWebsocketURL(path) {
     if (BACKEND_API.startsWith('http')) {
         return BACKEND_API.replace(/^http/, 'ws') + path
     } else {  // Handle relative URLs
-        return 'wss://' + location.host + "/api" + path
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+        return `${protocol}//${location.host}/api${path}`
     }
 }
