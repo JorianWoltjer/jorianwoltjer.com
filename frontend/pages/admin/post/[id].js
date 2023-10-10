@@ -29,6 +29,9 @@ export default function EditPost({ content, all_folders }) {
 export async function getServerSideProps({ params, query }) {
     try {
         const { id } = params;
+        if (!/^\d+$/.test(id)) {
+            throw new Error("Invalid folder ID: " + id)
+        }
         const { s: signature } = query;
         if (signature !== undefined && !/^[a-f0-9]{64}$/.test(signature)) {  // Sanity check
             throw new Error("Invalid signature: " + signature)

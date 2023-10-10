@@ -26,7 +26,7 @@ export default function Login() {
                 const expires = new Date();
                 expires.setDate(expires.getDate() + 1);  // Should align with sid= cookie expiration
                 document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
-                document.location.href = router.query.next || "/blog";
+                document.location.href = /^\/[a-z]/.test(router.query.next) ? router.query.next : "/blog";
             } else {
                 setAlert(<div className="alert alert-danger" role="alert">Incorrect password</div>);
             }

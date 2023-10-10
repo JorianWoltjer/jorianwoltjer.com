@@ -11,7 +11,7 @@ async function unauthorized(req) {
 export async function middleware(req) {
     const sid = req.cookies.get("sid")?.value;
     // Sanity check
-    if (!sid || !/^[a-zA-Z0-9/+-_=]+$/.test(sid)) {
+    if (!sid || !/^[a-zA-Z0-9+_=\/\-]+$/.test(sid)) {
         return unauthorized(req);
     }
     // Proxy to the backend

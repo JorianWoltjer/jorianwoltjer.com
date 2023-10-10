@@ -32,6 +32,9 @@ export async function getServerSideProps({ params }) {
         const all_folders = await res_all.json()
 
         const { id } = params;
+        if (!/^\d+$/.test(id)) {
+            throw new Error("Invalid folder ID: " + id)
+        }
         const res = await fetch(BACKEND + "/blog/folder/" + id)
         const content = await res.json()
 
