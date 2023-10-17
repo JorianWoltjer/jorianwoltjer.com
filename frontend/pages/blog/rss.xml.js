@@ -1,5 +1,5 @@
 import { BACKEND } from "@/config";
-import { xmlEscape } from "@/pages/sitemap.xml";
+import { xmlEscape } from "@/utils/strings";
 
 const HOST = 'https://jorianwoltjer.com';
 

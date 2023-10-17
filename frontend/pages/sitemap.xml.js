@@ -1,21 +1,8 @@
 import { BACKEND } from "@/config";
+import { xmlEscape } from "@/utils/strings";
 
 const HOST = 'https://jorianwoltjer.com';
 
-export function xmlEscape(obj) {
-    if (typeof obj === 'string') {
-        return obj.replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-    } else if (typeof obj === 'object') {
-        for (const key in obj) {
-            obj[key] = xmlEscape(obj[key])
-        }
-    }
-    return obj
-}
 
 function url(path, timestamp) {
     timestamp = timestamp || new Date().toISOString();

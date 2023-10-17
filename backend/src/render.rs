@@ -1,10 +1,17 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::slugify;
-
 lazy_static! {
     static ref HEADER_REGEX: Regex = Regex::new(r"<h([1-6])>(.*?)</h[1-6]>").unwrap();
+}
+
+fn slugify(title: &str) -> String {
+    Regex::new(r"((<.*?>)|(&.*?;)|[^\w])+")
+        .unwrap()
+        .replace_all(title, "-")
+        .trim_matches('-')
+        .to_string()
+        .to_lowercase()
 }
 
 pub fn markdown_to_html(markdown: &str) -> Result<String, String> {

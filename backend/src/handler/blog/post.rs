@@ -13,7 +13,7 @@ use serde::Deserialize;
 use sha2::Sha256;
 
 use crate::{
-    build_slug,
+    extend_slug,
     handler::{internal_error, sql_not_found},
     schema::*,
     AppState, RevalidationRequest, Slug,
@@ -157,7 +157,7 @@ pub async fn create_post(
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
 ) -> Result<Json<HiddenPost>, StatusCode> {
-    let slug = build_slug(post.folder, &post.title, &state)
+    let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
 
@@ -191,7 +191,7 @@ pub async fn create_post(
 
     // Everything has changed now, revalidate NextJS
     RevalidationRequest {
-        slugs: vec![Slug::Post { slug: slug.clone() }],
+        slugs: vec![Slug::Post { slug }],
     }
     .execute()
     .await
@@ -208,7 +208,7 @@ pub async fn edit_post(
     Path(slug_or_id): Path<String>,
     Json(post): Json<CreatePost>,
 ) -> Result<Json<HiddenPost>, StatusCode> {
-    let slug = build_slug(post.folder, &post.title, &state)
+    let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
 

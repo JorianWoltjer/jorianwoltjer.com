@@ -5,10 +5,10 @@ use axum::{
 };
 
 use crate::{
-    build_slug,
+    extend_slug,
     handler::{internal_error, sql_not_found},
     schema::*,
-    slugify, AppState, RevalidationRequest, Slug,
+    AppState, RevalidationRequest, Slug,
 };
 
 pub async fn get_folders(State(state): State<AppState>) -> Result<Json<Vec<Folder>>, StatusCode> {
@@ -65,12 +65,9 @@ pub async fn create_folder(
     State(state): State<AppState>,
     Json(folder): Json<CreateFolder>,
 ) -> Result<Json<Folder>, StatusCode> {
-    let slug = match folder.parent {
-        Some(parent) => build_slug(parent, &folder.title, &state)
-            .await
-            .map_err(internal_error)?,
-        None => slugify(&folder.title),
-    };
+    let slug = extend_slug(&folder.slug, folder.parent.unwrap_or(-1), &state)
+        .await
+        .map_err(internal_error)?;
 
     sqlx::query!(
         "INSERT INTO folders (title, slug, description, img, parent) VALUES ($1, $2, $3, $4, $5)",
@@ -116,12 +113,9 @@ pub async fn edit_folder(
     .await
     .map_err(internal_error)?;
 
-    let slug = match folder.parent {
-        Some(parent) => build_slug(parent, &folder.title, &state)
-            .await
-            .map_err(internal_error)?,
-        None => slugify(&folder.title),
-    };
+    let slug = extend_slug(&folder.slug, folder.parent.unwrap_or(-1), &state)
+        .await
+        .map_err(internal_error)?;
 
     let mut revalidations = vec![
         Slug::Folder {

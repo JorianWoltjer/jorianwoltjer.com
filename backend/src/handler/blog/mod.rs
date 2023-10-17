@@ -6,7 +6,7 @@ use axum::Json;
 use chrono::Utc;
 use reqwest::StatusCode;
 
-use crate::build_slug;
+use crate::extend_slug;
 use crate::render::markdown_to_html;
 use crate::schema::CreatePost;
 use crate::schema::Post;
@@ -22,7 +22,7 @@ pub async fn preview(
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
 ) -> Result<Json<Post>, StatusCode> {
-    let slug = build_slug(post.folder, &post.title, &state)
+    let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
 

@@ -100,6 +100,7 @@ impl HiddenPost {
 #[derive(Deserialize, Serialize, JsonSchema)]
 pub struct CreatePost {
     pub folder: i32,
+    pub slug: String,
     pub title: String,
     pub description: String,
     pub img: String,
@@ -169,6 +170,7 @@ impl FolderContents {
 pub struct CreateFolder {
     pub parent: Option<i32>,
     pub title: String,
+    pub slug: String,
     pub description: String,
     pub img: String,
 }
