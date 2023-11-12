@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 export default function ErrorPage({ title, message }) {
     const router = useRouter();
 
-    return <div className="center">
+    return <div className="center-transform">
         <FontAwesomeIcon icon={faTriangleExclamation} className="big-icon" />
         <h1>{title}</h1>
         <p className="lead">

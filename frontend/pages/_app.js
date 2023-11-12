@@ -133,7 +133,7 @@ export default function App({ Component, pageProps }) {
       </div>
     </nav>
     <div id="page-content">
-      <div className="container">
+      <div className="container h-100">
         <Component {...pageProps} admin_interface={admin_interface} />
       </div>
     </div>

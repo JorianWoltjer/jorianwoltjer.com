@@ -57,19 +57,21 @@ export default function PostContent({ content, admin_interface, admin_components
     }, []);
 
     return <>
-        <Breadcrumbs slug={content.slug} title={content.title} />
-        <br />
-        <Tags tags={content.tags} points={content.points} />
-        <div className="text-muted mb-2">
-            {<RelativeTime timestamp={content.timestamp} />} - <span className="darken">
-                <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}</span>
-        </div>
-        {admin_interface && <div className="mb-4">{admin_components}</div>}
-        <TableOfContents html={content.html} />
-        <div className='post-content'>{render(content.html, mounted)}</div>
-        <div className="pagination">
-            <div className="pagination-center">
-                <p className="text-white-50">The end! If you have any questions feel free to ask me anywhere on my <Link href="/contact" target="_blank">Contacts</Link></p>
+        <div className='d-flex flex-column h-100'>
+            <Breadcrumbs slug={content.slug} title={content.title} />
+            <br />
+            <Tags tags={content.tags} points={content.points} />
+            <div className="text-muted mb-2">
+                {<RelativeTime timestamp={content.timestamp} />} - <span className="darken">
+                    <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}</span>
+            </div>
+            {admin_interface && <div className="mb-4">{admin_components}</div>}
+            <TableOfContents html={content.html} />
+            <div className='post-content flex-grow-1'>{render(content.html, mounted)}</div>
+            <div className="pagination">
+                <div className="pagination-center">
+                    <p className="text-white-50">The end! If you have any questions feel free to ask me anywhere on my <Link href="/contact" target="_blank">Contacts</Link></p>
+                </div>
             </div>
         </div>
     </>

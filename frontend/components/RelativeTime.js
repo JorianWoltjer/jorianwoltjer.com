@@ -30,9 +30,10 @@ export function timeDifference(current, timestamp) {
     unit = "year";
   }
 
-  unit += Math.round(value) === 1 ? "" : "s";
+  value = Math.floor(value)
+  unit += value === 1 ? "" : "s";
 
-  return Math.round(value) + " " + unit + " ago";
+  return value + " " + unit + " ago";
 }
 
 export default function RelativeTime({ timestamp, interval_ms = 1000 }) {

@@ -35,17 +35,15 @@ export default function Login() {
 
     return <>
         <Metadata title="Login" description="Log into the administrator interface used to manage this website" />
-        <div className="d-flex align-items-center justify-content-center">
-            <div className="boxed center">
-                <h1>Admin login</h1>
+        <div className="boxed center-transform">
+            <h1>Admin login</h1>
+            <br />
+            {alert}
+            <form method="post" onSubmit={handleSubmit}>
+                <input className="form-control" type="password" id="password" name="password" placeholder="Password..." />
                 <br />
-                {alert}
-                <form method="post" onSubmit={handleSubmit}>
-                    <input className="form-control" type="password" id="password" name="password" placeholder="Password..." />
-                    <br />
-                    <input className="btn btn-secondary" type="submit" value="Submit" />
-                </form>
-            </div>
+                <input className="btn btn-secondary" type="submit" value="Submit" />
+            </form>
         </div>
     </>
 }

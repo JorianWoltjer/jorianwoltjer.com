@@ -5,11 +5,15 @@ import { faEyeSlash, faMagnifyingGlass, faSquareRss } from "@fortawesome/free-so
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import Link from "next/link";
+import Head from "next/head";
 
 export default function Blog({ root_folders, featured_posts, admin_interface }) {
   return (
     <>
       <Metadata title="Blog" description="A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations." />
+      <Head>
+        <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+      </Head>
       <h1 className="my-4">Blog</h1>
       <div className="mb-3">
         {root_folders.map(folder => {
