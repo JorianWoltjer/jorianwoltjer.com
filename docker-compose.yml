@@ -12,6 +12,7 @@ services:
       - BACKEND=http://backend
       - NEXT_PUBLIC_BACKEND_API=/api
       - PORT=80
+      - INTERNAL_TOKEN=${INTERNAL_TOKEN}
     networks:
       - website
 
@@ -27,6 +28,7 @@ services:
       - FRONTEND=http://frontend
       - PRODUCTION=true
       - PORT=80
+      - INTERNAL_TOKEN=${INTERNAL_TOKEN}
     networks:
       - website
 

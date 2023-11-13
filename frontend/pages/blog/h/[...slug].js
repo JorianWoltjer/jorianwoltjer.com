@@ -40,7 +40,7 @@ export async function getServerSideProps({ params, query }) {
         const res_html = await fetch(BACKEND + "/render", {
             method: "POST",
             headers: {
-                "X-Internal": "true"
+                "X-Internal": process.env.INTERNAL_TOKEN
             },
             body: content.markdown
         })

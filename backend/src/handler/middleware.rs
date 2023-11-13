@@ -1,3 +1,5 @@
+use std::env;
+
 use axum::{
     http::{Request, StatusCode},
     middleware::Next,
@@ -42,9 +44,9 @@ pub async fn internal_only_middleware<B>(
         return Ok(next.run(Request::from_parts(parts, body)).await);
     }
 
-    // X-Internal header is set to "false" by nginx, only internal requests can set it to "true"
+    // X-Internal header is set to "false" by nginx, only internal requests can set it to the correct token
     let is_internal = match parts.headers.get("X-Internal") {
-        Some(header_value) => header_value.to_str().unwrap() == "true",
+        Some(header_value) => header_value.to_str().unwrap_or_default() == env::var("INTERNAL_TOKEN").unwrap(),
         None => false,
     };
     if is_internal {

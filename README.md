@@ -4,7 +4,7 @@
 
 ## Setup
 
-A [`.env`](.env.example) file should be created with two strong passwords for the database.
+A [`.env`](.env.example) file should be created with two strong randomly generated passwords for the database. The 'internal token' variable should only contain alphanumeric characters. 
 
 The following environment variables are required to use [BuildKit](https://docs.docker.com/build/buildkit/#getting-started) with docker-compose:
 

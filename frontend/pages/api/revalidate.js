@@ -2,7 +2,7 @@ import path from 'path';
 
 export default async function handler(req, res) {
   // X-Internal header is set to "false" by nginx, only internal requests can set it to "true"
-  const is_internal = req.headers["x-internal"] === "true";
+  const is_internal = req.headers["x-internal"] === process.env.INTERNAL_TOKEN;
   if (!is_internal) {
     return res.status(403).json({ message: "Forbidden" });
   } else if (req.method !== "POST") {  // Only POST

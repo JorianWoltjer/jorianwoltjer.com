@@ -24,4 +24,4 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 USER rust
 
-CMD cron && backend
+CMD echo "$INTERNAL_TOKEN" > /tmp/internal_token && cron && backend
