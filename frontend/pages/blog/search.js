@@ -31,39 +31,46 @@ export default function Search() {
     const [loading, setLoading] = useState(States.Loading)
 
     useEffect(() => {
-        const ws = new WebSocket(getWebsocketURL('/blog/search'))
+        const createSocket = () => {
+            setLoading(States.Loading)
+            const ws = new WebSocket(getWebsocketURL('/blog/search'))
 
-        ws.onopen = () => {
-            console.log('Connected!')
-            setSocket(ws)
-            ws.send('')
+            ws.onopen = () => {
+                console.log('Socket connected!')
+                setSocket(ws)
+                ws.send('')
+            }
+
+            ws.onmessage = (e) => {
+                console.log(e)
+                const results = JSON.parse(e.data).map((post) => {
+                    // Replace description with highlighted content
+                    if (post.markdown.includes('{~')) {
+                        post.description = '… ' + post.markdown.replaceAll('...', '…') + ' …'
+                    }
+                    post.title = replaceHighlights(post.title)
+                    post.description = replaceHighlights(post.description, post.slug)
+                    return post
+                })
+                setResults(results)
+                setLoading(States.Done)
+            }
+
+            ws.onclose = (e) => {
+                console.error("Socket closed unexpectedly:", e.reason)
+                setSocket(null)
+                setLoading(States.Error)
+                setTimeout(createSocket, 2000)
+            }
+            ws.onerror = (e) => {
+                console.error("Socket error:", e)
+                ws.close()
+            }
+
+            return () => ws.close()
         }
 
-        ws.onmessage = (e) => {
-            console.log(e)
-            const results = JSON.parse(e.data).map((post) => {
-                if (post.markdown.includes('{~')) {  // Replace description with highlighted content
-                    post.description = '… ' + post.markdown.replaceAll('...', '…') + ' …'
-                }
-                post.title = replaceHighlights(post.title)
-                post.description = replaceHighlights(post.description, post.slug)
-                return post
-            })
-            setResults(results)
-            setLoading(States.Done)
-        }
-
-        ws.onclose = (e) => {
-            console.error("Socket closed unexpectedly:", e.reason)
-            setSocket(null)
-            setLoading(States.Error)
-        }
-        ws.onerror = (e) => {
-            console.error("Socket error:", e)
-            ws.close()
-        }
-
-        return () => ws.close()
+        createSocket()
     }, [])
 
     return <>

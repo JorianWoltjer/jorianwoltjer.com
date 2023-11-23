@@ -1,3 +1,5 @@
+use std::{time::Duration, sync::Arc};
+
 use aide::axum::IntoApiResponse;
 use axum::{
     extract::{
@@ -11,6 +13,8 @@ use hmac::{Hmac, Mac};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use sha2::Sha256;
+use tokio::time;
+use futures::{sink::SinkExt, stream::StreamExt, lock::Mutex};
 
 use crate::{
     extend_slug,
@@ -381,8 +385,27 @@ pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl Int
 }
 
 /// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.
-pub async fn handle_ws_search(mut socket: WebSocket, State(state): State<AppState>) {
-    while let Some(Ok(msg)) = socket.recv().await {
+pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) {
+    let (tx, mut rx) = socket.split();
+    let tx = Arc::new(Mutex::new(tx));
+    
+    // Send ping every 10 seconds in background thread
+    let tx_ping = tx.clone();
+    tokio::spawn(async move {
+        loop {
+            time::sleep(Duration::from_secs(10)).await;
+            println!("WebSocket: Sending ping");
+
+            let mut tx = tx_ping.lock().await;
+            if tx.send(Message::Ping(vec![])).await.is_err() {
+                break; // Connection closed
+            };
+        }
+    });
+
+    // Respond to incoming messages
+    let tx_search = tx.clone();
+    while let Some(Ok(msg)) = rx.next().await {
         println!("WebSocket: Received {msg:?}");
         if let Message::Text(query) = msg {
             println!("           -> Query: {}", query);
@@ -402,7 +425,8 @@ pub async fn handle_ws_search(mut socket: WebSocket, State(state): State<AppStat
                         println!("           -> Sending {} results", results.len());
                         let response = Message::Text(serde_json::to_string(&results).unwrap());
             
-                        if socket.send(response).await.is_err() {
+                        let mut tx = tx_search.lock().await;
+                        if tx.send(response).await.is_err() {
                             break; // Connection closed
                         };
                     },
