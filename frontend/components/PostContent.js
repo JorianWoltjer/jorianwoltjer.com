@@ -66,8 +66,10 @@ export default function PostContent({ content, admin_interface, admin_components
                     <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}</span>
             </div>
             {admin_interface && <div className="mb-4">{admin_components}</div>}
-            <TableOfContents html={content.html} />
-            <div className='post-content flex-grow-1'>{render(content.html, mounted)}</div>
+            <div className='flex-grow-1'>
+                <TableOfContents html={content.html} />
+                <div className='post-content'>{render(content.html, mounted)}</div>
+            </div>
             <div className="pagination">
                 <div className="pagination-center">
                     <p className="text-white-50">The end! If you have any questions feel free to ask me anywhere on my <Link href="/contact" target="_blank">Contacts</Link></p>
