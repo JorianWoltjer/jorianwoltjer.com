@@ -2,7 +2,7 @@ import { Breadcrumbs, CodeBlock, RelativeTime, TableOfContents, Tags } from '@/c
 import { faEye } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'highlight.js/styles/github-dark.css';
-import parse from 'html-react-parser';
+import parse, { domToReact } from 'html-react-parser';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -39,11 +39,13 @@ export function render(html, mounted) {
                 if (node.attribs.href === node.children[0].data && match) {
                     return <iframe width="560" height="315" src={`https://www.youtube-nocookie.com/embed/${match[1]}`} title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                 }
+                // Convert other links to `target="_blank"`
+                return <a href={node.attribs.href} target="_blank">{domToReact(node.children)}</a>
 
             } else if (node.type === 'tag' && Object.keys(headers).includes(node.name)) {
                 // Add anchor links to headings
                 const id = node.attribs.id;
-                return headers[node.name]({ id, children: <a className="header-link" href={`#${id}`}>{node.children[0].data}</a> })
+                return headers[node.name]({ id, children: <a className="header-link" href={`#${id}`}>{domToReact(node.children)}</a> })
             }
         }
     })

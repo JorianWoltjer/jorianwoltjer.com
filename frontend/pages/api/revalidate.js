@@ -1,7 +1,7 @@
 import path from 'path';
 
 export default async function handler(req, res) {
-  // X-Internal header is set to "false" by nginx, only internal requests can set it to "true"
+  // X-Internal header is set to "false" by nginx
   const is_internal = req.headers["x-internal"] === process.env.INTERNAL_TOKEN;
   if (!is_internal) {
     return res.status(403).json({ message: "Forbidden" });
