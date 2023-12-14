@@ -1,4 +1,34 @@
 import path from 'path';
+import fs from 'fs';
+
+function getBuildId() {
+  return fs.readFileSync(".next/BUILD_ID", 'utf8')
+}
+
+async function purgeCloudflareCache(files) {
+  // Convert to absolute URLs and add /_next/data URLs
+  const BUILD_ID = getBuildId();
+  files = files
+    .concat(files.map(path => `/_next/data/${BUILD_ID}${path}.json`))
+    .map(path => new URL(path, process.env.NEXT_PUBLIC_SITE_URL).toString())
+
+  console.log("Cloudflare Purge:", files)
+
+  // Send request to Cloudflare
+  const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${process.env.CLOUDFLARE_ZONE_ID}/purge_cache`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.CLOUDFLARE_API_KEY}`
+    },
+    body: JSON.stringify({ files })
+  })
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error(data.errors[0].message)
+  }
+  return data
+}
 
 export default async function handler(req, res) {
   // X-Internal header is set to "false" by nginx
@@ -46,6 +76,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: err.message })
   }
   console.timeEnd("Revalidation")
+
+  if (process.env.CLOUDFLARE_ZONE_ID && process.env.CLOUDFLARE_API_KEY) {
+    console.log(await purgeCloudflareCache(Array.from(revalidations)))
+  }
 
   return res.status(204).end()
 }

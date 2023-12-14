@@ -6,6 +6,8 @@ then
   exit 1
 fi
 
-docker exec jw-backend curl -s -X POST http://frontend/api/revalidate -H 'Content-Type: application/json' -d '[{"type":"Custom","slug":"'"$1"'"}]'
+. $(dirname $BASH_SOURCE)/../.env
+
+docker exec jw-backend curl -s -X POST http://frontend/api/revalidate -H 'Content-Type: application/json' -d '[{"type":"Custom","slug":"'"$1"'"}]' -H "X-Internal: $INTERNAL_TOKEN"
 
 echo "Revalidated $1"

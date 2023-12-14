@@ -11,6 +11,9 @@ services:
       - NODE_ENV=production
       - BACKEND=http://backend
       - NEXT_PUBLIC_BACKEND_API=/api
+      - NEXT_PUBLIC_SITE_URL=https://jorianwoltjer.com
+      - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - PORT=80
       - INTERNAL_TOKEN=${INTERNAL_TOKEN}
     networks:
