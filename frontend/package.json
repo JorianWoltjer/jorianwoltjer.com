@@ -18,9 +18,9 @@
     "bootstrap": "^5.3.1",
     "highlight.js": "^11.8.0",
     "html-react-parser": "^4.2.2",
-    "next": "^13.5.4",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "next": "^14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-medium-image-zoom": "^5.1.8",
     "react-tooltip": "^5.21.3",
     "react-tsparticles": "^2.12.2",
@@ -30,6 +30,6 @@
   },
   "devDependencies": {
     "eslint": "8.47.0",
-    "eslint-config-next": "13.4.18"
+    "eslint-config-next": "^14.0.4"
   }
 }

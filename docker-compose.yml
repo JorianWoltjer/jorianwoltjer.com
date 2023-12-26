@@ -4,7 +4,7 @@ services:
     build: ./frontend
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
     container_name: jw-frontend
     hostname: frontend
     environment:
@@ -23,7 +23,7 @@ services:
     build: ./backend
     depends_on:
       - db
-    restart: always
+    restart: unless-stopped
     container_name: jw-backend
     hostname: backend
     environment:
@@ -39,7 +39,7 @@ services:
     image: postgres:latest
     container_name: jw-db
     hostname: db
-    restart: always
+    restart: unless-stopped
     environment:
       - BACKEND_PASSWORD=${BACKEND_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -51,7 +51,7 @@ services:
 
   nginx:
     image: nginx:latest
-    restart: always
+    restart: unless-stopped
     container_name: jw-nginx
     networks:
       - website
