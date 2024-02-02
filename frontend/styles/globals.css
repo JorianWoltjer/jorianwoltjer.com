@@ -52,7 +52,7 @@ body {
   margin-top: 5.6484375rem;
 }
 
-div.center-transform {
+.center-transform {
   text-align: center;
   position: absolute;
   top: 50%;
@@ -954,4 +954,13 @@ a.no-style:hover {
 
 .w-unset {
   width: unset !important;
+}
+
+.img88x31 {
+  top: unset;
+  bottom: calc(0.875em*2 + 1.2rem*2 + 2rem);
+  transition: opacity 0.25s ease;
+}
+.img88x31:hover {
+  opacity: 100% !important;
 }
