@@ -958,6 +958,7 @@ a.no-style:hover {
 
 .img88x31 {
   top: unset;
+  opacity: 0%;
   bottom: calc(0.875em*2 + 1.2rem*2 + 2rem);
   transition: opacity 0.25s ease;
 }

@@ -30,7 +30,7 @@ export default function Home() {
         <Image className="round-shadow" src="/img/logo.png" width="250" height="250" alt="Logo" />
         <h2 className="my-4">Welcome to my website!</h2>
       </div>
-      <a href="/img/88x31.gif" className="center-transform img88x31"  style={{opacity: 0}}>
+      <a href="/img/88x31.gif" className="center-transform img88x31">
         <img src="/img/88x31.gif" alt="88x31" />
       </a>
     </>
