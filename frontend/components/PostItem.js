@@ -1,10 +1,11 @@
 import { RelativeTime, Tags } from '@/components'
+import { timeDifference } from '@/utils/strings'
 import { faEye } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function PostItem({ slug, title, description, img, points, views, timestamp, hidden, tags, signature }) {
+export default function PostItem({ slug, title, description, img, points, views, timestamp, hidden, autorelease, tags, signature }) {
     let href;
     if (slug) {
         if (signature) {  // Hidden
@@ -34,7 +35,7 @@ export default function PostItem({ slug, title, description, img, points, views,
                     <p className="card-text">{description}</p>
                 </div>
                 <div className="card-footer text-muted">
-                    <RelativeTime timestamp={timestamp} /> - <span className="darken">
+                    <RelativeTime timestamp={timestamp} /> - <span className="darken" title={autorelease && `Auto-Release: ${timeDifference(autorelease)}`}>
                         <FontAwesomeIcon icon={faEye} /> {hidden ? <b>Hidden</b> : `${views || 0} views`}</span>
                 </div>
             </div>

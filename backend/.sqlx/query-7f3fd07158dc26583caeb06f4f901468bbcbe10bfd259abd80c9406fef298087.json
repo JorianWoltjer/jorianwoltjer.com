@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, \n                    ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as \"title!\", \n                    ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as \"description!\", \n                    ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as \"markdown!\", \n                    img, points, views, featured, hidden, timestamp, \n                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n                    FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)\n                    WHERE NOT hidden\n                    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5",
+  "query": "SELECT p.id, folder, slug, \n                    ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as \"title!\", \n                    ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as \"description!\", \n                    ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as \"markdown!\", \n                    img, points, views, featured, hidden, autorelease, timestamp, \n                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n                    FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)\n                    WHERE NOT hidden\n                    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5",
   "describe": {
     "columns": [
       {
@@ -60,11 +60,16 @@
       },
       {
         "ordinal": 11,
-        "name": "timestamp",
+        "name": "autorelease",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 12,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
         "name": "tags!: Vec<Tag>",
         "type_info": "RecordArray"
       }
@@ -86,9 +91,10 @@
       false,
       false,
       false,
+      true,
       false,
       null
     ]
   },
-  "hash": "e9406b2b9ec6d004082f011a43499273aa07e967a4bbf35ee02d4a78af67d468"
+  "hash": "7f3fd07158dc26583caeb06f4f901468bbcbe10bfd259abd80c9406fef298087"
 }

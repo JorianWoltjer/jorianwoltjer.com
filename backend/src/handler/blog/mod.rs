@@ -44,6 +44,7 @@ pub async fn preview(
         views: 0,
         featured: post.featured,
         hidden: post.hidden,
+        autorelease: post.autorelease,
         timestamp: Utc::now(),
         tags,
     }))

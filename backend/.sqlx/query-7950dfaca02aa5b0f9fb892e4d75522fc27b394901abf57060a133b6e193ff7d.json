@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)",
+  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE p.id = $1",
   "describe": {
     "columns": [
       {
@@ -35,28 +35,28 @@
       },
       {
         "ordinal": 6,
-        "name": "markdown",
-        "type_info": "Text"
-      },
-      {
-        "ordinal": 7,
         "name": "points",
         "type_info": "Int4"
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "views",
         "type_info": "Int4"
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "featured",
         "type_info": "Bool"
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "hidden",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "autorelease",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 11,
@@ -71,7 +71,7 @@
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Int4"
       ]
     },
     "nullable": [
@@ -85,10 +85,10 @@
       false,
       false,
       false,
-      false,
+      true,
       false,
       null
     ]
   },
-  "hash": "7f6e0e6e2467a2e7a26e8b3a8242893000ce340c46462fe9363ea76db9d2e4c2"
+  "hash": "7950dfaca02aa5b0f9fb892e4d75522fc27b394901abf57060a133b6e193ff7d"
 }

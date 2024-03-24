@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, \n                array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n                FROM posts p WHERE NOT hidden AND (folder = $1) ORDER BY timestamp DESC",
+  "query": "SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)",
   "describe": {
     "columns": [
       {
@@ -35,38 +35,48 @@
       },
       {
         "ordinal": 6,
+        "name": "markdown",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
         "name": "points",
         "type_info": "Int4"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "views",
         "type_info": "Int4"
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "featured",
         "type_info": "Bool"
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "hidden",
         "type_info": "Bool"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
+        "name": "autorelease",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
         "name": "timestamp",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 13,
         "name": "tags!: Vec<Tag>",
         "type_info": "RecordArray"
       }
     ],
     "parameters": {
       "Left": [
-        "Int4"
+        "Text"
       ]
     },
     "nullable": [
@@ -81,8 +91,10 @@
       false,
       false,
       false,
+      true,
+      false,
       null
     ]
   },
-  "hash": "1268787ca433f5d61c812c0250fff02d2453a1e78b95fe02e87fd3c57f90a782"
+  "hash": "705d77dadaba729cb45644b0c6530ef66124727c9162853734098ad1156b2d26"
 }

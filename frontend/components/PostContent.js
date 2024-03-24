@@ -1,4 +1,5 @@
 import { Breadcrumbs, CodeBlock, RelativeTime, TableOfContents, Tags } from '@/components';
+import { timeDifference } from '@/utils/strings';
 import { faEye } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import 'highlight.js/styles/github-dark.css';
@@ -64,8 +65,9 @@ export default function PostContent({ content, admin_interface, admin_components
             <br />
             <Tags tags={content.tags} points={content.points} />
             <div className="text-muted mb-2">
-                {<RelativeTime timestamp={content.timestamp} />} - <span className="darken">
-                    <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}</span>
+                {<RelativeTime timestamp={content.timestamp} />} - <span className="darken" title={content.autorelease && `Auto-Release: ${timeDifference(content.autorelease)}`}>
+                    <FontAwesomeIcon icon={faEye} /> {content.hidden ? <b>Hidden</b> : `${content.views || 0} views`}
+                </span>
             </div>
             {admin_interface && <div className="mb-4">{admin_components}</div>}
             <div className='flex-grow-1'>

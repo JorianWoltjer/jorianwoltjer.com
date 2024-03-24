@@ -1,40 +1,5 @@
 import { useEffect, useState } from "react";
-
-export function timeDifference(current, timestamp) {
-  const msDiff = current - timestamp;
-
-  const msPerMinute = 60 * 1000;
-  const msPerHour = msPerMinute * 60;
-  const msPerDay = msPerHour * 24;
-  const msPerMonth = msPerDay * 30;
-  const msPerYear = msPerDay * 365;
-
-  let value, unit;
-  if (msDiff < msPerMinute) {
-    value = msDiff / 1000;
-    unit = "second";
-  } else if (msDiff < msPerHour) {
-    value = msDiff / msPerMinute;
-    unit = "minute";
-  } else if (msDiff < msPerDay) {
-    value = msDiff / msPerHour;
-    unit = "hour";
-  } else if (msDiff < msPerMonth) {
-    value = msDiff / msPerDay;
-    unit = "day";
-  } else if (msDiff < msPerYear) {
-    value = msDiff / msPerMonth;
-    unit = "month";
-  } else {
-    value = msDiff / msPerYear;
-    unit = "year";
-  }
-
-  value = Math.floor(value)
-  unit += value === 1 ? "" : "s";
-
-  return value + " " + unit + " ago";
-}
+import { timeDifference } from "@/utils/strings";
 
 export default function RelativeTime({ timestamp, interval_ms = 1000 }) {
   const [now, setNow] = useState(Date.now())
@@ -47,6 +12,6 @@ export default function RelativeTime({ timestamp, interval_ms = 1000 }) {
   if (timestamp === undefined) return "0 seconds ago"
 
   return <span suppressHydrationWarning>
-    {timeDifference(now, new Date(timestamp))}
+    {timeDifference(new Date(timestamp), now)}
   </span>
 }

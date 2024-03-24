@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE NOT hidden AND (featured) ORDER BY timestamp DESC",
+  "query": "SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, \n            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n            FROM posts p WHERE NOT hidden AND (featured) ORDER BY timestamp DESC",
   "describe": {
     "columns": [
       {
@@ -55,11 +55,16 @@
       },
       {
         "ordinal": 10,
-        "name": "timestamp",
+        "name": "autorelease",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 11,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
         "name": "tags!: Vec<Tag>",
         "type_info": "RecordArray"
       }
@@ -78,9 +83,10 @@
       false,
       false,
       false,
+      true,
       false,
       null
     ]
   },
-  "hash": "86408893b97dafc49f496daa27cdfdcac54e1a7ed2b8a65f960dc470a07d85d7"
+  "hash": "8f99d8cae6e3cb7a9f28979ae20bb25f2e5c2a90db9f26ba8fa658fd9ff12b07"
 }

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET hidden = false, timestamp = autorelease, autorelease = NULL WHERE autorelease <= NOW() AND hidden RETURNING slug",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8d3d0067a5bfc7fce753b3d443b1116ea47567656eef1288ced8cf126e6993da"
+}

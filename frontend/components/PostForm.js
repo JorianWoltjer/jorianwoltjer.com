@@ -1,6 +1,6 @@
 import { MarkdownEditor, PostItem } from "@/components";
 import { BACKEND_API } from "@/config";
-import { slugify } from "@/utils/strings";
+import { slugify, timeDifference, toLocalTime } from "@/utils/strings";
 import { faFolder, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
@@ -19,8 +19,10 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     const [points, setPoints] = useState(content_.points || 0);
     const [featured, setFeatured] = useState(content_.featured || false);
     const [hidden, setHidden] = useState(content_.hidden || false);
+    const [autoreleaseCheck, setAutoreleaseCheck] = useState(Boolean(content_.autorelease) || false);
+    const [autorelease, setAutorelease] = useState(autoreleaseCheck ? new Date(content_.autorelease) : new Date(Date.now() + 60 * 60 * 24 * 1000));
     const [tags, setTags] = useState(content_.tags || []);
-    const content = { title, slug, description, img, folder, markdown, points, featured, hidden, tags };
+    const content = { title, slug, description, img, folder, markdown, points, featured, hidden, tags, autorelease: autoreleaseCheck ? autorelease.toISOString() : null };
 
     const [previewWindow, setPreviewWindow] = useState(null);
     const { data: all_tags } = useSWRImmutable(BACKEND_API + "/blog/tags", fetcher);
@@ -62,7 +64,7 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
         <div className="input-group mb-3">
             <div className="form-floating">
                 <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title}
-                    onChange={e => {setTitle(e.target.value),setSlug(slugify(e.target.value))}} onKeyDown={noSubmit} required autoFocus />
+                    onChange={e => { setTitle(e.target.value), setSlug(slugify(e.target.value)) }} onKeyDown={noSubmit} required autoFocus />
                 <label htmlFor="title">Title</label>
             </div>
             <div className="form-floating">
@@ -125,12 +127,25 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
         </div>
         <div className="form-check form-switch">
             <label className="form-check-label" htmlFor="featured">Featured</label>
-            <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked) || setHidden(false)} />
+            <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked)} />
         </div>
         <div className="form-check form-switch">
             <label className="form-check-label" htmlFor="hidden">Hidden</label>
-            <input className="form-check-input" id="hidden" type="checkbox" name="hidden" checked={hidden} onChange={e => setHidden(e.target.checked) || setFeatured(false)} />
+            <input className="form-check-input" id="hidden" type="checkbox" name="hidden" checked={hidden} onChange={e => setHidden(e.target.checked)} />
         </div>
+        {hidden && <>
+            <div className="form-check form-switch">
+                <label className="form-check-label" htmlFor="autoreleasecheck">Auto-Release</label>
+                <input className="form-check-input" id="autoreleasecheck" type="checkbox" name="autoreleasecheck" checked={autoreleaseCheck} onChange={e => setAutoreleaseCheck(e.target.checked)} />
+                <label className="form-label" htmlFor="autorelease">&nbsp;at&nbsp;</label>
+                <input id="autorelease" name="autorelease" type="datetime-local" value={autorelease && toLocalTime(autorelease)}
+                    onChange={e => {
+                        setAutoreleaseCheck(true);
+                        setAutorelease(new Date(e.target.value))
+                    }} />
+                &nbsp;({timeDifference(autorelease.getTime())})
+            </div>
+        </>}
         <br />
         <div className="float-end">
             <button className="btn btn-primary" type="submit"

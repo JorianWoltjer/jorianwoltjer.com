@@ -35,26 +35,28 @@ pub fn is_production() -> bool {
         .unwrap()
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(tag = "type")]
 pub enum Slug {
     Post { slug: String },
     Folder { slug: String },
 }
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct RevalidationRequest {
     pub slugs: Vec<Slug>,
 }
 impl RevalidationRequest {
     /// Revalidate a slug in NextJS static pages
     pub async fn execute(self) -> Result<(), reqwest::Error> {
-        let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
-        reqwest::Client::new()
-            .post(format!("{frontend}/api/revalidate"))
-            .header("X-Internal", env::var("INTERNAL_TOKEN").unwrap())
-            .json(&self.slugs)
-            .send()
-            .await?;
+        if !self.slugs.is_empty() {
+            let frontend = env::var("FRONTEND").unwrap_or(String::from("http://localhost:3000"));
+            reqwest::Client::new()
+                .post(format!("{frontend}/api/revalidate"))
+                .header("X-Internal", env::var("INTERNAL_TOKEN").unwrap())
+                .json(&self.slugs)
+                .send()
+                .await?;
+        }
 
         Ok(())
     }

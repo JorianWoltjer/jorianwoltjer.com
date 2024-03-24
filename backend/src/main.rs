@@ -95,7 +95,7 @@ async fn main() {
         .merge(
             ApiRouter::new() // Internal-only
                 .route("/render", post(render))
-                .route("/blog/revalidate_views", post(revalidate_views))
+                .route("/blog/revalidate", post(revalidate))
                 .route_layer(axum::middleware::from_fn(internal_only_middleware)),
         )
         .merge(

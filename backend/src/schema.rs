@@ -39,6 +39,7 @@ pub struct Post {
     pub views: i32,
     pub featured: bool,
     pub hidden: bool,
+    pub autorelease: Option<DateTime<Utc>>,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
@@ -54,6 +55,7 @@ pub struct PostSummary {
     pub views: i32,
     pub featured: bool,
     pub hidden: bool,
+    pub autorelease: Option<DateTime<Utc>>,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
@@ -69,6 +71,7 @@ pub struct HiddenPost {
     pub views: i32,
     pub featured: bool,
     pub hidden: bool,
+    pub autorelease: Option<DateTime<Utc>>,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
     pub signature: Option<String>,
@@ -91,6 +94,7 @@ impl HiddenPost {
             views: post.views,
             featured: post.featured,
             hidden: post.hidden,
+            autorelease: post.autorelease,
             timestamp: post.timestamp,
             tags: post.tags,
             signature,
@@ -107,6 +111,7 @@ pub struct CreatePost {
     pub points: i32,
     pub featured: bool,
     pub hidden: bool,
+    pub autorelease: Option<DateTime<Utc>>,
     pub markdown: String,
     pub tags: Vec<Tag>, // Only ids are used
 }
@@ -145,7 +150,7 @@ impl FolderContents {
 
         let contents_posts = sqlx::query_as!(
             PostSummary,
-            r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+            r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
                 array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
                 FROM posts p WHERE NOT hidden AND (folder = $1) ORDER BY timestamp DESC"#,
             folder.id

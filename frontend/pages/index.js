@@ -31,6 +31,7 @@ export default function Home() {
         <h2 className="my-4">Welcome to my website!</h2>
       </div>
       <a href="/img/88x31.gif" className="center-transform img88x31">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/img/88x31.gif" alt="88x31" />
       </a>
     </>

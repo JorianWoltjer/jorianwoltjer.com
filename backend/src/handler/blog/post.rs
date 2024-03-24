@@ -26,7 +26,7 @@ use crate::{
 async fn get_hidden_post_summary(id: i32, state: &AppState) -> Result<HiddenPost, sqlx::Error> {
     sqlx::query_as!(
         PostSummary,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE p.id = $1"#,
         id
@@ -74,7 +74,7 @@ pub async fn get_posts(
 ) -> Result<Json<Vec<PostSummary>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden ORDER BY timestamp DESC"#
     )
@@ -90,7 +90,7 @@ pub async fn get_post(
 ) -> Result<Json<Post>, StatusCode> {
     if let Ok(post) = sqlx::query_as!(
         Post,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)"#,
         slug_or_id
@@ -102,7 +102,7 @@ pub async fn get_post(
         Ok(Json(
             sqlx::query_as!(
                 Post,
-                r#"SELECT p.id, folder, p.slug, title, description, img, markdown, points, views, featured, hidden, timestamp, 
+                r#"SELECT p.id, folder, p.slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
                     array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
                     FROM posts p 
                     JOIN post_redirects pr ON p.id = pr.post_id 
@@ -121,7 +121,7 @@ pub async fn get_hidden_posts(
 ) -> Result<Json<Vec<HiddenPost>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE hidden ORDER BY timestamp DESC"#
     )
@@ -146,7 +146,7 @@ pub async fn get_hidden_post(
 
     sqlx::query_as!(
         Post,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE p.id = $1"#,
         id
@@ -166,7 +166,7 @@ pub async fn create_post(
         .map_err(internal_error)?;
 
     let id = sqlx::query!(
-        "INSERT INTO posts (folder, title, slug, description, img, points, featured, hidden, markdown) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        "INSERT INTO posts (folder, title, slug, description, img, points, featured, hidden, autorelease, markdown) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING id",
         post.folder,
         post.title,
@@ -176,6 +176,7 @@ pub async fn create_post(
         post.points,
         post.featured,
         post.hidden,
+        post.autorelease,
         post.markdown
     )
     .fetch_one(&state.db)
@@ -224,12 +225,14 @@ pub async fn edit_post(
     .await
     .map_err(internal_error)?;
 
-    let mut revalidations = vec![
-        Slug::Post {
-            slug: original_post.slug.clone(),
-        },
-        Slug::Post { slug: slug.clone() },
-    ];
+    let mut revalidations = RevalidationRequest {
+        slugs: vec![
+            Slug::Post {
+                slug: original_post.slug.clone(),
+            },
+            Slug::Post { slug: slug.clone() },
+        ],
+    };
 
     if original_post.slug != slug {
         // Add old to redirects table
@@ -249,7 +252,7 @@ pub async fn edit_post(
         .fetch_all(&state.db)
         .await
         .map_err(internal_error)?;
-        revalidations.extend(
+        revalidations.slugs.extend(
             post_revalidations
                 .into_iter()
                 .map(|record| Slug::Post { slug: record.slug }),
@@ -257,7 +260,7 @@ pub async fn edit_post(
     }
 
     sqlx::query!(
-        "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, hidden = $8, markdown = $9 WHERE id = $10",
+        "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, hidden = $8, autorelease = $9, markdown = $10 WHERE id = $11",
         post.folder,
         post.title,
         slug,
@@ -266,6 +269,7 @@ pub async fn edit_post(
         post.points,
         post.featured,
         post.hidden,
+        post.autorelease,
         post.markdown,
         original_post.id
     )
@@ -288,12 +292,7 @@ pub async fn edit_post(
     .map_err(internal_error)?;
 
     // Everything has changed now, revalidate NextJS
-    RevalidationRequest {
-        slugs: revalidations,
-    }
-    .execute()
-    .await
-    .map_err(internal_error)?;
+    revalidations.execute().await.map_err(internal_error)?;
 
     get_hidden_post_summary(original_post.id, &state)
         .await
@@ -306,7 +305,7 @@ pub async fn get_featured_posts(
 ) -> Result<Json<Vec<PostSummary>>, StatusCode> {
     sqlx::query_as!(
         PostSummary,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden AND (featured) ORDER BY timestamp DESC"#
     )
@@ -339,8 +338,12 @@ pub async fn add_view(
     Ok(())
 }
 
-pub async fn revalidate_views(State(state): State<AppState>) -> Result<StatusCode, StatusCode> {
-    let needs_revalidation = sqlx::query!(
+/// Called every minute by a cron job. This does:
+/// 1. Revalidate views
+/// 2. Auto-Release posts
+pub async fn revalidate(State(state): State<AppState>) -> Result<StatusCode, StatusCode> {
+    // Revalidate views
+    let mut revalidations = sqlx::query!(
         "SELECT slug FROM posts WHERE NOT hidden AND (views != cached_views)"
     )
     .fetch_all(&state.db)
@@ -353,17 +356,29 @@ pub async fn revalidate_views(State(state): State<AppState>) -> Result<StatusCod
             .collect(),
     })?;
 
-    if needs_revalidation.slugs.is_empty() {
-        return Ok(StatusCode::NO_CONTENT);
+    if !revalidations.slugs.is_empty() {
+        sqlx::query!("UPDATE posts SET cached_views = views")
+            .execute(&state.db)
+            .await
+            .map_err(internal_error)?;
     }
-    
-    sqlx::query!("UPDATE posts SET cached_views = views")
-        .execute(&state.db)
-        .await
-        .map_err(internal_error)?;
 
-    println!("Revalidating {} posts", needs_revalidation.slugs.len());
-    needs_revalidation.execute().await.map_err(internal_error)?;
+    // Auto-Release posts
+    let released_posts = sqlx::query!(
+        "UPDATE posts SET hidden = false, timestamp = autorelease, autorelease = NULL WHERE autorelease <= NOW() AND hidden RETURNING slug"
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal_error)?;
+
+    revalidations.slugs.extend(
+        released_posts
+            .iter()
+            .map(|record| Slug::Post { slug: record.slug.clone() }),
+    );
+
+    println!("Revalidating {} posts", revalidations.slugs.len());
+    revalidations.execute().await.map_err(internal_error)?;
 
     Ok(StatusCode::OK)
 }
@@ -413,7 +428,7 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
                     ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
                     ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
                     ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
-                    img, points, views, featured, hidden, timestamp, 
+                    img, points, views, featured, hidden, autorelease, timestamp, 
                     array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
                     FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)
                     WHERE NOT hidden
