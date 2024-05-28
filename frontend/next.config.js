@@ -17,7 +17,6 @@ const nextConfig = {
         '/rss.xml',
         '/blog/rss',
         '/blog/feed.xml',
-        '/blog/rss.xml',
         '/blog.rss',
       ].map(source => ({
         source,
