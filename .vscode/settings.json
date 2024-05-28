@@ -1,5 +1,5 @@
 {
   "rust-analyzer.linkedProjects": ["./backend/Cargo.toml"],
   "eslint.workingDirectories": ["./frontend"],
-  "sarif-viewer.connectToGithubCodeScanning": "off"
+  "editor.tabSize": 2
 }

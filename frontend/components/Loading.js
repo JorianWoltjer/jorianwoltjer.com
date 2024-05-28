@@ -1,5 +1,5 @@
 export default function Loading() {
-    return <div className="center-transform">
-        <p className="text-muted fs-5">Loading...</p>
-    </div>
+  return <div className="center2">
+    <p className="text-muted fs-5">Loading...</p>
+  </div>
 }

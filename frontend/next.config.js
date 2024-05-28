@@ -11,16 +11,19 @@ const nextConfig = {
         destination: '/sitemap.xml',
         permanent: true,
       },
-      {
-        source: '/rss',
+      ...[
+        '/rss',
+        '/feed.xml',
+        '/rss.xml',
+        '/blog/rss',
+        '/blog/feed.xml',
+        '/blog/rss.xml',
+        '/blog.rss',
+      ].map(source => ({
+        source,
         destination: '/blog/rss.xml',
         permanent: true,
-      },
-      {
-        source: '/blog/rss',
-        destination: '/blog/rss.xml',
-        permanent: true,
-      },
+      }))
     ]
   }
 }

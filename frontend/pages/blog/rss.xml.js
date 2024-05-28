@@ -10,24 +10,25 @@ function item(post) {
         <description>${post.description}</description>
         <link>${HOST}/blog/p/${post.slug}</link>
         <guid isPermaLink="true">${HOST}/blog/p/${post.id}</guid>
-        <pubDate>${post.timestamp}</pubDate>
+        <pubDate>${new Date(post.timestamp).toUTCString()}</pubDate>
     </item>`;
 }
 
 function generateRSS(posts) {
     posts = xmlEscape(posts);
     return `<?xml version="1.0" encoding="UTF-8"?>
-    <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+    <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
     <title>Blog | Jorian Woltjer</title>
     <link>${HOST}/blog</link>
+    <atom:link href="${HOST}/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations.</description>
     <image>
         <title>Blog | Jorian Woltjer</title>
         <url>${HOST}/img/logo.png</url>
         <link>${HOST}/blog</link>
     </image>
-    ${posts.map(item)}
+    ${posts.map(item).join('')}
     </channel>
 </rss>`
 }
