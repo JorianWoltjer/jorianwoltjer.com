@@ -15,8 +15,17 @@ fn slugify(title: &str) -> String {
 }
 
 pub fn markdown_to_html(markdown: &str) -> Result<String, String> {
-    let mut html = markdown::to_html_with_options(markdown, &markdown::Options::gfm())
-        .map_err(|e| e.to_string())?;
+    let mut html = markdown::to_html_with_options(
+        markdown,
+        &markdown::Options {
+            parse: markdown::ParseOptions::gfm(),
+            compile: markdown::CompileOptions {
+                allow_dangerous_html: true, // Don't care about Self-XSS, required for <iframe>
+                ..markdown::CompileOptions::default()
+            },
+        },
+    )
+    .map_err(|e| e.to_string())?;
     // Don't we all love parsing HTML with Regex :)
 
     // Add IDs and links to headings
