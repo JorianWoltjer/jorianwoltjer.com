@@ -18,6 +18,7 @@
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.4.0",
     "bootstrap": "^5.3.3",
+    "framer-motion": "^11.2.10",
     "highlight.js": "^11.9.0",
     "html-react-parser": "^5.1.10",
     "next": "^14.2.3",

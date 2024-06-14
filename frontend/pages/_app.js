@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 config.autoAddCss = false
 
 function NavbarItem({ href, title, new: _new, ...props }) {
@@ -124,7 +125,7 @@ export default function App({ Component, pageProps }) {
               </li>
             }
             <NavbarItem href="/" title="Home" />
-            <NavbarItem href="https://book.jorianwoltjer.com" target="_blank" title=" Book" new={true} />
+            <NavbarItem href="https://book.jorianwoltjer.com" target="_blank" title="Book" new={true} />
             <NavbarItem href="/blog" title="Blog" />
             <NavbarItem href="/projects" title="Projects" />
             <NavbarItem href="/contact" title="Contact" />
@@ -134,7 +135,9 @@ export default function App({ Component, pageProps }) {
     </nav>
     <div id="page-content">
       <div className="container h-100">
-        <Component {...pageProps} admin_interface={admin_interface} />
+        <AnimatePresence initial={false}>
+          <Component {...pageProps} admin_interface={admin_interface} />
+        </AnimatePresence>
       </div>
     </div>
     <footer id="sticky-footer" className="bg-dark text-white-50">
