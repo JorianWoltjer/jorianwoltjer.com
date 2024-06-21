@@ -1,5 +1,5 @@
-import Particles from "@tsparticles/react";
-import { loadSlim } from "@tsparticles/slim";
+import Particles from "react-tsparticles";
+import { loadSlim } from "tsparticles-slim";
 
 async function particlesInit(tsParticles) {
   console.log("init", tsParticles);
