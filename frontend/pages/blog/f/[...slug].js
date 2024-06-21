@@ -4,6 +4,7 @@ import { faEdit, faFolderPlus, faPlus } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from 'next/router';
 import { useEffect } from "react";
+import { motion } from "framer-motion";
 import Link from 'next/link';
 import Head from "next/head";
 
@@ -38,18 +39,24 @@ export default function Folder({ content, admin_interface }) {
     </Head>
     <Breadcrumbs slug={content.slug} title={content.title} />
     <hr />
-    <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>
-    {admin_interface && <>
-      <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
-      <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
-      <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
-    </>}
-    {content.folders.map(folder => (
-      <FolderItem key={folder.id} {...folder} />
-    ))}
-    {content.posts.map(post => (
-      <PostItem key={post.id} {...post} />
-    ))}
+    <motion.main
+      initial={{ opacity: 0.5, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ ease: "easeOut", duration: 0.2 }}
+    >
+      <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>
+      {admin_interface && <>
+        <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
+        <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
+        <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
+      </>}
+      {content.folders.map(folder => (
+        <FolderItem key={folder.id} {...folder} />
+      ))}
+      {content.posts.map(post => (
+        <PostItem key={post.id} {...post} />
+      ))}
+    </motion.main>
   </>
 }
 
