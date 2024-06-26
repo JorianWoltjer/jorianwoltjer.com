@@ -1,4 +1,4 @@
-import { Loading, Metadata, PostContent } from "@/components";
+import { Loading, Metadata, PostContent, TransitionAnimator } from "@/components";
 import { BACKEND, BACKEND_API, SLUG_REGEX } from "@/config";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,9 +38,11 @@ export default function Post({ content, admin_interface }) {
     <Head>
       <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
     </Head>
-    <PostContent content={content} admin_interface={admin_interface} admin_components={
-      <Link className="big-button" href={`/admin/post/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
-    } />
+    <TransitionAnimator>
+      <PostContent content={content} admin_interface={admin_interface} admin_components={
+        <Link className="big-button" href={`/admin/post/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
+      } />
+    </TransitionAnimator>
   </>
 }
 

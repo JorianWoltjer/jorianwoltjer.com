@@ -1,4 +1,4 @@
-import { Metadata, PostItem } from '@/components'
+import { Metadata, PostItem, TransitionAnimator } from '@/components'
 import { getWebsocketURL } from '@/config'
 import { faCheck, faRotate, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -82,22 +82,24 @@ export default function Search() {
       <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
     </Head>
     <h1>Search</h1>
-    <div className="input-group mb-3">
-      <span className="input-group-text" style={{ width: "50px" }}>{loading}</span>
-      <input className="form-control form-control-lg" type="text" placeholder="Search..." defaultValue={q} autoComplete="off" autoFocus
-        onBlur={(e) => {
-          const queryString = e.target.value ? `?q=${encodeURIComponent(e.target.value)}` : '';
-          history.replaceState({}, '', '/blog/search' + queryString)
-        }}
-        onInput={(e) => {
-          if (socket) {
-            socket.send(e.target.value)
-            setLoading(States.Loading)
-          }
-        }} />
-    </div>
-    {results.length > 0 ? results.map((post) =>
-      <PostItem key={post.id} {...post} />
-    ) : loading === States.Done && <p className="lead text-muted">No results found.</p>}
+    <TransitionAnimator>
+      <div className="input-group mb-3">
+        <span className="input-group-text" style={{ width: "50px" }}>{loading}</span>
+        <input className="form-control form-control-lg" type="text" placeholder="Search..." defaultValue={q} autoComplete="off" autoFocus
+          onBlur={(e) => {
+            const queryString = e.target.value ? `?q=${encodeURIComponent(e.target.value)}` : '';
+            history.replaceState({}, '', '/blog/search' + queryString)
+          }}
+          onInput={(e) => {
+            if (socket) {
+              socket.send(e.target.value)
+              setLoading(States.Loading)
+            }
+          }} />
+      </div>
+      {results.length > 0 ? results.map((post) =>
+        <PostItem key={post.id} {...post} />
+      ) : loading === States.Done && <p className="lead text-muted">No results found.</p>}
+    </TransitionAnimator>
   </>
 }
