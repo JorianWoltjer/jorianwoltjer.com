@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["nginx"],
+    remotePatterns: [{ protocol: "http", hostname: "nginx", port: "" }],
   },
   async redirects() {
     return [

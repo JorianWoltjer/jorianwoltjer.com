@@ -15,3 +15,4 @@ export { default as Project } from './Project';
 export { default as RelativeTime } from './RelativeTime';
 export { default as TableOfContents } from './TableOfContents';
 export { default as Tags } from './Tags';
+export { default as TransitionAnimator } from './TransitionAnimator';

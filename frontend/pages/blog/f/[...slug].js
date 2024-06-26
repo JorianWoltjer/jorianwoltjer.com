@@ -1,4 +1,4 @@
-import { Breadcrumbs, FolderItem, Loading, Metadata, PostItem } from "@/components";
+import { Breadcrumbs, FolderItem, Loading, Metadata, PostItem, TransitionAnimator } from "@/components";
 import { BACKEND, SLUG_REGEX } from "@/config";
 import { faEdit, faFolderPlus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -38,18 +38,21 @@ export default function Folder({ content, admin_interface }) {
     </Head>
     <Breadcrumbs slug={content.slug} title={content.title} />
     <hr />
-    <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>
-    {admin_interface && <>
-      <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
-      <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
-      <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
-    </>}
-    {content.folders.map(folder => (
-      <FolderItem key={folder.id} {...folder} />
-    ))}
-    {content.posts.map(post => (
-      <PostItem key={post.id} {...post} />
-    ))}
+    <TransitionAnimator>
+      <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>
+      {admin_interface && <>
+        <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
+        <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
+        <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
+      </>}
+      {content.folders.map(folder => (
+        <FolderItem key={folder.id} {...folder} />
+      ))}
+      {content.posts.map(post => (
+        <PostItem key={post.id} {...post} />
+      ))}
+    </TransitionAnimator>
+
   </>
 }
 
