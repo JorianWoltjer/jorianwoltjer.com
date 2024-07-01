@@ -9,7 +9,9 @@ const variants = {
 }
 
 function getDirection() {
+  // Don't we all love javascript error handling?
   if (typeof window === 'undefined') return 0
+  if (!('navigation' in window)) return 0
 
   let url = navigation.entries().at(-1)?.url
   if (!url) return 0
