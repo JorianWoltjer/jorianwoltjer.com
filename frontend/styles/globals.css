@@ -750,10 +750,17 @@ code {
 .post-content img {
   position: relative !important;
   display: block;
+  margin: 0 auto;
   max-width: calc(min(50ch, 100%));
   max-height: 500px;
   border: 2px solid var(--background-light);
   border-radius: 10px;
+}
+
+.post-content iframe {
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 1rem;
 }
 
 .post-content a:not(.copy, .no-style, .header-link),
@@ -959,7 +966,7 @@ a.no-style:hover {
 .img88x31 {
   top: unset;
   opacity: 0%;
-  bottom: calc(0.875em*2 + 1.2rem*2 + 2rem);
+  bottom: calc(0.875em * 2 + 1.2rem * 2 + 2rem);
   transition: opacity 0.25s ease;
 }
 .img88x31:hover {
