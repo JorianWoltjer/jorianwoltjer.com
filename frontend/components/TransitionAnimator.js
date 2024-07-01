@@ -11,9 +11,14 @@ const variants = {
 function getDirection() {
   if (typeof window === 'undefined') return 0
 
-  let before = new URL(navigation.entries().at(-1).url)
+  let url = navigation.entries().at(-1)?.url
+  if (!url) return 0
+
+  let before = new URL(url)
   if (before.href === location.href) {
-    before = new URL(navigation.entries().at(-2).url)
+    url = navigation.entries().at(-2)?.url
+    if (!url) return 0
+    before = new URL(url)
   }
 
   const [beforeSlashes, afterSlashes] = [before, location].map(url => url.pathname.split('/').length - 1)
