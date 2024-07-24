@@ -40,7 +40,7 @@ export default function Login() {
       <br />
       {alert}
       <form method="post" onSubmit={handleSubmit}>
-        <input className="form-control" type="password" id="password" name="password" placeholder="Password..." />
+        <input className="form-control" type="password" id="password" name="password" placeholder="Password..." autoFocus />
         <br />
         <input className="btn btn-secondary" type="submit" value="Submit" />
       </form>

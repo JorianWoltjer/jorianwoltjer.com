@@ -9,29 +9,30 @@ export default function Metadata({ title, description, img }) {
   return <>
     <Head>
       <title>{title}</title>
+      <meta name="theme-color" content="#3498db" />
       {title && <>
-        <meta property='og:title' content={title} />
-        <meta name='twitter:title' content={title} />
+        <meta property="og:title" content={title} />
+        <meta name="twitter:title" content={title} />
       </>}
       {description && <>
-        <meta name='description' content={description} />
-        <meta property='og:description' content={description} />
-        <meta name='twitter:description' content={description} />
+        <meta name="description" content={description} />
+        <meta property="og:description" content={description} />
+        <meta name="twitter:description" content={description} />
       </>}
       {img ? <>
-        <meta property='og:image' content={img} />
-        <meta name='twitter:image' content={img} />
-        <meta name='twitter:card' content='summary_large_image' />
+        <meta property="og:image" content={`https://jorianwoltjer.com${img}`} />
+        <meta name="twitter:image" content={`https://jorianwoltjer.com${img}`} />
+        <meta name="twitter:card" content="summary_large_image" />
       </> : <>
-        <meta property='og:image' content='/img/logo.png' />
-        <meta name='twitter:image' content='/img/logo.png' />
-        <meta name='twitter:card' content='summary' />
+        <meta property="og:image" content="https://jorianwoltjer.com/img/logo.png" />
+        <meta name="twitter:image" content="https://jorianwoltjer.com/img/logo.png" />
+        <meta name="twitter:card" content="summary" />
       </>}
-      <meta property='og:type' content='website' />
-      <meta property='og:url' content={`https://jorianwoltjer.com${router.asPath}`} />
-      <meta name='twitter:url' content={`https://jorianwoltjer.com${router.asPath}`} />
-      <meta property='og:site_name' content='jorianwoltjer.com' />
-      <meta name='twitter:domain' content='jorianwoltjer.com' />
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content={`https://jorianwoltjer.com${router.asPath}`} />
+      <meta name="twitter:url" content={`https://jorianwoltjer.com${router.asPath}`} />
+      <meta property="og:site_name" content="jorianwoltjer.com" />
+      <meta name="twitter:domain" content="jorianwoltjer.com" />
     </Head>
   </>
 }
