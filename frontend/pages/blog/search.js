@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 
 const States = {
   Error: <FontAwesomeIcon className='w-100' icon={faXmark} style={{ color: "var(--red)" }} title='Error' />,
@@ -17,7 +18,7 @@ export function replaceHighlights(input, slug) {
     if (index % 2 === 1) {
       if (slug) {
         const href = `/blog/p/${slug}#:~:text=${encodeURIComponent(part)}`
-        return <a key={index} href={href} className='no-style' style={{ backgroundColor: "rgb(255 255 255 / 15%)" }}>{part}</a>;
+        return <Link key={index} href={href} className='no-style' style={{ backgroundColor: "rgb(255 255 255 / 15%)" }}>{part}</Link>;
       } else {
         return <span key={index} style={{ backgroundColor: "rgb(255 255 255 / 15%)" }}>{part}</span>;
       }

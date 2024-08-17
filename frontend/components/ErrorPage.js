@@ -12,7 +12,7 @@ export default function ErrorPage({ title, message }) {
     <p className="lead">
       {message}
       <br />
-      You can try going back <Link href="/">Home</Link> or to the <a href="#" onClick={router.back}>previous page</a>.
+      You can try going back <Link href="/">Home</Link> or to the <Link href="#" onClick={router.back}>previous page</Link>.
     </p>
     <p className="lead text-muted">
       (or create an <Link style={{ color: 'inherit' }} href="https://github.com/JorianWoltjer/jorianwoltjer.com/issues/new">Issue</Link> with context if you think this is a bug)

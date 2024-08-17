@@ -33,11 +33,11 @@ export default function Blog({ root_folders, featured_posts, admin_interface }) 
         <div className="row row-cols-1 row-cols-md-2 g-4">
           {featured_posts.map(post => <div key={post.id} className="col">
             <div className="card h-100">
-              <a href={`/blog/p/${post.slug}`}><div className="card-img-top"><Image fill src={`http://nginx/img/blog/${post.img || '../placeholder.png'}`} alt="Thumbnail" /></div></a>
+              <Link href={`/blog/p/${post.slug}`}><div className="card-img-top"><Image fill src={`http://nginx/img/blog/${post.img || '../placeholder.png'}`} alt="Thumbnail" /></div></Link>
               <div className="card-body">
                 <Tags tags={post.tags} />
                 <h4 className="card-title">
-                  <a href={`/blog/p/${post.slug}`}>{post.title}</a>
+                  <Link href={`/blog/p/${post.slug}`}>{post.title}</Link>
                 </h4>
                 <p className="card-text">{post.description}</p>
               </div>
