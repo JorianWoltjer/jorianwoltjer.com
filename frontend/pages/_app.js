@@ -1,4 +1,5 @@
 import { BACKEND_API } from "@/config";
+import { HistoryContextProvider } from "@/components/HistoryContext";
 import 'bootstrap/dist/css/bootstrap.css';
 import '@/styles/fonts.css';
 import '@/styles/globals.css';
@@ -136,7 +137,9 @@ export default function App({ Component, pageProps }) {
     <div id="page-content">
       <div className="container h-100">
         <AnimatePresence initial={false}>
-          <Component {...pageProps} admin_interface={admin_interface} />
+          <HistoryContextProvider>
+            <Component {...pageProps} admin_interface={admin_interface} />
+          </HistoryContextProvider>
         </AnimatePresence>
       </div>
     </div>

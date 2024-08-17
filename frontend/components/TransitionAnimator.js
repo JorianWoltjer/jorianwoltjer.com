@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
+import usePreviousRoute from "@/components/HistoryContext";
 
 const variants = {
   visible: { x: 0 },
@@ -8,33 +9,21 @@ const variants = {
   })
 }
 
-function getDirection() {
-  // Don't we all love javascript error handling?
-  if (typeof window === 'undefined') return 0
-  if (!('navigation' in window)) return 0
+function getDirection(previous, current) {
+  if (!previous) return 0;
+  const [previousSlashes, currentSlashes] = [previous, current].map(path => path.split('/').length - 1);
 
-  let url = navigation.entries().at(-1)?.url
-  if (!url) return 0
-
-  let before = new URL(url)
-  if (before.href === location.href) {
-    url = navigation.entries().at(-2)?.url
-    if (!url) return 0
-    before = new URL(url)
-  }
-
-  const [beforeSlashes, afterSlashes] = [before, location].map(url => url.pathname.split('/').length - 1)
-
-  const diff = afterSlashes - beforeSlashes
-  return diff === 0 ? 0 : diff / Math.abs(diff)
+  const diff = currentSlashes - previousSlashes;
+  return diff === 0 ? 0 : diff / Math.abs(diff);
 }
 
 export default function TransitionAnimator({ children }) {
-  const pathname = useRouter().asPath
+  const current = useRouter().asPath;
+  const previous = usePreviousRoute()?.url;
 
   return <motion.main
-    key={pathname}
-    custom={getDirection()}
+    key={current}
+    custom={getDirection(previous, current)}
     initial="hidden"
     animate="visible"
     variants={variants}
