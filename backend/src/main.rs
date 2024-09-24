@@ -100,7 +100,7 @@ async fn main() {
         )
         .merge(
             ApiRouter::new() // Authentication required
-                .route("/login", get(login_check))
+                .route("/check", get(login_check).post(login_check))
                 .route("/blog/preview", post(preview))
                 .route("/blog/folders", post(create_folder))
                 .route("/blog/posts", post(create_post))

@@ -15,7 +15,7 @@ export async function middleware(req) {
         return unauthorized(req);
     }
     // Proxy to the backend
-    const res = await fetch(BACKEND + "/login", {
+    const res = await fetch(BACKEND + "/check", {
         headers: {
             cookie: `sid=${sid}`
         }
