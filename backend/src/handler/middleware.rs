@@ -6,13 +6,14 @@ use axum::{
     response::Response,
     RequestPartsExt,
 };
-use axum_sessions::extractors::ReadableSession;
+// use axum_sessions::extractors::ReadableSession;
+use tower_sessions::Session;
 
 use crate::is_production;
 
 pub async fn auth_required_middleware<B>(
     req: Request<B>,
-    next: Next<B>,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     let (mut parts, body) = req.into_parts();
 
@@ -22,11 +23,11 @@ pub async fn auth_required_middleware<B>(
     }
 
     let session = parts
-        .extract::<ReadableSession>()
+        .extract::<Session>()
         .await
         .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
-    if !session.get::<bool>("logged_in").unwrap_or(false) {
+    if !session.get::<bool>("logged_in").await.unwrap_or(false) {
         return Err(StatusCode::UNAUTHORIZED);
     }
 
@@ -35,7 +36,7 @@ pub async fn auth_required_middleware<B>(
 
 pub async fn internal_only_middleware<B>(
     req: Request<B>,
-    next: Next<B>,
+    next: Next,
 ) -> Result<Response, StatusCode> {
     let (parts, body) = req.into_parts();
 
