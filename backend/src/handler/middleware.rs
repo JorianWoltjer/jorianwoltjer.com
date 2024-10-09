@@ -2,6 +2,7 @@ use std::env;
 
 use axum::{
     http::{Request, StatusCode},
+    body::Body,
     middleware::Next,
     response::Response,
     RequestPartsExt,
@@ -12,7 +13,7 @@ use tower_sessions::Session;
 use crate::is_production;
 
 pub async fn auth_required_middleware<B>(
-    req: Request<B>,
+    req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
     let (mut parts, body) = req.into_parts();
@@ -27,7 +28,7 @@ pub async fn auth_required_middleware<B>(
         .await
         .map_err(|_| StatusCode::UNAUTHORIZED)?;
 
-    if !session.get::<bool>("logged_in").await.unwrap_or(false) {
+    if !session.get::<bool>("logged_in").await.unwrap_or_default().unwrap() {
         return Err(StatusCode::UNAUTHORIZED);
     }
 
