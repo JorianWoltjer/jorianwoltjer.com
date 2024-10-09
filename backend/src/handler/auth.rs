@@ -22,7 +22,10 @@ pub async fn login(
 
     match bcrypt::verify(login.password, &password_hash) {
         Ok(true) => {
-            session.insert("logged_in", true).await.map_err(internal_error)?;
+            session
+                .insert("logged_in", true)
+                .await
+                .map_err(internal_error)?;
             Ok(StatusCode::NO_CONTENT)
         }
         _ => Err(StatusCode::UNAUTHORIZED),

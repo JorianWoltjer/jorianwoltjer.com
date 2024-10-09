@@ -1,5 +1,3 @@
-use std::env;
-
 use aide::{
     axum::{
         routing::{get, post, put},
@@ -8,10 +6,12 @@ use aide::{
     openapi::{Info, OpenApi, Server},
 };
 use axum::{response::Html, Extension, Json};
+use std::env;
+use std::net::SocketAddr;
 // use axum_sessions::{async_session::MemoryStore, SessionLayer};
-use tower_sessions::{MemoryStore, SessionManagerLayer};
 use backend::{handler::*, is_production, AppState};
 use rand::Rng;
+use tower_sessions::{cookie::Key, MemoryStore, SessionManagerLayer};
 
 use sqlx::postgres::PgPoolOptions;
 use tower_http::{
@@ -64,8 +64,11 @@ async fn main() {
     // Session setup
     let mut secret = [0; 64];
     rand::thread_rng().fill(&mut secret);
-    let store = MemoryStore::new();
-    let session_layer = SessionLayer::new(store, &secret);
+    let key = Key::try_from(hex::decode(secret).expect("INVALID SECRET").as_slice()).unwrap();
+    let store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(store)
+        .with_signed(key)
+        .with_secure(true);
 
     // Logging
     tracing_subscriber::fmt()
@@ -147,8 +150,16 @@ async fn main() {
     }
 
     println!("Listening on :{port}...");
-    let listener = tokio::net::TcpListener::bind(&format!("0.0.0.0:{port}").parse().unwrap()).await.unwrap();
-    axum::serve(listener, app.finish_api(&mut api)
-        .layer(Extension(api))
-        .into_make_service()).await.unwrap();
+    let listener =
+        tokio::net::TcpListener::bind(format!("0.0.0.0:{port}").parse::<SocketAddr>().unwrap())
+            .await
+            .unwrap();
+    axum::serve(
+        listener,
+        app.finish_api(&mut api)
+            .layer(Extension(api))
+            .into_make_service(),
+    )
+    .await
+    .unwrap();
 }
