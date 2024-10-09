@@ -147,14 +147,6 @@ async fn main() {
     }
 
     println!("Listening on :{port}...");
-    // axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
-    //     .serve(
-    //         app.finish_api(&mut api)
-    //             .layer(Extension(api))
-    //             .into_make_service(),
-    //     )
-    //     .await
-    //     .unwrap();
     let listener = tokio::net::TcpListener::bind(&format!("0.0.0.0:{port}").parse().unwrap()).await.unwrap();
     axum::serve(listener, app.finish_api(&mut api)
         .layer(Extension(api))
