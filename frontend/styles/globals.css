@@ -762,6 +762,13 @@ code {
   margin: 0 auto;
   margin-bottom: 1rem;
 }
+.post-content .side-by-side {
+  display: flex;
+  flex-wrap: wrap;
+}
+.post-content .side-by-side iframe {
+  flex: 1;
+}
 
 .post-content a:not(.copy, .no-style, .header-link),
 .post-content a:not(.copy, .no-style, .header-link) * {
