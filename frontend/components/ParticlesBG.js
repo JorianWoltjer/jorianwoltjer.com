@@ -2,8 +2,6 @@ import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 
 async function particlesInit(tsParticles) {
-  console.log("init", tsParticles);
-
   await loadSlim(tsParticles);
 }
 

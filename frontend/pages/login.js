@@ -24,7 +24,7 @@ export default function Login() {
     }).then(res => {
       if (res.ok) {
         const expires = new Date();
-        expires.setDate(expires.getDate() + 1);  // Should align with sid= cookie expiration
+        expires.setDate(expires.getDate() + 1);  // Should align with session= cookie expiration
         document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
         document.location.href = /^\/[a-z]/.test(router.query.next) ? router.query.next : "/blog";
       } else {

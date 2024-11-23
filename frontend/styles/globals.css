@@ -73,7 +73,8 @@ h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+details > summary {
   color: var(--main-color);
   font-family: var(--font-code);
   font-weight: 500;
@@ -86,6 +87,7 @@ h6 {
 .post-content h5,
 .post-content h6 {
   color: revert;
+  font-weight: 600;
   font-family: var(--font-header);
 }
 
@@ -805,7 +807,7 @@ code {
 }
 .table-of-contents a {
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 601;
   display: block;
   padding: 6px 0;
   margin: 0;
@@ -815,6 +817,38 @@ code {
 .table-of-contents a:hover {
   color: var(--main-color);
   text-decoration: underline;
+}
+.table-of-contents ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  margin-left: 1em;
+}
+.table-of-contents ul a {
+  font-size: 0.9rem;
+}
+.table-of-contents summary {
+  padding: 0.8em 1.2em 0.7em 1.2em;
+  margin: -0.8em -1.2em -0.4em -1.2em;
+  font-size: 1.2rem;
+}
+details[open] > summary {
+  list-style: none;
+}
+details[open] > summary::-webkit-details-marker {
+  display: none;
+}
+.table-of-contents summary {
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .table-of-contents {
+    float: none;
+    margin-left: 0;
+  }
+  .table-of-contents summary {
+    pointer-events: auto;
+  }
 }
 
 .round-shadow {

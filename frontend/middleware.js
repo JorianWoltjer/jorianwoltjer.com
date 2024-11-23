@@ -9,15 +9,15 @@ async function unauthorized(req) {
 
 // Admin panel redirect
 export async function middleware(req) {
-    const sid = req.cookies.get("sid")?.value;
+    const session = req.cookies.get("session")?.value;
     // Sanity check
-    if (!sid || !/^[a-zA-Z0-9+_=\/\-]+$/.test(sid)) {
+    if (!session || !/^[a-zA-Z0-9+_=\/\-]+$/.test(session)) {
         return unauthorized(req);
     }
     // Proxy to the backend
     const res = await fetch(BACKEND + "/check", {
         headers: {
-            cookie: `sid=${sid}`
+            cookie: `session=${session}`
         }
     });
     if (!res.ok) {

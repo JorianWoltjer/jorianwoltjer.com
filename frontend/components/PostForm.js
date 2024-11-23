@@ -32,7 +32,6 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     handleSubmit(content);
   }
   const sendPreview = (w) => {
-    console.log(content);
     w.postMessage({
       type: "preview",
       content
@@ -49,7 +48,6 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
         if (event.origin !== window.location.origin) return;
         if (event.data.type !== "preview") return;
 
-        console.log(event.origin, event.data);
         if (event.data.ready) {
           sendPreview(child);
         }

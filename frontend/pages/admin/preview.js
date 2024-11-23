@@ -18,7 +18,6 @@ export default function Preview() {
       if (event.origin !== window.location.origin) return;
       if (event.data.type !== "preview") return;
 
-      console.log(event.origin, event.data)
       // Render post just like in blog/p/[...slug].js getStaticProps()
       const res = await fetch(BACKEND_API + "/blog/preview", {
         method: "POST",

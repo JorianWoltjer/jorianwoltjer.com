@@ -40,13 +40,11 @@ export default function Search() {
       const ws = new WebSocket(getWebsocketURL('/blog/search'))
 
       ws.onopen = () => {
-        console.log('Socket connected!')
         setSocket(ws)
         ws.send(q || '')
       }
 
       ws.onmessage = (e) => {
-        console.log(e)
         const results = JSON.parse(e.data).map((post) => {
           // Replace description with highlighted content
           if (post.markdown.includes('{~')) {

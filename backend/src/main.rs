@@ -7,23 +7,20 @@ use aide::{
     },
     openapi::{Info, OpenApi, Server},
 };
-use axum::{response::Html, Extension, Json};
-use axum_sessions::{async_session::MemoryStore, SessionLayer};
+use axum::{Extension, Json};
 use backend::{handler::*, is_production, AppState};
-use rand::Rng;
-
 use sqlx::postgres::PgPoolOptions;
+use tokio::net::TcpListener;
 use tower_http::{
     cors::{Any, CorsLayer},
+    services::ServeDir,
     trace::{self, TraceLayer},
 };
+use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tracing::Level;
 
 async fn serve_api(Extension(api): Extension<OpenApi>) -> impl IntoApiResponse {
     Json(api)
-}
-async fn serve_swagger_ui() -> Html<&'static str> {
-    Html(include_str!("../static/swagger-ui.html"))
 }
 
 #[tokio::main]
@@ -61,10 +58,8 @@ async fn main() {
         .unwrap();
 
     // Session setup
-    let mut secret = [0; 64];
-    rand::thread_rng().fill(&mut secret);
-    let store = MemoryStore::new();
-    let session_layer = SessionLayer::new(store, &secret);
+    let store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(store).with_name("session");
 
     // Logging
     tracing_subscriber::fmt()
@@ -76,7 +71,7 @@ async fn main() {
     let mut app = ApiRouter::new()
         // Only api_route() routes will be included in documentation
         .route("/swagger.json", get(serve_api))
-        .route("/", get(serve_swagger_ui))
+        .nest_service("/", ServeDir::new("static"))
         .merge(
             ApiRouter::new() // Public
                 .route("/login", post(login))
@@ -146,12 +141,15 @@ async fn main() {
     }
 
     println!("Listening on :{port}...");
-    axum::Server::bind(&format!("0.0.0.0:{port}").parse().unwrap())
-        .serve(
-            app.finish_api(&mut api)
-                .layer(Extension(api))
-                .into_make_service(),
-        )
+    let listener = TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
-        .unwrap();
+        .expect("Failed to bind to port");
+    axum::serve(
+        listener,
+        app.finish_api(&mut api)
+            .layer(Extension(api))
+            .into_make_service(),
+    )
+    .await
+    .unwrap();
 }
