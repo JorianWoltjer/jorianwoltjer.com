@@ -41,6 +41,9 @@ function rssFull(posts) {
 export async function rss() {
   const res_posts = await fetch(BACKEND + "/blog/posts");
   let posts = await res_posts.json()
+  // Limit to 10 most recent posts
+  posts.sort((a, b) => b.timestamp - a.timestamp);
+  posts = posts.slice(0, 10);
   posts = await Promise.all(posts.map(post => getRenderedPost(post.id)));
 
   // Generate the XML RSS feed with the data
