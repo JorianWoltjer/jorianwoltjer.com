@@ -6,8 +6,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-# Allow node to create .next/ folder
-RUN chown node:node .
+# Allow `node` user to create .next/ folder and write XML files
+RUN mkdir .next && touch public/sitemap.xml public/blog/rss.xml
+RUN chown -R node:node .next public/sitemap.xml public/blog/rss.xml
 
 USER node
 

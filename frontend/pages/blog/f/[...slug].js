@@ -32,7 +32,7 @@ export default function Folder({ content, admin_interface }) {
   const [descriptionFirst, descriptionRest] = splitSentence(content.description);
 
   return <>
-    <Metadata title={"Folder: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
+    <Metadata title={content.title} description={content.description} img={`/img/blog/${content.img}`} />
     <Head>
       <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
     </Head>

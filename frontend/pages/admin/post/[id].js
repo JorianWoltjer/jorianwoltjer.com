@@ -19,7 +19,7 @@ export default function EditPost({ content, all_folders }) {
 
   return (
     <>
-      <Metadata title={"Edit Post: " + content.title} />
+      <Metadata title={"Edit " + content.title} />
       <h1>Edit Post</h1>
       <PostForm content={content} all_folders={all_folders} handleSubmit={handleSubmit} />
     </>

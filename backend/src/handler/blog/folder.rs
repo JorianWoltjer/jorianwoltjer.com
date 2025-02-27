@@ -81,12 +81,10 @@ pub async fn create_folder(
     .await
     .map_err(internal_error)?;
 
-    RevalidationRequest {
-        slugs: vec![Slug::Folder { slug: slug.clone() }],
-    }
-    .execute()
-    .await
-    .map_err(internal_error)?;
+    RevalidationRequest::new(vec![Slug::Folder { slug: slug.clone() }])
+        .execute()
+        .await
+        .map_err(internal_error)?;
 
     sqlx::query_as!(
         Folder,
@@ -189,12 +187,10 @@ pub async fn edit_folder(
     .await
     .map_err(internal_error)?;
 
-    RevalidationRequest {
-        slugs: revalidations,
-    }
-    .execute()
-    .await
-    .map_err(internal_error)?;
+    RevalidationRequest::new(revalidations)
+        .execute()
+        .await
+        .map_err(internal_error)?;
 
     sqlx::query_as!(
         Folder,

@@ -44,8 +44,16 @@ pub enum Slug {
 #[derive(Serialize, Debug)]
 pub struct RevalidationRequest {
     pub slugs: Vec<Slug>,
+    pub views_only: bool,
 }
 impl RevalidationRequest {
+    pub fn new(slugs: Vec<Slug>) -> Self {
+        Self {
+            slugs,
+            views_only: false,
+        }
+    }
+
     /// Revalidate a slug in NextJS static pages
     pub async fn execute(self) -> Result<(), reqwest::Error> {
         if !self.slugs.is_empty() {
@@ -53,7 +61,7 @@ impl RevalidationRequest {
             reqwest::Client::new()
                 .post(format!("{frontend}/api/revalidate"))
                 .header("X-Internal", env::var("INTERNAL_TOKEN").unwrap())
-                .json(&self.slugs)
+                .json(&self)
                 .send()
                 .await?;
         }

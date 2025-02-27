@@ -19,7 +19,7 @@ export default function EditFolder({ content, all_folders }) {
 
   return (
     <>
-      <Metadata title={"Edit Folder: " + content.title} />
+      <Metadata title={"Edit " + content.title} />
       <h1>Edit Folder</h1>
       <FolderForm content={content} all_folders={all_folders} handleSubmit={handleSubmit} />
     </>

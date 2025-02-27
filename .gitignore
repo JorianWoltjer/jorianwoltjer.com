@@ -1,3 +1,5 @@
 .env
 *.bak
 scripts/sql
+sitemap.xml
+rss.xml

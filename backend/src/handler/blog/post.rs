@@ -1,20 +1,20 @@
-use std::{time::Duration, sync::Arc};
+use std::{sync::Arc, time::Duration};
 
 use aide::axum::IntoApiResponse;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
-        Path, State, WebSocketUpgrade, Query,
+        Path, Query, State, WebSocketUpgrade,
     },
     http::StatusCode,
     Json,
 };
+use futures::{lock::Mutex, sink::SinkExt, stream::StreamExt};
 use hmac::{Hmac, Mac};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use sha2::Sha256;
 use tokio::time;
-use futures::{sink::SinkExt, stream::StreamExt, lock::Mutex};
 
 use crate::{
     extend_slug,
@@ -42,28 +42,35 @@ pub fn sign(id: i32, hmac_key: &[u8]) -> String {
     hex::encode(mac.finalize().into_bytes())
 }
 
-pub async fn verify_signature(slug_or_id: &str, signature: &str, state: &AppState) -> Result<i32, StatusCode> {
+pub async fn verify_signature(
+    slug_or_id: &str,
+    signature: &str,
+    state: &AppState,
+) -> Result<i32, StatusCode> {
     let signature = hex::decode(signature).map_err(|_| StatusCode::BAD_REQUEST)?;
     let mut mac = Hmac::<Sha256>::new_from_slice(&state.hmac_key).unwrap();
 
     let id = match slug_or_id.parse::<i32>() {
         Ok(id) => id,
         Err(_) => {
-            sqlx::query!(r#"SELECT id as "id!" FROM posts WHERE slug = $1 UNION 
-                    SELECT post_id FROM post_redirects WHERE slug = $1"#, slug_or_id)
-                .fetch_one(&state.db)
-                .await
-                .map_err(sql_not_found)?
-                .id
+            sqlx::query!(
+                r#"SELECT id as "id!" FROM posts WHERE slug = $1 UNION 
+                    SELECT post_id FROM post_redirects WHERE slug = $1"#,
+                slug_or_id
+            )
+            .fetch_one(&state.db)
+            .await
+            .map_err(sql_not_found)?
+            .id
         }
     };
-    
+
     mac.update(id.to_string().as_bytes());
 
     if mac.verify_slice(&signature).is_ok() {
         return Ok(id);
     }
-    
+
     Err(StatusCode::UNAUTHORIZED)
 }
 
@@ -195,12 +202,10 @@ pub async fn create_post(
     .map_err(internal_error)?;
 
     // Everything has changed now, revalidate NextJS
-    RevalidationRequest {
-        slugs: vec![Slug::Post { slug }],
-    }
-    .execute()
-    .await
-    .map_err(internal_error)?;
+    RevalidationRequest::new(vec![Slug::Post { slug }])
+        .execute()
+        .await
+        .map_err(internal_error)?;
 
     get_hidden_post_summary(id, &state)
         .await
@@ -225,14 +230,12 @@ pub async fn edit_post(
     .await
     .map_err(internal_error)?;
 
-    let mut revalidations = RevalidationRequest {
-        slugs: vec![
-            Slug::Post {
-                slug: original_post.slug.clone(),
-            },
-            Slug::Post { slug: slug.clone() },
-        ],
-    };
+    let mut revalidations = RevalidationRequest::new(vec![
+        Slug::Post {
+            slug: original_post.slug.clone(),
+        },
+        Slug::Post { slug: slug.clone() },
+    ]);
 
     if original_post.slug != slug {
         // Add old to redirects table
@@ -330,10 +333,14 @@ pub async fn add_view(
         None => false,
     };
 
-    sqlx::query!("UPDATE posts SET views = views + 1 WHERE id = $1 AND (NOT hidden OR $2)", id, signature_valid)
-        .execute(&state.db)
-        .await
-        .map_err(internal_error)?;
+    sqlx::query!(
+        "UPDATE posts SET views = views + 1 WHERE id = $1 AND (NOT hidden OR $2)",
+        id,
+        signature_valid
+    )
+    .execute(&state.db)
+    .await
+    .map_err(internal_error)?;
 
     Ok(())
 }
@@ -343,18 +350,19 @@ pub async fn add_view(
 /// 2. Auto-Release posts
 pub async fn revalidate(State(state): State<AppState>) -> Result<StatusCode, StatusCode> {
     // Revalidate views
-    let mut revalidations = sqlx::query!(
-        "SELECT slug FROM posts WHERE NOT hidden AND (views != cached_views)"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(|records| RevalidationRequest {
-        slugs: records
-            .into_iter()
-            .map(|record| Slug::Post { slug: record.slug })
-            .collect(),
-    })?;
+    let mut revalidations =
+        sqlx::query!("SELECT slug FROM posts WHERE NOT hidden AND (views != cached_views)")
+            .fetch_all(&state.db)
+            .await
+            .map_err(internal_error)
+            .map(|records| {
+                RevalidationRequest::new(
+                    records
+                        .into_iter()
+                        .map(|record| Slug::Post { slug: record.slug })
+                        .collect(),
+                )
+            })?;
 
     if !revalidations.slugs.is_empty() {
         sqlx::query!("UPDATE posts SET cached_views = views")
@@ -371,11 +379,15 @@ pub async fn revalidate(State(state): State<AppState>) -> Result<StatusCode, Sta
     .await
     .map_err(internal_error)?;
 
-    revalidations.slugs.extend(
-        released_posts
-            .iter()
-            .map(|record| Slug::Post { slug: record.slug.clone() }),
-    );
+    revalidations
+        .slugs
+        .extend(released_posts.iter().map(|record| Slug::Post {
+            slug: record.slug.clone(),
+        }));
+
+    if released_posts.is_empty() {
+        revalidations.views_only = true;
+    }
 
     println!("Revalidating {} posts", revalidations.slugs.len());
     revalidations.execute().await.map_err(internal_error)?;
@@ -403,7 +415,7 @@ pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl Int
 pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) {
     let (tx, mut rx) = socket.split();
     let tx = Arc::new(Mutex::new(tx));
-    
+
     // Send ping every 10 seconds in background thread
     let tx_ping = tx.clone();
     tokio::spawn(async move {

@@ -7,19 +7,17 @@ export function slugify(title) {
   return slug;
 }
 
-export function xmlEscape(obj) {
-  if (typeof obj === 'string') {
-    return obj.replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-  } else if (typeof obj === 'object') {
-    for (const key in obj) {
-      obj[key] = xmlEscape(obj[key])
-    }
-  }
-  return obj
+export function xmlEscape(s) {
+  return s.replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+export function cdataEscape(s) {
+  // https://stackoverflow.com/a/36331725/10508498
+  return `<![CDATA[${s.replace(/]]>/g, ']]]]><![CDATA[>')}]]>`
 }
 
 export function timeDifference(timestamp, from) {

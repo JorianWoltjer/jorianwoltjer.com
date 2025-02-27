@@ -1,3 +1,4 @@
+import { generateXML } from '@/utils/generate';
 import path from 'path';
 import fs from 'fs';
 
@@ -42,7 +43,9 @@ export default async function handler(req, res) {
   const revalidations = new Set();
   revalidations.add(`/blog`)  // For root folders and featured posts
 
-  for (const request of req.body) {
+  const { slugs, views_only } = req.body;
+
+  for (const request of slugs) {
     const { type, slug } = request;
     if (!path || !type) {  // Required parameters
       return res.status(400).json({ message: "Missing parameters" });
@@ -64,6 +67,7 @@ export default async function handler(req, res) {
     }
   }
 
+  // Regenerate requested static pages
   console.time("Revalidation")
   try {
     for (const url of revalidations) {
@@ -77,8 +81,21 @@ export default async function handler(req, res) {
   }
   console.timeEnd("Revalidation")
 
+  // Purge Cloudflare cache
   if (process.env.CLOUDFLARE_ZONE_ID && process.env.CLOUDFLARE_API_KEY) {
     console.log(await purgeCloudflareCache(Array.from(revalidations)))
+  }
+
+  // Regenerate site map and RSS feed files
+  if (!views_only) {
+    console.time("XML Regeneration")
+    try {
+      await generateXML()
+    } catch (err) {
+      console.error(err)
+      return res.status(500).json({ message: err.message })
+    }
+    console.timeEnd("XML Regeneration")
   }
 
   return res.status(204).end()

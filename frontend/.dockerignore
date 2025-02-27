@@ -1,8 +1,11 @@
 Dockerfile
 .dockerignore
-.gitignore
+**/.gitignore
+**/.gitkeep
 .git
 README.md
 node_modules
 .next
 npm-debug.log
+**/sitemap.xml
+**/rss.xml

@@ -1,5 +1,6 @@
 import { Loading, Metadata, PostContent, TransitionAnimator } from "@/components";
 import { BACKEND, BACKEND_API, SLUG_REGEX } from "@/config";
+import { getRenderedPost } from "@/utils/api";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from 'next/router';
@@ -34,7 +35,7 @@ export default function Post({ content, admin_interface }) {
   }
 
   return <>
-    <Metadata title={"Post: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
+    <Metadata title={content.title} description={content.description} img={`/img/blog/${content.img}`} />
     <Head>
       <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
     </Head>
@@ -60,42 +61,41 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }) {
-  const slug = params.slug.join("/")
   try {
+    const slug = params.slug.join("/")
     if (!SLUG_REGEX.test(slug)) {  // Sanity check
       throw new Error("Invalid slug: " + slug)
     }
-    const res = await fetch(BACKEND + "/blog/post/" + slug)
-    const content = await res.json()
-
-    const res_html = await fetch(BACKEND + "/render", {
-      method: "POST",
-      headers: {
-        "X-Internal": process.env.INTERNAL_TOKEN
-      },
-      body: content.markdown
-    })
-    content.html = await res_html.text()
+    let content;
+    try {
+      content = await getRenderedPost(slug);
+    } catch (err) {
+      console.error(err);
+      const res = await fetch(BACKEND + "/blog/post/" + slug)
+      if (!res.ok) {
+        // Try to find folder with the same name, and redirect to it
+        const res2 = await fetch(BACKEND + "/blog/folder/" + slug)
+        if (res2.ok) {
+          return {
+            redirect: {
+              destination: "/blog/f/" + slug,
+              permanent: true
+            }
+          }
+        }
+      }
+      throw err;
+    }
 
     return {
       props: {
         content
       }
     }
-  } catch (err) {  // Not found
-    // Try to find folder with the same name, and redirect to it
-    const res = await fetch(BACKEND + "/blog/folder/" + slug)
-    if (res.status === 200) {
-      return {
-        redirect: {
-          destination: "/blog/f/" + slug,
-          permanent: true
-        }
-      }
-    } else {
-      return {
-        notFound: true
-      }
+  } catch (err) {
+    console.error(err)
+    return {
+      notFound: true
     }
   }
 }
