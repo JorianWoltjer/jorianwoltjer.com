@@ -45,7 +45,7 @@ export default function App({ Component, pageProps }) {
   const toggleNavbar = useRef(null);
 
   const router = useRouter();
-  const executingFile = getJavascriptFile(router.pathname);
+  const executingFile = getJavascriptFile(router.pathname).replace(/\[/g, "%5B").replace(/\]/g, "%5D");
 
   useEffect(() => {
     if (document.cookie.includes("admin_interface=true")) {
