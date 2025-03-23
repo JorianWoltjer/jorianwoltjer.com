@@ -71,7 +71,7 @@ async fn main() {
     let mut app = ApiRouter::new()
         // Only api_route() routes will be included in documentation
         .route("/swagger.json", get(serve_api))
-        .nest_service("/", ServeDir::new("static"))
+        .fallback_service(ServeDir::new("static"))
         .merge(
             ApiRouter::new() // Public
                 .route("/login", post(login))
@@ -79,9 +79,9 @@ async fn main() {
                 .api_route("/projects", get(get_projects))
                 .api_route("/blog/folders", get(get_folders))
                 .api_route("/blog/posts", get(get_posts))
-                .api_route("/blog/folder/*slug_or_id", get(get_folder))
-                .api_route("/blog/post/*slug_or_id", get(get_post))
-                .api_route("/blog/hidden/*slug_or_id", get(get_hidden_post))
+                .api_route("/blog/folder/{*slug_or_id}", get(get_folder))
+                .api_route("/blog/post/{*slug_or_id}", get(get_post))
+                .api_route("/blog/hidden/{*slug_or_id}", get(get_hidden_post))
                 .route("/blog/add_view", post(add_view))
                 .api_route("/blog/featured", get(get_featured_posts))
                 .api_route("/blog/tags", get(get_tags))
@@ -100,8 +100,8 @@ async fn main() {
                 .route("/blog/folders", post(create_folder))
                 .route("/blog/posts", post(create_post))
                 .route("/blog/hidden", get(get_hidden_posts))
-                .route("/blog/folder/*slug_or_id", put(edit_folder))
-                .route("/blog/post/*slug_or_id", put(edit_post))
+                .route("/blog/folder/{*slug_or_id}", put(edit_folder))
+                .route("/blog/post/{*slug_or_id}", put(edit_post))
                 .route_layer(axum::middleware::from_fn(auth_required_middleware)),
         )
         .with_state(AppState { db, hmac_key })

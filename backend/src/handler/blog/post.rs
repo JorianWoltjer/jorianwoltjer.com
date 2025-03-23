@@ -2,12 +2,10 @@ use std::{sync::Arc, time::Duration};
 
 use aide::axum::IntoApiResponse;
 use axum::{
-    extract::{
+    body::Bytes, extract::{
         ws::{Message, WebSocket},
         Path, Query, State, WebSocketUpgrade,
-    },
-    http::StatusCode,
-    Json,
+    }, http::StatusCode, Json
 };
 use futures::{lock::Mutex, sink::SinkExt, stream::StreamExt};
 use hmac::{Hmac, Mac};
@@ -424,7 +422,7 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
             println!("WebSocket: Sending ping");
 
             let mut tx = tx_ping.lock().await;
-            if tx.send(Message::Ping(vec![])).await.is_err() {
+            if tx.send(Message::Ping(Bytes::new())).await.is_err() {
                 break; // Connection closed
             };
         }
@@ -445,12 +443,12 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
                     FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)
                     WHERE NOT hidden
                     ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
-                query)
+                query.to_string())
                 .fetch_all(&state.db)
                 .await {
                     Ok(results) => {
                         println!("           -> Sending {} results", results.len());
-                        let response = Message::Text(serde_json::to_string(&results).unwrap());
+                        let response = Message::Text(serde_json::to_string(&results).unwrap().into());
             
                         let mut tx = tx_search.lock().await;
                         if tx.send(response).await.is_err() {
