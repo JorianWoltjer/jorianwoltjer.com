@@ -9,7 +9,7 @@ use reqwest::StatusCode;
 use crate::extend_slug;
 use crate::render::markdown_to_html;
 use crate::schema::CreatePost;
-use crate::schema::Post;
+use crate::schema::PostFull;
 use crate::schema::Tag;
 use crate::AppState;
 
@@ -21,7 +21,7 @@ use super::internal_error;
 pub async fn preview(
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
-) -> Result<Json<Post>, StatusCode> {
+) -> Result<Json<PostFull>, StatusCode> {
     let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
@@ -32,7 +32,7 @@ pub async fn preview(
         .await
         .map_err(internal_error)?;
 
-    Ok(Json(Post {
+    Ok(Json(PostFull {
         id: 0,
         folder: post.folder,
         slug,

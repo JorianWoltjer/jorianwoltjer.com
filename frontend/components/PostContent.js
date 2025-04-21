@@ -1,4 +1,5 @@
 import { Breadcrumbs, CodeBlock, RelativeTime, TableOfContents, Tags } from '@/components';
+import { CDN } from '@/config'
 import { timeDifference } from '@/utils/strings';
 import { faEye } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,7 +23,7 @@ export function render(html, mounted) {
     replace: (node) => {
       if (node.type === 'tag' && node.name === 'img') {
         // Image zoom
-        const src = `http://nginx/img/blog/${node.attribs.src}`;
+        const src = `${CDN}/img/blog/${node.attribs.src}`;
         // Stupid hydration error doesn't like <div> inside <p>, so have to delay to the client
         return <>{mounted && <Zoom><Image className='w-unset' fill src={src} alt={node.attribs.alt} /></Zoom>}</>
 

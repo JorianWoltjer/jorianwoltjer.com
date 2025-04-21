@@ -12,7 +12,7 @@ use backend::{handler::*, is_production, AppState};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer},
     services::ServeDir,
     trace::{self, TraceLayer},
 };
@@ -81,7 +81,8 @@ async fn main() {
                 .api_route("/blog/posts", get(get_posts))
                 .api_route("/blog/folder/{*slug_or_id}", get(get_folder))
                 .api_route("/blog/post/{*slug_or_id}", get(get_post))
-                .api_route("/blog/hidden/{*slug_or_id}", get(get_hidden_post))
+                .api_route("/blog/link/{id}", get(get_link))
+                .api_route("/blog/hidden/{*slug_or_id}", get(get_post_hidden))
                 .route("/blog/add_view", post(add_view))
                 .api_route("/blog/featured", get(get_featured_posts))
                 .api_route("/blog/tags", get(get_tags))
@@ -99,9 +100,11 @@ async fn main() {
                 .route("/blog/preview", post(preview))
                 .route("/blog/folders", post(create_folder))
                 .route("/blog/posts", post(create_post))
-                .route("/blog/hidden", get(get_hidden_posts))
+                .route("/blog/links", post(create_link))
+                .route("/blog/hidden", get(get_posts_hidden))
                 .route("/blog/folder/{*slug_or_id}", put(edit_folder))
                 .route("/blog/post/{*slug_or_id}", put(edit_post))
+                .route("/blog/link/{id}", put(edit_link))
                 .route_layer(axum::middleware::from_fn(auth_required_middleware)),
         )
         .with_state(AppState { db, hmac_key })
@@ -134,9 +137,10 @@ async fn main() {
         println!("WARNING: Running in development mode, disabling security features.");
         app = app.layer(
             CorsLayer::new()
-                .allow_methods(Any)
-                .allow_headers(Any)
-                .allow_origin(Any),
+                .allow_origin(AllowOrigin::mirror_request())
+                .allow_methods(AllowMethods::mirror_request())
+                .allow_headers(AllowHeaders::mirror_request())
+                .allow_credentials(true),
         );
     }
 

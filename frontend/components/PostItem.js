@@ -1,4 +1,5 @@
 import { RelativeTime, Tags } from '@/components'
+import { CDN } from '@/config'
 import { timeDifference } from '@/utils/strings'
 import { faEye } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -22,7 +23,7 @@ export default function PostItem({ slug, title, description, img, points, views,
       <div className="col-sm-3">
         <Link href={href}>
           <div className="card-img-top h-100">
-            <Image fill src={`http://nginx/img/blog/${img || '../placeholder.png'}`} className="card-img-top h-100" alt="Post thumbnail" />
+            <Image fill src={`${CDN}/img/blog/${img || '../placeholder.png'}`} className="card-img-top h-100" alt="Post thumbnail" />
           </div>
         </Link>
       </div>

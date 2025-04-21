@@ -30,7 +30,7 @@ export async function getServerSideProps({ params, query }) {
   try {
     const { id } = params;
     if (!/^\d+$/.test(id)) {
-      throw new Error("Invalid folder ID: " + id)
+      throw new Error("Invalid post ID: " + id)
     }
     const { s: signature } = query;
     if (signature !== undefined && !/^[a-f0-9]{64}$/.test(signature)) {  // Sanity check

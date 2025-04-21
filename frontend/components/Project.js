@@ -1,3 +1,4 @@
+import { CDN } from '@/config'
 import Image from "next/image";
 
 function capitalize(str) {
@@ -9,7 +10,7 @@ export default function Project({ title, text, img, href, category }) {
     <div className="card h-100">
       <a href={href} target={(!href || category == "Utility") ? "" : "_blank"}>
         <div className="card-img-top">
-          <Image fill src={`http://nginx/img/projects/${img}`} alt="Project thumbnail" />
+          <Image fill src={`${CDN}/img/projects/${img}`} alt="Project thumbnail" />
         </div>
       </a>
       <div className="card-body">

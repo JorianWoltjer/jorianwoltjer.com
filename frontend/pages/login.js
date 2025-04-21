@@ -17,15 +17,13 @@ export default function Login() {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "same-origin",  // Receive and save cookies
+      credentials: "include",  // Receive and save cookies
       body: JSON.stringify({
         password: password.value
       })
     }).then(res => {
       if (res.ok) {
-        const expires = new Date();
-        expires.setDate(expires.getDate() + 1);  // Should align with session= cookie expiration
-        document.cookie = "admin_interface=true; Path=/; Expires=" + expires.toUTCString();
+        document.cookie = "admin_interface=true; Path=/; SameSite=Lax; Secure";
         document.location.href = /^\/[a-z]/.test(router.query.next) ? router.query.next : "/blog";
       } else {
         setAlert(<div className="alert alert-danger" role="alert">Incorrect password</div>);

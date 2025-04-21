@@ -1,5 +1,5 @@
 import { Metadata, PostContent, TransitionAnimator } from "@/components";
-import { BACKEND, SLUG_REGEX } from "@/config";
+import { BACKEND, SLUG_REGEX, HOST } from "@/config";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from 'next/router';
@@ -20,7 +20,7 @@ export default function HiddenPost({ content, admin_interface, signature }) {
   return <>
     <Metadata title={"Hidden: " + content.title} description={content.description} img={`/img/blog/${content.img}`} />
     <Head>
-      <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+      <link rel="alternate" type="application/rss+xml" href={`${HOST}/blog/rss.xml`} title="Blog | Jorian Woltjer" />
     </Head>
     <TransitionAnimator>
       <PostContent content={content} admin_interface={admin_interface} admin_components={

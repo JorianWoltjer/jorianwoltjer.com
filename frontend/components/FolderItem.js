@@ -1,4 +1,5 @@
 import { RelativeTime } from '@/components'
+import { CDN } from '@/config'
 import { faFolderClosed } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Image from 'next/image'
@@ -12,7 +13,7 @@ export default function FolderItem({ title, description, img, slug, timestamp })
       <div className="col-sm-3">
         <Link href={href}>
           <div className="card-img-top h-100">
-            <Image fill src={`http://nginx/img/blog/${img || '../placeholder.png'}`} alt="Folder thumbnail" />
+            <Image fill src={`${CDN}/img/blog/${img || '../placeholder.png'}`} alt="Folder thumbnail" />
           </div>
         </Link>
       </div>

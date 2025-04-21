@@ -40,6 +40,7 @@ pub fn is_production() -> bool {
 pub enum Slug {
     Post { slug: String },
     Folder { slug: String },
+    Custom { slug: String },
 }
 #[derive(Serialize, Debug)]
 pub struct RevalidationRequest {

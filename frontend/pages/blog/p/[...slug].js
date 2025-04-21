@@ -1,5 +1,5 @@
 import { Loading, Metadata, PostContent, TransitionAnimator } from "@/components";
-import { BACKEND, BACKEND_API, SLUG_REGEX } from "@/config";
+import { BACKEND, BACKEND_API, SLUG_REGEX, HOST } from "@/config";
 import { getRenderedPost } from "@/utils/api";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -37,7 +37,7 @@ export default function Post({ content, admin_interface }) {
   return <>
     <Metadata title={content.title} description={content.description} img={`/img/blog/${content.img}`} />
     <Head>
-      <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+      <link rel="alternate" type="application/rss+xml" href={`${HOST}/blog/rss.xml`} title="Blog | Jorian Woltjer" />
     </Head>
     <TransitionAnimator>
       <PostContent content={content} admin_interface={admin_interface} admin_components={
@@ -51,7 +51,7 @@ export async function getStaticPaths() {
   let posts = await fetch(BACKEND + "/blog/posts").then(res => res.json());
 
   return {
-    paths: posts.map(post => ({
+    paths: posts.map(post => post.Post).filter(Boolean).map(post => ({
       params: {
         slug: post.slug.split("/")
       }

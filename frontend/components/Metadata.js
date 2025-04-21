@@ -1,10 +1,15 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { HOST } from '@/config';
 
 export default function Metadata({ title, description, img }) {
   const router = useRouter();
 
   title += " | Jorian Woltjer";
+  img = HOST + img;
+  const logo = `${HOST}/img/logo.png`;
+  const url = `${HOST}${router.asPath}`;
+  const domain = new URL(HOST).hostname;
 
   return <>
     <Head>
@@ -26,19 +31,19 @@ export default function Metadata({ title, description, img }) {
         <meta name="twitter:description" content={description} />
       </>}
       {img ? <>
-        <meta property="og:image" content={`https://jorianwoltjer.com${img}`} />
-        <meta name="twitter:image" content={`https://jorianwoltjer.com${img}`} />
+        <meta property="og:image" content={img} />
+        <meta name="twitter:image" content={img} />
         <meta name="twitter:card" content="summary_large_image" />
       </> : <>
-        <meta property="og:image" content="https://jorianwoltjer.com/img/logo.png" />
-        <meta name="twitter:image" content="https://jorianwoltjer.com/img/logo.png" />
+        <meta property="og:image" content={logo} />
+        <meta name="twitter:image" content={logo} />
         <meta name="twitter:card" content="summary" />
       </>}
       <meta property="og:type" content="website" />
-      <meta property="og:url" content={`https://jorianwoltjer.com${router.asPath}`} />
-      <meta name="twitter:url" content={`https://jorianwoltjer.com${router.asPath}`} />
-      <meta property="og:site_name" content="jorianwoltjer.com" />
-      <meta name="twitter:domain" content="jorianwoltjer.com" />
+      <meta property="og:url" content={url} />
+      <meta name="twitter:url" content={url} />
+      <meta property="og:site_name" content={domain} />
+      <meta name="twitter:domain" content={domain} />
     </Head>
   </>
 }

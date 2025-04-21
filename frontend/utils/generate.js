@@ -1,18 +1,20 @@
-import { BACKEND } from "@/config";
+import { BACKEND, HOST } from "@/config";
 import { xmlEscape as escape, cdataEscape } from "@/utils/strings";
 import { getRenderedPost } from "@/utils/api";
 
-const HOST = 'https://jorianwoltjer.com';
-
 function rssItem(post) {
+  const p = post.Post || post.Link;
+  const url = post.Post ? `${escape(HOST)}/blog/p/${escape(p.slug)}` : p.url;
+  const permaUrl = post.Post ? `${escape(HOST)}/blog/p/${escape(String(p.id))}` : p.url;
+
   return `<item>
-      <title>${escape(post.title)}</title>
-      <link>${escape(HOST)}/blog/p/${escape(post.slug)}</link>
-      <guid isPermaLink="true">${escape(HOST)}/blog/p/${escape(String(post.id))}</guid>
-      <media:thumbnail url="${escape(HOST)}/img/blog/${escape(post.img) || '../placeholder.png'}" />
-      <description>${escape(post.description)}</description>
-      <pubDate>${escape(new Date(post.timestamp).toUTCString())}</pubDate>
-      <content:encoded>${cdataEscape(post.html)}</content:encoded>
+      <title>${escape(p.title)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${permaUrl}</guid>
+      <media:thumbnail url="${escape(HOST)}/img/blog/${escape(p.img) || '../placeholder.png'}" />
+      <description>${escape(p.description)}</description>
+      <pubDate>${escape(new Date(p.timestamp).toUTCString())}</pubDate>
+${post.Post ? `      <content:encoded>${cdataEscape(p.html)}</content:encoded>\n` : ''}\
     </item>`;
 }
 
@@ -42,9 +44,13 @@ export async function rss() {
   const res_posts = await fetch(BACKEND + "/blog/posts");
   let posts = await res_posts.json()
   // Limit to 10 most recent posts
-  posts.sort((a, b) => b.timestamp - a.timestamp);
+  posts.sort((a, b) => {
+    const timestampA = a[Object.keys(a)[0]].timestamp
+    const timestampB = b[Object.keys(b)[0]].timestamp
+    return timestampB - timestampA
+  });
   posts = posts.slice(0, 10);
-  posts = await Promise.all(posts.map(post => getRenderedPost(post.id)));
+  posts = await Promise.all(posts.map(async post => post.Post ? { Post: await getRenderedPost(post.Post.id) } : post));
 
   // Generate the XML RSS feed with the data
   return rssFull(posts);
@@ -65,7 +71,7 @@ function sitemapFull(posts, folders) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   ${sitemapUrl('/')}
   ${sitemapUrl('/blog')}
-  ${posts.map(post => sitemapUrl('/blog/p/' + post.slug, post.timestamp))}
+  ${posts.map(post => post.Post).filter(Boolean).map(post => sitemapUrl('/blog/p/' + post.slug, post.timestamp))}
   ${folders.map(folder => sitemapUrl('/blog/f/' + folder.slug, folder.timestamp))}
 </urlset>`
 }

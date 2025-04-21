@@ -5,8 +5,8 @@
   --yellow: #f39c12;
   --light-yellow: #fed330;
   --green: #27ae60;
-  --light-green: #94df00;
   --blue: #3498db;
+  --bsky-blue: #0085ff;
   --discord-blue: #5865f2;
   --purple: #a55eea;
   --dark-gray: #404040;
@@ -319,12 +319,12 @@ div.c-button {
 .c-button.discord-blue .c-button-text:hover {
   background: var(--discord-blue);
 }
-.c-button.light-green {
-  background: var(--light-green);
-  box-shadow: 0 0 0 3px var(--light-green);
+.c-button.bsky-blue {
+  background: var(--bsky-blue);
+  box-shadow: 0 0 0 3px var(--bsky-blue);
 }
-.c-button.light-green .c-button-text:hover {
-  background: var(--light-green);
+.c-button.bsky-blue .c-button-text:hover {
+  background: var(--bsky-blue);
 }
 
 p.c-button {
@@ -514,6 +514,9 @@ p.c-button svg {
 .tag-yellow,
 .tag-encoding {
   background-color: var(--yellow);
+}
+.tag-gray {
+  background-color: var(--gray);
 }
 
 .tag-add {

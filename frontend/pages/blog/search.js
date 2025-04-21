@@ -1,5 +1,5 @@
 import { Metadata, PostItem, TransitionAnimator } from '@/components'
-import { getWebsocketURL } from '@/config'
+import { getWebsocketURL, HOST } from '@/config'
 import { faCheck, faRotate, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useRouter } from 'next/router'
@@ -78,7 +78,7 @@ export default function Search() {
   return <>
     <Metadata title="Blog - Search" description="Search through all posts on my blog about cybersecurity. Quickly find what you're looking for by typing in the search bar." />
     <Head>
-      <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+      <link rel="alternate" type="application/rss+xml" href={`${HOST}/blog/rss.xml`} title="Blog | Jorian Woltjer" />
     </Head>
     <h1>Search</h1>
     <TransitionAnimator>

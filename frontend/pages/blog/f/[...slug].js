@@ -1,11 +1,12 @@
 import { Breadcrumbs, FolderItem, Loading, Metadata, PostItem, TransitionAnimator } from "@/components";
-import { BACKEND, SLUG_REGEX } from "@/config";
-import { faEdit, faFolderPlus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { BACKEND, SLUG_REGEX, HOST } from "@/config";
+import { faEdit, faFolderPlus, faLink, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from 'next/router';
 import { useEffect } from "react";
 import Link from 'next/link';
 import Head from "next/head";
+import LinkItem from "@/components/LinkItem";
 
 function splitSentence(sentence) {
   const first = /^.*?(\w[!?.] |$)/.exec(sentence)[0];
@@ -34,25 +35,28 @@ export default function Folder({ content, admin_interface }) {
   return <>
     <Metadata title={content.title} description={content.description} img={`/img/blog/${content.img}`} />
     <Head>
-      <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+      <link rel="alternate" type="application/rss+xml" href={`${HOST}/blog/rss.xml`} title="Blog | Jorian Woltjer" />
     </Head>
     <Breadcrumbs slug={content.slug} title={content.title} />
     <hr />
     <TransitionAnimator>
       <p className="lead">{descriptionFirst}<span className="desktop-only">{descriptionRest}</span></p>
       {admin_interface && <>
+        <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
         <Link className="big-button" href={`/admin/post?parent=${content.id}`}><FontAwesomeIcon icon={faPlus} /> New Post</Link>
         <Link className="big-button" href={`/admin/folder?parent=${content.id}`}><FontAwesomeIcon icon={faFolderPlus} /> New Folder</Link>
-        <Link className="big-button" href={`/admin/folder/${content.id}`}><FontAwesomeIcon icon={faEdit} /> Edit</Link>
+        <Link className="big-button" href={`/admin/link?parent=${content.id}`}><FontAwesomeIcon icon={faLink} /> New Link</Link>
       </>}
-      {content.folders.map(folder => (
-        <FolderItem key={folder.id} {...folder} />
-      ))}
-      {content.posts.map(post => (
-        <PostItem key={post.id} {...post} />
-      ))}
+      {content.contents.map(item => {
+        if (item.Folder) {
+          return <FolderItem key={"folder" + item.Folder.id} {...item.Folder} />
+        } else if (item.Post) {
+          return <PostItem key={"post" + item.Post.id} {...item.Post} />
+        } else if (item.Link) {
+          return <LinkItem key={"link" + item.Link.id} {...item.Link} admin_interface={admin_interface} />
+        }
+      })}
     </TransitionAnimator>
-
   </>
 }
 

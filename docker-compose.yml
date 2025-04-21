@@ -11,6 +11,7 @@ services:
       - BACKEND=http://backend
       - NEXT_PUBLIC_BACKEND_API=/api
       - NEXT_PUBLIC_SITE_URL=https://jorianwoltjer.com
+      - NEXT_PUBLIC_CDN=http://nginx
       - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - PORT=80

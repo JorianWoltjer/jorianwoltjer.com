@@ -1,7 +1,7 @@
 import { CategoryFolder, Metadata, RelativeTime, Tags, TransitionAnimator } from "@/components";
-import { BACKEND } from "@/config";
+import { BACKEND, CDN, HOST } from "@/config";
 import { faEye } from "@fortawesome/free-regular-svg-icons";
-import { faEyeSlash, faMagnifyingGlass, faSquareRss } from "@fortawesome/free-solid-svg-icons";
+import { faEyeSlash, faMagnifyingGlass, faSquareRss, faLink, faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,7 +12,7 @@ export default function Blog({ root_folders, featured_posts, admin_interface }) 
     <>
       <Metadata title="Blog" description="A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations." />
       <Head>
-        <link rel="alternate" type="application/rss+xml" href="https://jorianwoltjer.com/blog/rss.xml" title="Blog | Jorian Woltjer" />
+        <link rel="alternate" type="application/rss+xml" href={`${HOST}/blog/rss.xml`} title="Blog | Jorian Woltjer" />
       </Head>
       <h1 className="my-4">Blog</h1>
       <TransitionAnimator>
@@ -31,21 +31,44 @@ export default function Blog({ root_folders, featured_posts, admin_interface }) 
 
         <h3 className="my-4">Featured posts</h3>
         <div className="row row-cols-1 row-cols-md-2 g-4">
-          {featured_posts.map(post => <div key={post.id} className="col">
-            <div className="card h-100">
-              <Link href={`/blog/p/${post.slug}`}><div className="card-img-top"><Image fill src={`http://nginx/img/blog/${post.img || '../placeholder.png'}`} alt="Thumbnail" /></div></Link>
-              <div className="card-body">
-                <Tags tags={post.tags} />
-                <h4 className="card-title">
-                  <Link href={`/blog/p/${post.slug}`}>{post.title}</Link>
-                </h4>
-                <p className="card-text">{post.description}</p>
+          {featured_posts.map(post => {
+            if (post.Post) {
+              const p = post.Post;
+              return <div key={"post" + p.id} className="col">
+                <div className="card h-100">
+                  <Link href={`/blog/p/${p.slug}`}><div className="card-img-top"><Image fill src={`${CDN}/img/blog/${p.img || '../placeholder.png'}`} alt="Thumbnail" /></div></Link>
+                  <div className="card-body">
+                    <Tags tags={p.tags} />
+                    <h4 className="card-title">
+                      <Link href={`/blog/p/${p.slug}`}>{p.title}</Link>
+                    </h4>
+                    <p className="card-text">{p.description}</p>
+                  </div>
+                  <div className="card-footer text-muted">
+                    <RelativeTime timestamp={p.timestamp} /> - <span className="darken"><FontAwesomeIcon icon={faEye} /> {p.views} views</span>
+                  </div>
+                </div>
               </div>
-              <div className="card-footer text-muted">
-                <RelativeTime timestamp={post.timestamp} /> - <span className="darken"><FontAwesomeIcon icon={faEye} /> {post.views} views</span>
+            } else {
+              const p = post.Link;
+              const domain = new URL(p.url).hostname.replace(/^www\./, '');
+              return <div key={"link" + p.id} className="col">
+                <div className="card h-100">
+                  <Link href={p.url} target="_blank"><div className="card-img-top"><Image fill src={`${CDN}/img/blog/${p.img || '../placeholder.png'}`} alt="Thumbnail" /></div></Link>
+                  <div className="card-body">
+                    <Tags tags={[{ name: <><FontAwesomeIcon icon={faArrowUpRightFromSquare} /> External</>, color: "gray" }]} />
+                    <h4 className="card-title">
+                      <Link href={p.url} target="_blank">{p.title}</Link>
+                    </h4>
+                    <p className="card-text">{p.description}</p>
+                  </div>
+                  <div className="card-footer text-muted">
+                    <RelativeTime timestamp={p.timestamp} /> - <FontAwesomeIcon icon={faLink} /> {domain}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>)}
+            }
+          })}
         </div>
       </TransitionAnimator>
     </>

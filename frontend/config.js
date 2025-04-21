@@ -1,6 +1,8 @@
 // Different options for local development and docker-compose
-export const BACKEND = process.env.BACKEND || "http://localhost:8000"  // Internal
-export const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || "http://localhost:8000" // External
+export const BACKEND = process.env.BACKEND || "http://localhost:8000"  // Internal address
+export const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || "http://localhost:8000" // External address
+export const CDN = process.env.NEXT_PUBLIC_CDN || ""  // nginx
+export const HOST = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:8000"
 
 export const SLUG_REGEX = /^[\w-\/]+$/
 

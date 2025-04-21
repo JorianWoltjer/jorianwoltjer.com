@@ -1,18 +1,18 @@
-import { CategoryFolder, FolderItem } from "@/components";
-import { slugify } from "@/utils/strings";
+import { LinkItem } from "@/components";
 import { faFolder } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 
 const noSubmit = e => e.key == "Enter" ? e.preventDefault() : null;
 
-export default function FolderForm({ content: content_, all_folders, handleSubmit }) {
+export default function LinkForm({ content: content_, all_folders, handleSubmit }) {
   const [title, setTitle] = useState(content_.title || "");
-  const [slug, setSlug] = useState(content_.slug?.split("/").at(-1) || "");
+  const [url, setUrl] = useState(content_.url || "");
   const [description, setDescription] = useState(content_.description || "");
   const [img, setImg] = useState(content_.img || "");
-  const [parent, setParent] = useState(parseInt(content_.parent) || null);
-  const content = { title, slug, description, img, parent };
+  const [folder, setFolder] = useState(parseInt(content_.folder));
+  const [featured, setFeatured] = useState(content_.featured || false);
+  const content = { title, url, description, img, folder, featured };
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -23,15 +23,13 @@ export default function FolderForm({ content: content_, all_folders, handleSubmi
     <div className="input-group mb-3">
       <div className="form-floating">
         <input className="form-control" id="title" name="title" type="text" placeholder="Title" value={title}
-          onChange={e => { setTitle(e.target.value), setSlug(slugify(e.target.value)) }} onKeyDown={noSubmit} required autoFocus />
+          onChange={e => setTitle(e.target.value)} onKeyDown={noSubmit} required autoFocus />
         <label htmlFor="title">Title</label>
       </div>
       <div className="form-floating">
-        <input className={`form-control text-body-secondary ${(title && !slug) && 'is-invalid'}`}
-          id="slug" name="slug" type="text" placeholder="URL" value={slug}
-          onChange={e => setSlug(e.target.value)} onBlur={e => setSlug(slugify(slug))}
-          onKeyDown={noSubmit} required />
-        <label htmlFor="slug" className="text-body-secondary">URL</label>
+        <input className="form-control text-body-secondary" id="url" name="url" type="url" placeholder="URL" value={url}
+          onChange={e => setUrl(e.target.value)} onKeyDown={noSubmit} required />
+        <label htmlFor="url" className="text-body-secondary">URL</label>
       </div>
     </div>
     <textarea className="form-control" name="description" placeholder="Description..." value={description} onChange={e => setDescription(e.target.value)} />
@@ -41,19 +39,22 @@ export default function FolderForm({ content: content_, all_folders, handleSubmi
     <br />
     <div className="input-group mb-3">
       <label className="input-group-text" htmlFor="folder"><FontAwesomeIcon icon={faFolder} /></label>
-      <select className="form-select" name="folder" value={parent} onChange={e => setParent(parseInt(e.target.value) || null)}>
-        <option value={null}>-</option>
+      <select className="form-select" name="folder" value={folder} onChange={e => setFolder(parseInt(e.target.value))}>
         {all_folders.map(folder => (
           <option key={folder.id} value={folder.id}>{folder.title}</option>
         ))}
       </select>
     </div>
-    {(parent === null) ?
-      <div className="mb-4"><CategoryFolder {...content} /></div> :
-      <FolderItem {...content} timestamp={content_.timestamp} views={content_.views} />}
+    <LinkItem {...content} timestamp={content_.timestamp} views={content_.views} />
+    <br />
+    <div className="form-check form-switch">
+      <label className="form-check-label" htmlFor="featured">Featured</label>
+      <input className="form-check-input" id="featured" type="checkbox" name="featured" checked={featured} onChange={e => setFeatured(e.target.checked)} />
+    </div>
+    <br />
     <div className="float-end">
-      <input className="btn btn-primary" type="submit" value="Save"
-        onClick={e => confirm("Are you sure you want to save?") ? null : e.preventDefault()} />
+      <button className="btn btn-primary" type="submit"
+        onClick={e => confirm("Are you sure you want to save?") ? null : e.preventDefault()}>Save</button>
     </div>
   </form>
 }

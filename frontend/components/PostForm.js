@@ -75,7 +75,7 @@ export default function PostForm({ content: content_, all_folders, handleSubmit 
     </div>
     <textarea className="form-control" name="description" placeholder="Description..." value={description} onChange={e => setDescription(e.target.value)} />
     <br />
-    <input className="form-control" name="img" type="text" placeholder="Image URL..." value={img}
+    <input className="form-control" name="img" type="text" placeholder="Image path..." value={img}
       onChange={e => setImg(e.target.value)} onKeyDown={noSubmit} />
     <br />
     <div className="input-group mb-3">

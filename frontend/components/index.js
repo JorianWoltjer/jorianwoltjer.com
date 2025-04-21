@@ -4,6 +4,8 @@ export { default as CodeBlock } from './CodeBlock';
 export { default as ErrorPage } from './ErrorPage';
 export { default as FolderForm } from './FolderForm';
 export { default as FolderItem } from './FolderItem';
+export { default as LinkForm } from './LinkForm';
+export { default as LinkItem } from './LinkItem';
 export { default as Loading } from './Loading';
 export { default as MarkdownEditor } from './MarkdownEditor';
 export { default as Metadata } from './Metadata';

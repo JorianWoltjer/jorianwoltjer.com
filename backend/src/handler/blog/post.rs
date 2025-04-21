@@ -23,7 +23,7 @@ use crate::{
 
 async fn get_hidden_post_summary(id: i32, state: &AppState) -> Result<HiddenPost, sqlx::Error> {
     sqlx::query_as!(
-        PostSummary,
+        Post,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE p.id = $1"#,
@@ -76,25 +76,44 @@ pub async fn verify_signature(
 
 pub async fn get_posts(
     State(state): State<AppState>,
-) -> Result<Json<Vec<PostSummary>>, StatusCode> {
-    sqlx::query_as!(
-        PostSummary,
+) -> Result<Json<Vec<Content>>, StatusCode> {
+    let contents_posts = sqlx::query_as!(
+        Post,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden ORDER BY timestamp DESC"#
     )
     .fetch_all(&state.db)
     .await
-    .map_err(internal_error)
-    .map(Json)
+    .map_err(internal_error)?
+    .into_iter()
+    .map(Content::Post);
+
+    let contents_links = sqlx::query_as!(
+        Link,
+        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links ORDER BY timestamp DESC"
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal_error)?
+    .into_iter()
+    .map(Content::Link);
+
+    let mut contents = contents_posts
+            .chain(contents_links)
+            .collect::<Vec<_>>();
+    contents.sort(); // Sort by timestamp
+    contents.reverse(); // Newest first
+
+    Ok(Json(contents))
 }
 
 pub async fn get_post(
     State(state): State<AppState>,
     Path(slug_or_id): Path<String>,
-) -> Result<Json<Post>, StatusCode> {
+) -> Result<Json<PostFull>, StatusCode> {
     if let Ok(post) = sqlx::query_as!(
-        Post,
+        PostFull,
         r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)"#,
@@ -106,7 +125,7 @@ pub async fn get_post(
     } else {
         Ok(Json(
             sqlx::query_as!(
-                Post,
+                PostFull,
                 r#"SELECT p.id, folder, p.slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
                     array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
                     FROM posts p 
@@ -121,11 +140,11 @@ pub async fn get_post(
     }
 }
 
-pub async fn get_hidden_posts(
+pub async fn get_posts_hidden(
     State(state): State<AppState>,
 ) -> Result<Json<Vec<HiddenPost>>, StatusCode> {
     sqlx::query_as!(
-        PostSummary,
+        Post,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE hidden ORDER BY timestamp DESC"#
@@ -142,18 +161,30 @@ pub struct HiddenRequest {
     signature: String,
 }
 
-pub async fn get_hidden_post(
+pub async fn get_post_hidden(
     State(state): State<AppState>,
     Path(slug_or_id): Path<String>,
     Query(HiddenRequest { signature }): Query<HiddenRequest>,
-) -> Result<Json<Post>, StatusCode> {
+) -> Result<Json<PostFull>, StatusCode> {
     let id = verify_signature(&slug_or_id, &signature, &state).await?;
 
     sqlx::query_as!(
-        Post,
+        PostFull,
         r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE p.id = $1"#,
+        id
+    )
+    .fetch_one(&state.db)
+    .await
+    .map_err(internal_error)
+    .map(Json)
+}
+
+pub async fn get_link(State(state): State<AppState>, Path(id): Path<i32>) -> Result<Json<Link>, StatusCode> {
+    sqlx::query_as!(
+        Link,
+        "SELECT id, folder, url, title, description, img, timestamp, featured FROM links WHERE id = $1",
         id
     )
     .fetch_one(&state.db)
@@ -209,6 +240,44 @@ pub async fn create_post(
         .await
         .map_err(internal_error)
         .map(Json)
+}
+
+pub async fn create_link(
+    State(state): State<AppState>,
+    Json(link): Json<CreateLink>,
+) -> Result<Json<Link>, StatusCode> {
+    let id = sqlx::query!(
+        "INSERT INTO links (folder, url, title, description, img, featured) VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id",
+        link.folder,
+        link.url,
+        link.title,
+        link.description,
+        link.img,
+        link.featured
+    )
+    .fetch_one(&state.db)
+    .await
+    .map_err(internal_error)?
+    .id;
+
+    // Get the folder slug
+    let folder_slug = sqlx::query!(
+        "SELECT slug FROM folders WHERE id = $1",
+        link.folder
+    )
+    .fetch_one(&state.db)
+    .await
+    .map_err(internal_error)?
+    .slug;
+    
+    RevalidationRequest::new(vec![
+        Slug::Custom {
+            slug: format!("/blog/f/{folder_slug}"),
+        }
+    ]).execute().await.map_err(internal_error)?;
+
+    get_link(State(state), Path(id)).await
 }
 
 pub async fn edit_post(
@@ -301,19 +370,77 @@ pub async fn edit_post(
         .map(Json)
 }
 
+pub async fn edit_link(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+    Json(link): Json<CreateLink>,
+) -> Result<Json<Link>, StatusCode> {
+    sqlx::query!(
+        "UPDATE links SET folder = $1, title = $2, url = $3, description = $4, img = $5, featured = $6 WHERE id = $7",
+        link.folder,
+        link.title,
+        link.url,
+        link.description,
+        link.img,
+        link.featured,
+        id
+    )
+    .execute(&state.db)
+    .await
+    .map_err(internal_error)?;
+
+    // Get the folder slug
+    let folder_slug = sqlx::query!(
+        "SELECT slug FROM folders WHERE id = $1",
+        link.folder
+    )
+    .fetch_one(&state.db)
+    .await
+    .map_err(internal_error)?
+    .slug;
+
+    RevalidationRequest::new(vec![
+        Slug::Custom {
+            slug: format!("/blog/f/{folder_slug}"),
+        }
+    ]).execute().await.map_err(internal_error)?;
+
+    get_link(State(state), Path(id)).await
+}
+
 pub async fn get_featured_posts(
     State(state): State<AppState>,
-) -> Result<Json<Vec<PostSummary>>, StatusCode> {
-    sqlx::query_as!(
-        PostSummary,
+) -> Result<Json<Vec<Content>>, StatusCode> {
+    let contents_posts = sqlx::query_as!(
+        Post,
         r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND (featured) ORDER BY timestamp DESC"#
+            FROM posts p WHERE NOT hidden AND featured ORDER BY timestamp DESC"#
     )
     .fetch_all(&state.db)
     .await
-    .map_err(internal_error)
-    .map(Json)
+    .map_err(internal_error)?
+    .into_iter()
+    .map(Content::Post);
+
+    let contents_links = sqlx::query_as!(
+        Link,
+        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links 
+            WHERE featured ORDER BY timestamp DESC"
+    )
+    .fetch_all(&state.db)
+    .await
+    .map_err(internal_error)?
+    .into_iter()
+    .map(Content::Link);
+
+    let mut contents = contents_posts
+            .chain(contents_links)
+            .collect::<Vec<_>>();
+    contents.sort(); // Sort by timestamp
+    contents.reverse(); // Newest first
+
+    Ok(Json(contents))
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -434,7 +561,7 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
         println!("WebSocket: Received {msg:?}");
         if let Message::Text(query) = msg {
             println!("           -> Query: {}", query);
-            match sqlx::query_as!(Post, r#"SELECT p.id, folder, slug, 
+            match sqlx::query_as!(PostFull, r#"SELECT p.id, folder, slug, 
                     ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
                     ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
                     ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 

@@ -1,4 +1,5 @@
 import { generateXML } from '@/utils/generate';
+import { HOST } from '@/config'
 import path from 'path';
 import fs from 'fs';
 
@@ -11,7 +12,7 @@ async function purgeCloudflareCache(files) {
   const BUILD_ID = getBuildId();
   files = files
     .concat(files.map(path => `/_next/data/${BUILD_ID}${path}.json`))
-    .map(path => new URL(path, process.env.NEXT_PUBLIC_SITE_URL).toString())
+    .map(path => new URL(path, HOST).toString())
 
   console.log("Cloudflare Purge:", files)
 
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
   }
 
   const revalidations = new Set();
-  revalidations.add(`/blog`)  // For root folders and featured posts
+  revalidations.add(`/blog`)  // For root folders and featured posts (always)
 
   const { slugs, views_only } = req.body;
 
