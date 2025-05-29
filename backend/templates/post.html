@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"
+      integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
+      integrity="sha512-rO+olRTkcf304DQBxSWxln8JXCzTHlKnIdnMUwYvQa9/Jd4cQaNkItIUj6Z4nvW1dqK0SKXLbn9h4KwZTNtAyw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script>
+      hljs.highlightAll();
+    </script>
     <script src="script.js" defer></script>
     <title>Some Post | Jorian Woltjer</title>
   </head>
@@ -30,7 +46,7 @@
               <li><a href="#~">~</a></li>
               <li><a href="#hacking">hacking</a></li>
             </ol>
-            <h1>Some quite long title like I normally do</h1>
+            <h1>x3CTF - blogdog (+ new CSS Injection XS-Leak!)</h1>
             <div class="info">
               <div class="text-muted">
                 <span>3 months ago</span> -
@@ -51,9 +67,10 @@
               <summary tabindex="-1">Table of Contents</summary>
               <hr />
               <ol>
-                <li><a href="#test">The first test</a></li>
+                <li><a href="#test">The Challenge</a></li>
+                <li><a href="#test">CSS Injection</a></li>
                 <li>
-                  <a href="#test2">test2</a>
+                  <a href="#test2">Timing Attack (inspiration)</a>
                   <ul>
                     <li><a href="#test3">3rd, bit of a longer one</a></li>
                     <li><a href="#test4">test4</a></li>
@@ -64,165 +81,41 @@
             </details>
           </nav>
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. In tellus tortor, vulputate et iaculis vitae, volutpat sit amet massa. Sed
-            condimentum, est molestie luctus aliquet, dui metus suscipit tortor, ut vehicula libero tortor eget erat. Integer posuere quis libero
-            vitae condimentum. Ut gravida justo non urna tristique ultricies. Maecenas tincidunt aliquam nibh nec tempor. Etiam eros lorem, faucibus
-            quis massa ac, accumsan condimentum est. Nulla facilisi. Nullam aliquam, odio at pellentesque viverra, quam eros vulputate ligula, ut
-            dignissim nibh lectus ut elit. Donec sagittis sapien et lorem sollicitudin, ut aliquet mauris euismod.
+            The first challenge I looked at during <a href="https://x3c.tf/" target="_blank">x3CTF</a> was "blogdog" by
+            <a href="https://lyra.horse/" target="_blank">rebane2001</a>. It's tagged as "hard web xssbot", which is right up my alley. My goal was to
+            get the first blood, but it took me way longer than expected even though I quickly thought I had all the right ideas. This turned out to
+            be because I was working on an <em>unintended</em> solution that was a lot more complex than the intended solution, but it is a new
+            technique that can be applied in many other scenarios.
           </p>
           <p>
-            Sed varius nibh sit amet lacus fermentum, sed sollicitudin mauris feugiat. Mauris eu lacus convallis, sodales tortor vitae, blandit diam.
-            Nunc et tincidunt turpis. Mauris ut mi quis dolor luctus ullamcorper. Praesent faucibus est id magna porta, at molestie elit iaculis.
-            Aenean sodales aliquam pretium. Integer pulvinar tempus mollis. Duis urna ex, laoreet vitae orci a, mattis imperdiet quam.
+            In summary, my new technique allows you to exfiltrate the result of CSS Injection when the Content-Security-Policy doesn't allow external
+            requests, so things like <code>background-image: url(...)</code> won't load. It is an
+            <a href="https://xsleaks.dev/" target="_blank">XS-Leak</a> possible on a window reference and only needs any URL on the website to be
+            iframable.
           </p>
-          <p>
-            Etiam eu lorem congue, dictum urna sed, convallis sem. Nunc bibendum facilisis purus, nec sagittis urna. Donec ac nisi suscipit tellus
-            elementum lacinia. Vivamus consectetur mi sed dictum tempus. In ut congue ligula. Mauris vulputate volutpat elit in mollis. Pellentesque
-            felis nulla, laoreet non eros sed, dictum imperdiet arcu. Sed fringilla id augue sed consectetur. Curabitur eget porttitor lacus.
-            Suspendisse mollis vestibulum nisi, non sollicitudin urna fringilla eu. Nam at scelerisque augue.
-          </p>
-          <p>
-            Suspendisse porttitor scelerisque ligula ac efficitur. Sed vitae ligula bibendum, pharetra velit ac, interdum erat. Praesent gravida
-            tellus quam, at semper risus condimentum sit amet. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla dolor nisl, rhoncus eget
-            suscipit vitae, lobortis eu orci. Sed in enim sem. Praesent tincidunt felis sit amet sodales laoreet. Nullam et pellentesque mi. Nunc
-            vulputate quam sit amet sollicitudin finibus.
-          </p>
-          <p>
-            Fusce lacus urna, ultrices sed est non, auctor laoreet ligula. Mauris placerat, lectus in blandit ornare, lacus ante ornare risus, quis
-            ultrices ex sem ut augue. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum at congue dolor. Fusce id accumsan
-            turpis, nec ultrices lorem. Duis ut lacus placerat, vulputate turpis sed, mollis magna. Donec vitae pellentesque magna, eu posuere neque.
-          </p>
-          <h2 id="test">test</h2>
-          <p>
-            Praesent blandit pulvinar aliquet. Duis tincidunt volutpat nisl, nec sollicitudin quam sodales quis. Duis ac ultrices ligula, quis lacinia
-            mi. Pellentesque non metus ipsum. Quisque sit amet ex ultricies, faucibus nisl et, luctus odio. Donec consequat faucibus urna vestibulum
-            hendrerit. Curabitur non lacus nisi. Vivamus nec neque vulputate, blandit lectus vel, efficitur erat. Quisque id tellus quis tellus
-            vehicula rutrum nec eget nulla. Sed ac felis massa. Ut in tincidunt libero, id vestibulum nibh. Aliquam aliquet mi sit amet porta mattis.
-            Nunc malesuada fringilla ullamcorper. Ut maximus, mauris eu semper dictum, urna tellus blandit sapien, quis iaculis massa felis et odio.
-            Integer laoreet lectus sit amet ligula eleifend, vitae aliquet nulla sodales.
-          </p>
-          <p>
-            Praesent quis enim scelerisque, hendrerit risus id, dignissim libero. Pellentesque nec lacus nec tortor facilisis fermentum a nec turpis.
-            Cras vitae tempor mauris. Donec ac libero a magna mollis facilisis. Vivamus id posuere ex. Vestibulum aliquet libero eu nisi volutpat
-            blandit. Donec ut blandit turpis, sit amet accumsan neque. Sed lobortis odio lorem, eget pellentesque ipsum sagittis eu. Donec mattis mi
-            sit amet est bibendum euismod. Ut ipsum ipsum, pretium non dolor vel, ultricies porttitor urna. Curabitur sit amet urna pretium, luctus
-            tortor dignissim, rhoncus ipsum. Nulla consectetur ipsum felis, vitae suscipit felis aliquet et. Nullam non tristique lacus, in feugiat
-            libero. Vestibulum venenatis ligula ac arcu dignissim posuere. Vivamus sit amet nisl sem.
-          </p>
-          <p>
-            Nulla blandit massa turpis, id varius enim pharetra id. Proin pulvinar dui ut dolor laoreet, sed placerat nunc cursus. Interdum et
-            malesuada fames ac ante ipsum primis in faucibus. Nullam leo erat, imperdiet id sapien vitae, iaculis rhoncus lorem. Fusce viverra sed
-            eros sit amet tempus. Curabitur mollis sem vitae mauris ornare iaculis ultrices a orci. Aenean sed neque enim. Nulla a tellus imperdiet,
-            venenatis massa nec, consectetur lectus. Nulla urna lacus, lobortis a viverra quis, pharetra at enim.
-          </p>
-          <p>
-            Proin fringilla feugiat nisi eget sodales. Quisque maximus porttitor ligula sed varius. In id diam vitae metus sollicitudin feugiat vitae
-            id ante. Sed nec metus sit amet libero porttitor rutrum. Nulla vitae nunc ligula. Phasellus vitae dapibus lacus. Nam vel orci in tortor
-            pulvinar sodales. Phasellus varius dapibus orci, mattis gravida augue lacinia sed. Orci varius natoque penatibus et magnis dis parturient
-            montes, nascetur ridiculus mus. Sed non auctor odio. Phasellus mi velit, commodo ac tincidunt vitae, elementum vel ante. Vestibulum
-            pharetra tincidunt nibh, vel elementum tortor commodo id. Phasellus viverra velit vel nulla molestie, at ultricies nibh feugiat. Nulla sed
-            pretium nunc.
-          </p>
-          <p>
-            Pellentesque mi metus, ornare vehicula malesuada vel, scelerisque in elit. Duis nulla libero, egestas ultricies erat non, dignissim
-            maximus urna. Phasellus porttitor turpis ipsum, vel feugiat elit sagittis facilisis. Praesent accumsan dolor eu nibh blandit tempus.
-            Interdum et malesuada fames ac ante ipsum primis in faucibus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per
-            inceptos himenaeos. Ut eu risus mollis tellus fermentum ultricies in vel quam. Pellentesque a odio consequat sem consequat cursus.
-            Pellentesque porttitor odio sagittis lacus scelerisque placerat. Mauris ut porta ante, at dignissim enim. Sed nec tincidunt lacus, quis
-            laoreet velit. Praesent venenatis nunc ac turpis semper, ac finibus odio varius. Quisque varius arcu in posuere porttitor.
-          </p>
-          <p>
-            Phasellus tincidunt lacus ac sapien egestas, sit amet venenatis lectus sagittis. Sed nec nisi mauris. Aenean nec tincidunt nisl, vitae
-            elementum elit. Fusce eget tincidunt odio. In non efficitur mi. Mauris consectetur eleifend nunc id sagittis. Morbi rhoncus dapibus mauris
-            at pretium. Sed vitae leo elit. Mauris vitae nunc ac neque fringilla feugiat et non magna. Morbi eget nisi ultricies, aliquet sapien ac,
-            blandit mauris. Suspendisse pretium a nulla nec ultricies. Suspendisse non suscipit lacus. Proin accumsan nulla eget ante semper, at
-            tempus orci faucibus. Quisque et eros et lacus accumsan dapibus tincidunt ut eros.
-          </p>
-          <p>
-            Nullam condimentum eros lectus, sit amet sollicitudin risus suscipit in. Nullam pellentesque ligula urna, eleifend auctor odio faucibus
-            id. Maecenas semper, lectus nec semper gravida, leo est aliquam ante, eget vestibulum justo nibh eget neque. Vestibulum eleifend sem sed
-            eros volutpat pharetra. Integer at lectus tellus. Fusce eu neque congue, posuere eros ut, consectetur sapien. Nunc elit mauris, interdum
-            et sodales sit amet, tempor vitae libero.
-          </p>
-          <p>
-            Vestibulum pretium, est vel rhoncus mattis, orci metus convallis quam, sed consectetur urna ligula id metus. Suspendisse tincidunt
-            interdum ante, quis ullamcorper magna dictum sit amet. Sed dignissim nec ipsum vitae rutrum. Nunc eget fringilla ipsum. Phasellus eget
-            ante a lorem efficitur feugiat. Morbi sodales ut sem a convallis. Sed ultrices quam sem, eu bibendum purus tempus in. Proin semper
-            lobortis dui. Aliquam mauris odio, dictum quis lorem et, efficitur sodales est. Donec ut ante neque. Donec nec venenatis risus.
-          </p>
-          <p>
-            Phasellus id semper turpis. Aliquam quis lorem dictum lacus finibus consequat blandit quis ante. Class aptent taciti sociosqu ad litora
-            torquent per conubia nostra, per inceptos himenaeos. Quisque pellentesque libero id congue tincidunt. Morbi sit amet facilisis felis.
-            Phasellus a feugiat nulla. Fusce pharetra nulla vitae nunc auctor pharetra. In hac habitasse platea dictumst. Aliquam suscipit felis quis
-            nulla gravida, sed commodo orci efficitur.
-          </p>
-          <p>
-            Curabitur ullamcorper elit felis, vitae maximus enim consequat non. Integer varius justo quis mattis commodo. Pellentesque porttitor
-            eleifend ante eu dapibus. Curabitur eget faucibus lectus, eget porta libero. Etiam in magna urna. Donec rutrum sagittis tellus, id
-            pellentesque leo auctor quis. Duis in lacinia libero. Vivamus accumsan porta sapien, eget iaculis leo.
-          </p>
-          <p>
-            Maecenas faucibus quam laoreet tellus finibus molestie. Mauris ornare nec massa et vulputate. Nam turpis lorem, iaculis et laoreet
-            fringilla, commodo id quam. Vivamus quis ultricies lectus. Fusce vel viverra nulla. Quisque id consequat eros. Suspendisse non mauris at
-            sem vehicula ullamcorper. Phasellus pellentesque gravida porta. Proin semper blandit feugiat. Etiam non metus in augue pretium sagittis.
-            Nulla ac velit efficitur, fermentum lorem eget, blandit dui. Fusce arcu lacus, rhoncus eu ligula vitae, fringilla ultrices est. Nam
-            vulputate metus magna, at accumsan massa pharetra lacinia. Quisque hendrerit tincidunt est, ac vehicula felis gravida vitae.
-          </p>
-          <p>
-            Cras a neque scelerisque, maximus ipsum ut, semper enim. Praesent arcu leo, sollicitudin sit amet tincidunt sed, egestas eget odio.
-            Praesent et lorem in sapien auctor tincidunt. Integer ut ante aliquet, tempor ipsum id, facilisis libero. Proin ante elit, fringilla
-            luctus mauris eu, iaculis interdum dui. Proin velit arcu, sodales et lorem eget, condimentum varius arcu. Maecenas est metus, lacinia vel
-            ex sed, mattis lacinia risus. Sed et egestas velit, id maximus ex.
-          </p>
-          <p>
-            Morbi non iaculis enim. Suspendisse ac enim dolor. Vivamus tempor ultrices metus ac pulvinar. Donec ullamcorper lacus mauris, non faucibus
-            arcu pharetra a. Nullam mattis non ipsum nec dictum. Nunc consectetur sapien ut aliquam iaculis. Pellentesque lacinia risus et arcu cursus
-            lacinia.
-          </p>
-          <p>
-            Curabitur venenatis dictum massa, id mollis massa sodales id. Donec cursus viverra ex, vel lacinia odio sagittis a. Quisque faucibus eu
-            felis sed scelerisque. Duis posuere laoreet quam eu vestibulum. Nulla rutrum laoreet libero. Ut hendrerit est ac leo ullamcorper dictum.
-            Fusce at tincidunt velit. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. In hac habitasse platea
-            dictumst. Nam in velit et tellus fermentum ullamcorper vitae vel augue. In sagittis faucibus lobortis.
-          </p>
-          <p>
-            Duis tincidunt feugiat metus, nec gravida ex ultricies a. Aenean porta orci eu pellentesque euismod. Sed vitae gravida elit, nec rutrum
-            ex. Nunc mattis sapien id metus efficitur, eu ultrices dui aliquet. Class aptent taciti sociosqu ad litora torquent per conubia nostra,
-            per inceptos himenaeos. Donec ornare elit at consequat sollicitudin. Quisque congue metus id iaculis facilisis. Sed posuere dapibus sem
-            nec egestas.
-          </p>
-          <p>
-            Aliquam convallis ullamcorper egestas. Nunc rutrum elementum odio at lobortis. Fusce malesuada non velit non sagittis. Nam aliquam nulla
-            erat, sit amet volutpat eros luctus eu. Donec nec finibus lectus, sit amet tempus justo. Nullam vitae tincidunt erat, cursus imperdiet
-            nisl. Aenean tempor augue eu libero accumsan, at finibus dui dictum. Donec commodo lorem non purus semper, vitae imperdiet ante blandit.
-            Cras vitae enim ac elit finibus facilisis. Duis porttitor aliquet quam, consequat placerat ligula tempus accumsan.
-          </p>
-          <p>
-            Fusce turpis orci, tristique sit amet finibus sit amet, consectetur in nisi. Mauris blandit tellus et sem mattis dictum. Suspendisse
-            efficitur odio a velit ultrices cursus. Donec hendrerit orci arcu, vel bibendum metus hendrerit eu. Quisque varius sapien sapien, eleifend
-            posuere risus hendrerit ut. Pellentesque id neque volutpat, fringilla arcu non, vehicula sem. Vestibulum a orci imperdiet, sollicitudin
-            lorem vel, dignissim nibh. Fusce tempor ut justo sit amet ornare. Morbi dictum fringilla dolor in ultrices. Duis pellentesque eros non
-            purus pharetra, sit amet hendrerit dolor lacinia.
-          </p>
-          <p>
-            In hac habitasse platea dictumst. Vivamus faucibus ligula vel lacus porttitor congue ac in velit. Vivamus tempor nunc dui. Sed a dignissim
-            neque. Vivamus vitae laoreet elit, non fringilla erat. Sed eu efficitur metus, ac ultricies nibh. Sed et orci vel leo pellentesque
-            eleifend nec in neque. Etiam ultrices condimentum nulla in egestas. Integer vestibulum enim pharetra lorem tempor imperdiet. Sed elementum
-            leo libero, eu iaculis nibh porta at. Vivamus facilisis magna vel imperdiet sollicitudin.
-          </p>
-          <p>
-            Praesent placerat ligula eu felis placerat, non porttitor sapien ullamcorper. Nullam dui turpis, laoreet nec orci ac, porta finibus augue.
-            Integer aliquet sed urna sit amet egestas. Donec ut iaculis tortor, sed porttitor sem. Morbi interdum tempus euismod. Duis urna massa,
-            tincidunt id tincidunt ac, suscipit quis ipsum. In eros velit, interdum vitae ullamcorper et, dapibus non tortor. Aliquam blandit velit in
-            nulla scelerisque, et cursus elit volutpat. Pellentesque bibendum rhoncus dui ac facilisis. Phasellus sed mi urna. In turpis justo,
-            hendrerit egestas finibus eu, tincidunt ut lectus.
-          </p>
-          <p>
-            Integer semper nec dui eu eleifend. Nam nulla ante, tempus et sagittis eget, rhoncus id quam. Nulla non purus ornare, tempor elit non,
-            congue magna. Nulla eu est vitae est gravida elementum. Proin justo neque, posuere a sollicitudin sit amet, tincidunt at purus. Quisque
-            vestibulum tempus sapien, sed sollicitudin nisi convallis eu. In tempor rhoncus orci eget vulputate. Suspendisse potenti. Nam id efficitur
-            nisi, sit amet condimentum turpis.
-          </p>
+          <h2 id="the-challenge"><a class="header-link" href="#the-challenge">The Challenge</a></h2>
+          <p>The source code of this challenge is quite simple:</p>
+          <div class="code-block">
+            <div class="code-block-header">
+              <span>Tree</span>
+              <svg aria-hidden="true" focusable="false" class="inline copy" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path
+                  fill="currentColor"
+                  d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"
+                ></path>
+              </svg>
+            </div>
+            <pre><code class="hljs language-Tree">blogdog/
+├── Dockerfile
+└── src/
+    ├── favicon.ico
+    ├── index.html
+    ├── index.js
+    ├── package-lock.json
+    ├── package.json
+    └── purify.min.js
+</code></pre>
+          </div>
         </article>
         <p class="blog-footer">
           The end! If you have any questions feel free to ask me anywhere on my <a target="_blank" href="/contact">Contacts</a>.
