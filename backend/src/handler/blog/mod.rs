@@ -1,27 +1,39 @@
 pub mod folder;
 pub mod post;
 
-use axum::extract::State;
-use axum::Json;
+use super::internal_error;
+use crate::{
+    database::*, extend_slug, html_template, render::markdown_to_html, schema::*, templates::*,
+    AppState,
+};
+use axum::Extension;
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use chrono::Utc;
-use reqwest::StatusCode;
-
-use crate::extend_slug;
-use crate::render::markdown_to_html;
-use crate::schema::CreatePost;
-use crate::schema::PostFull;
-use crate::schema::Tag;
-use crate::AppState;
 
 pub use self::folder::*;
 pub use self::post::*;
 
-use super::internal_error;
+pub async fn get_blog(
+    Extension(nonce): Extension<String>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let featured_posts = get_featured_posts(&state).await.map_err(internal_error)?;
+    let categories = get_categories(&state).await.map_err(internal_error)?;
 
-pub async fn preview(
+    dbg!(&featured_posts);
+
+    html_template(BlogTemplate {
+        nonce,
+        featured_posts,
+        categories,
+    })
+}
+
+pub async fn post_preview(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
-) -> Result<Json<PostFull>, StatusCode> {
+) -> Result<impl IntoResponse, StatusCode> {
     let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
@@ -32,7 +44,7 @@ pub async fn preview(
         .await
         .map_err(internal_error)?;
 
-    Ok(Json(PostFull {
+    let post = PostFull {
         id: 0,
         folder: post.folder,
         slug,
@@ -47,7 +59,8 @@ pub async fn preview(
         autorelease: post.autorelease,
         timestamp: Utc::now(),
         tags,
-    }))
+    };
+    html_template(PreviewPostTemplate { nonce, post })
 }
 
 /// Render Markdown to HTML (returns text/plain)

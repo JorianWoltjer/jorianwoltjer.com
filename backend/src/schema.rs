@@ -10,6 +10,26 @@ pub struct Login {
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+pub struct ResultUrl {
+    pub url: String,
+}
+impl ResultUrl {
+    pub fn new(url: String) -> Self {
+        Self { url }
+    }
+
+    pub fn post(slug: String) -> ResultUrl {
+        Self::new(format!("/blog/p/{slug}"))
+    }
+    pub fn folder(slug: String) -> ResultUrl {
+        Self::new(format!("/blog/f/{slug}"))
+    }
+    pub fn hidden(slug: String, signature: String) -> ResultUrl {
+        Self::new(format!("/blog/h/{slug}?s={signature}"))
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, JsonSchema)]
 pub struct Project {
     pub id: i32,
     pub title: String,
@@ -19,14 +39,14 @@ pub struct Project {
     pub category: String,
 }
 
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, JsonSchema, sqlx::Type)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema, sqlx::Type)]
 pub struct Tag {
     pub id: i32,
     pub name: String,
     pub color: String,
 }
 
-#[derive(Deserialize, Serialize, Clone, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
 pub struct PostFull {
     pub id: i32,
     pub folder: i32,
@@ -43,7 +63,7 @@ pub struct PostFull {
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
 }
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Link {
     pub id: i32,
     pub folder: i32,
@@ -54,7 +74,7 @@ pub struct Link {
     pub featured: bool,
     pub timestamp: DateTime<Utc>,
 }
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub enum Content {
     Folder(Folder),
     Post(Post),
@@ -79,7 +99,7 @@ impl PartialOrd for Content {
         Some(self.cmp(other))
     }
 }
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Post {
     pub id: i32,
     pub folder: i32,
@@ -137,7 +157,7 @@ impl HiddenPost {
         }
     }
 }
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, JsonSchema)]
 pub struct CreatePost {
     pub folder: i32,
     pub slug: String,
@@ -151,7 +171,7 @@ pub struct CreatePost {
     pub markdown: String,
     pub tags: Vec<Tag>, // Only ids are used
 }
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, JsonSchema)]
 pub struct CreateLink {
     pub folder: i32,
     pub url: String,
@@ -161,7 +181,7 @@ pub struct CreateLink {
     pub featured: bool,
 }
 
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct Folder {
     pub id: i32,
     pub parent: Option<i32>, // May be None for root folder
@@ -171,7 +191,7 @@ pub struct Folder {
     pub img: String,
     pub timestamp: DateTime<Utc>,
 }
-#[derive(Serialize, JsonSchema)]
+#[derive(Serialize, Debug, JsonSchema)]
 pub struct FolderContents {
     pub id: i32,
     pub parent: Option<i32>,
@@ -235,7 +255,7 @@ impl FolderContents {
         })
     }
 }
-#[derive(Deserialize, Serialize, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, JsonSchema)]
 pub struct CreateFolder {
     pub parent: Option<i32>,
     pub title: String,

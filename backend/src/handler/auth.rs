@@ -1,15 +1,18 @@
-use aide::NoApi;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Extension, Json};
 use tower_sessions::Session;
 
-use crate::{handler::internal_error, schema::*, AppState};
+use crate::{handler::internal_error, html_template, schema::*, templates::*, AppState};
 
 pub async fn login_check() -> StatusCode {
     StatusCode::NO_CONTENT
 }
 
-pub async fn login(
-    NoApi(session): NoApi<Session>,
+pub async fn get_login(Extension(nonce): Extension<String>) -> impl IntoResponse {
+    html_template(LoginTemplate { nonce })
+}
+
+pub async fn post_login(
+    session: Session,
     State(state): State<AppState>,
     Json(login): Json<Login>,
 ) -> Result<StatusCode, StatusCode> {
@@ -31,7 +34,7 @@ pub async fn login(
     }
 }
 
-pub async fn logout(NoApi(session): NoApi<Session>) -> Result<StatusCode, StatusCode> {
+pub async fn post_logout(session: Session) -> Result<StatusCode, StatusCode> {
     session.delete().await.map_err(internal_error)?;
     Ok(StatusCode::NO_CONTENT)
 }

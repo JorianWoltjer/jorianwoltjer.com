@@ -1,3 +1,0 @@
-BASH_ENV=/proc/1/environ
-# Cron job to revalidate all posts where view counter changed
-* * * * * curl -X POST http://localhost/blog/revalidate -H "X-Internal: $(cat /tmp/internal_token | tr -dc '[[:alpha:][:digit:]]')"

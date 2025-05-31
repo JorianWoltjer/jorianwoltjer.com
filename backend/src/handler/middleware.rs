@@ -1,12 +1,11 @@
-use std::env;
-
 use axum::{
     body::Body,
-    http::{Request, StatusCode},
+    http::{Method, Request, StatusCode},
     middleware::Next,
     response::Response,
     RequestPartsExt,
 };
+use rand::RngCore;
 use tower_sessions::Session;
 
 use crate::{handler::internal_error, is_production};
@@ -36,31 +35,68 @@ pub async fn auth_required_middleware(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
+    // CSRF protection (disallow non-GET requests not from same-origin)
+    let sec_fetch_site = parts
+        .headers
+        .get("Sec-Fetch-Site")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("none");
+    if parts.method != Method::GET && ["cross-site", "same-site"].contains(&sec_fetch_site) {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
     Ok(next.run(Request::from_parts(parts, body)).await)
 }
 
-pub async fn internal_only_middleware(
+pub async fn response_headers_middleware(
     req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    let (parts, body) = req.into_parts();
+    // Generate CSP nonce
+    let (mut parts, body) = req.into_parts();
+    let is_same_origin = parts
+        .headers
+        .get("Sec-Fetch-Site")
+        .and_then(|v| v.to_str().ok())
+        == Some("same-origin");
+    let mut bytes = [0; 16];
+    rand::rng().fill_bytes(&mut bytes);
+    let nonce = hex::encode(bytes);
+    parts.extensions.insert(nonce.clone());
+    let req = Request::from_parts(parts, body);
 
-    // Development mode bypasses
-    if !is_production() {
-        return Ok(next.run(Request::from_parts(parts, body)).await);
+    let mut response = next.run(req).await;
+    let headers = response.headers_mut();
+
+    // Set security headers
+    headers.insert("X-Content-Type-Options", "nosniff".parse().unwrap());
+    headers.insert("X-Frame-Options", "DENY".parse().unwrap());
+    headers.insert("Referrer-Policy", "origin".parse().unwrap());
+    if !is_same_origin {
+        // Set conditionally, because page transitions don't support it
+        headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
     }
+    headers.insert(
+        "Cross-Origin-Resource-Policy",
+        "same-origin".parse().unwrap(),
+    );
+    headers.insert(
+            "Content-Security-Policy",
+            format!("\
+    default-src 'self'; \
+    script-src 'self' 'nonce-{nonce}'; \
+    style-src 'self' https://fonts.googleapis.com; \
+    object-src 'none'; \
+    connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; \
+    font-src 'self' https://fonts.gstatic.com; \
+    img-src 'self' data:; \
+    frame-src https://www.youtube-nocookie.com https://yeswehack.github.io/Dom-Explorer/dom-explorer/frame; \
+    frame-ancestors 'none'; \
+    base-uri 'self'; \
+    form-action 'self'")
+                .parse()
+                .unwrap(),
+        );
 
-    // X-Internal header is set to "false" by nginx, only internal requests can set it to the correct token
-    let is_internal = match parts.headers.get("X-Internal") {
-        Some(header_value) => {
-            header_value.to_str().unwrap_or_default() == env::var("INTERNAL_TOKEN").unwrap()
-        }
-        None => false,
-    };
-    if is_internal {
-        return Ok(next.run(Request::from_parts(parts, body)).await);
-    }
-
-    // Also bypass if logged in
-    auth_required_middleware(Request::from_parts(parts, body), next).await
+    Ok(response)
 }

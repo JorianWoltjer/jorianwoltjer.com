@@ -3,15 +3,6 @@ FROM rust:latest
 # Create rust user
 RUN groupadd rust && useradd -g rust rust
 
-# Setup cron
-RUN apt-get update
-RUN apt-get -y install cron
-
-COPY crontab /etc/cron.d/revalidate-frontend
-RUN chmod 0644 /etc/cron.d/revalidate-frontend
-RUN crontab -u rust /etc/cron.d/revalidate-frontend
-RUN chmod u+s /usr/sbin/cron
-
 WORKDIR /app
 
 COPY . .
@@ -24,4 +15,4 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 USER rust
 
-CMD ["sh", "-c", "echo \"$INTERNAL_TOKEN\" > /tmp/internal_token && cron && backend"]
+CMD ["backend"]

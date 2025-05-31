@@ -1,73 +1,69 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    Json,
+    response::{IntoResponse, Redirect},
+    Extension, Json,
 };
 
 use crate::{
-    extend_slug,
-    handler::{internal_error, sql_not_found},
-    schema::*,
-    AppState, RevalidationRequest, Slug,
+    database, extend_slug, handler::internal_error, html_template, schema::*, templates::*,
+    AppState,
 };
 
-pub async fn get_folders(State(state): State<AppState>) -> Result<Json<Vec<Folder>>, StatusCode> {
-    sqlx::query_as!(
-        Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders ORDER BY timestamp DESC"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
-}
-
 pub async fn get_folder(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Path(slug_or_id): Path<String>,
-) -> Result<Json<FolderContents>, StatusCode> {
-    let folder = sqlx::query_as!(
-                Folder,
-                "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id::varchar = $1 OR slug = $1",
-                slug_or_id
-            )
-            .fetch_one(&state.db)
-            .await;
-
-    if let Ok(folder) = folder {
-        Ok(FolderContents::from_folder(folder, &state)
-            .await
-            .map(Json)
-            .map_err(internal_error)?)
-    } else {
-        Ok(Json(
-            FolderContents::from_folder(
-                sqlx::query_as!(
-                    Folder,
-                    "SELECT f.id, parent, f.slug, title, description, img, timestamp 
-                    FROM folders f
-                    JOIN folder_redirects fr ON f.id = fr.folder_id 
-                    WHERE fr.slug = $1",
-                    slug_or_id
-                )
-                .fetch_one(&state.db)
+    Path(slug): Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    match database::get_folder(&state, &slug)
+        .await
+        .map_err(internal_error)?
+    {
+        Some(folder) => {
+            // Add contents to the folder
+            let folder = FolderContents::from_folder(folder, &state)
                 .await
-                .map_err(sql_not_found)?,
-                &state,
-            )
-            .await
-            .map_err(internal_error)?,
-        ))
+                .map_err(internal_error)?;
+            Ok(html_template(FolderTemplate { nonce, folder }).into_response())
+        }
+        None => {
+            // Check if it's a redirect
+            let redirect = database::get_folder_redirect(&state, &slug)
+                .await
+                .map_err(internal_error)?;
+
+            match redirect {
+                Some(slug) => Ok(Redirect::permanent(&format!("/blog/f/{}", slug)).into_response()),
+                None => Err(StatusCode::NOT_FOUND),
+            }
+        }
     }
 }
 
-pub async fn create_folder(
+pub async fn get_new_folder(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Json(folder): Json<CreateFolder>,
-) -> Result<Json<Folder>, StatusCode> {
-    let slug = extend_slug(&folder.slug, folder.parent.unwrap_or(-1), &state)
+) -> Result<impl IntoResponse, StatusCode> {
+    let folders = database::get_folders(&state)
         .await
         .map_err(internal_error)?;
+    html_template(NewFolderTemplate {
+        nonce,
+        existing_folder: None,
+        folders,
+    })
+}
+
+pub async fn post_new_folder(
+    State(state): State<AppState>,
+    Json(folder): Json<CreateFolder>,
+) -> Result<Json<ResultUrl>, StatusCode> {
+    let slug = match folder.parent {
+        Some(parent) => extend_slug(&folder.slug, parent, &state)
+            .await
+            .map_err(internal_error)?,
+        None => folder.slug.clone(),
+    };
 
     sqlx::query!(
         "INSERT INTO folders (title, slug, description, img, parent) VALUES ($1, $2, $3, $4, $5)",
@@ -81,31 +77,37 @@ pub async fn create_folder(
     .await
     .map_err(internal_error)?;
 
-    RevalidationRequest::new(vec![Slug::Folder { slug: slug.clone() }])
-        .execute()
-        .await
-        .map_err(internal_error)?;
-
-    sqlx::query_as!(
-        Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE slug = $1",
-        slug
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
+    Ok(Json(ResultUrl::folder(slug)))
 }
 
-pub async fn edit_folder(
+pub async fn get_edit_folder(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Path(slug_or_id): Path<String>,
+    Path(id): Path<i32>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let existing_folder = database::get_folder_by_id(&state, id)
+        .await
+        .map_err(internal_error)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let folders = database::get_folders(&state)
+        .await
+        .map_err(internal_error)?;
+    html_template(NewFolderTemplate {
+        nonce,
+        existing_folder: Some(existing_folder),
+        folders,
+    })
+}
+
+pub async fn put_edit_folder(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
     Json(folder): Json<CreateFolder>,
-) -> Result<Json<Folder>, StatusCode> {
+) -> Result<Json<ResultUrl>, StatusCode> {
     let original_folder = sqlx::query_as!(
         Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id::varchar = $1 OR slug = $1",
-        slug_or_id
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = $1",
+        id
     )
     .fetch_one(&state.db)
     .await
@@ -115,16 +117,8 @@ pub async fn edit_folder(
         .await
         .map_err(internal_error)?;
 
-    let mut revalidations = vec![
-        Slug::Folder {
-            slug: original_folder.slug.clone(),
-        },
-        Slug::Folder { slug: slug.clone() },
-    ];
-
     if original_folder.slug != slug {
         let old_slug_full = original_folder.slug.clone() + "/";
-        let new_slug_full = slug.clone() + "/";
 
         // Add backups to redirects table
         sqlx::query!(
@@ -152,25 +146,6 @@ pub async fn edit_folder(
             original_folder.slug,
             old_slug_full
         ).execute(&state.db).await.map_err(internal_error)?;
-
-        // Create revalidations for NextJS of what was updated
-        let post_revalidations = sqlx::query!(r#"SELECT slug as "slug!" FROM post_redirects WHERE post_id IN (SELECT id FROM posts WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM posts WHERE POSITION($1 IN slug) = 1"#, 
-            new_slug_full
-        ).fetch_all(&state.db).await.map_err(internal_error)?;
-        revalidations.extend(
-            post_revalidations
-                .into_iter()
-                .map(|record| Slug::Post { slug: record.slug }),
-        );
-
-        let folder_revalidations = sqlx::query!(r#"SELECT slug as "slug!" FROM folder_redirects WHERE folder_id IN (SELECT id FROM folders WHERE POSITION($1 IN slug) = 1) UNION SELECT slug FROM folders WHERE POSITION($1 IN slug) = 1"#, 
-            new_slug_full
-        ).fetch_all(&state.db).await.map_err(internal_error)?;
-        revalidations.extend(
-            folder_revalidations
-                .into_iter()
-                .map(|record| Slug::Folder { slug: record.slug }),
-        );
     }
 
     // Update the post
@@ -187,18 +162,5 @@ pub async fn edit_folder(
     .await
     .map_err(internal_error)?;
 
-    RevalidationRequest::new(revalidations)
-        .execute()
-        .await
-        .map_err(internal_error)?;
-
-    sqlx::query_as!(
-        Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE id = $1",
-        original_folder.id
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
+    Ok(Json(ResultUrl::folder(slug)))
 }

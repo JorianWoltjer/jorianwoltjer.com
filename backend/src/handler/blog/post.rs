@@ -1,11 +1,10 @@
 use std::{sync::Arc, time::Duration};
 
-use aide::axum::IntoApiResponse;
 use axum::{
     body::Bytes, extract::{
         ws::{Message, WebSocket},
         Path, Query, State, WebSocketUpgrade,
-    }, http::StatusCode, Json
+    }, http::StatusCode, response::{IntoResponse, Redirect, Response}, Extension, Json
 };
 use futures::{lock::Mutex, sink::SinkExt, stream::StreamExt};
 use hmac::{Hmac, Mac};
@@ -15,24 +14,8 @@ use sha2::Sha256;
 use tokio::time;
 
 use crate::{
-    extend_slug,
-    handler::{internal_error, sql_not_found},
-    schema::*,
-    AppState, RevalidationRequest, Slug,
+    extend_slug, handler::{internal_error, sql_not_found}, html_template, schema::*, templates::*, database, AppState
 };
-
-async fn get_hidden_post_summary(id: i32, state: &AppState) -> Result<HiddenPost, sqlx::Error> {
-    sqlx::query_as!(
-        Post,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE p.id = $1"#,
-        id
-    )
-    .fetch_one(&state.db)
-    .await
-    .map(|post| HiddenPost::from_summary(post, state))
-}
 
 pub fn sign(id: i32, hmac_key: &[u8]) -> String {
     let mut mac = Hmac::<Sha256>::new_from_slice(hmac_key).unwrap();
@@ -40,11 +23,13 @@ pub fn sign(id: i32, hmac_key: &[u8]) -> String {
     hex::encode(mac.finalize().into_bytes())
 }
 
+pub struct VerifiedId(pub i32);
+
 pub async fn verify_signature(
     slug_or_id: &str,
     signature: &str,
     state: &AppState,
-) -> Result<i32, StatusCode> {
+) -> Result<VerifiedId, StatusCode> {
     let signature = hex::decode(signature).map_err(|_| StatusCode::BAD_REQUEST)?;
     let mut mac = Hmac::<Sha256>::new_from_slice(&state.hmac_key).unwrap();
 
@@ -66,7 +51,7 @@ pub async fn verify_signature(
     mac.update(id.to_string().as_bytes());
 
     if mac.verify_slice(&signature).is_ok() {
-        return Ok(id);
+        return Ok(VerifiedId(id));
     }
 
     Err(StatusCode::UNAUTHORIZED)
@@ -74,86 +59,23 @@ pub async fn verify_signature(
 
 // Routes
 
-pub async fn get_posts(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<Content>>, StatusCode> {
-    let contents_posts = sqlx::query_as!(
-        Post,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden ORDER BY timestamp DESC"#
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)?
-    .into_iter()
-    .map(Content::Post);
-
-    let contents_links = sqlx::query_as!(
-        Link,
-        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links ORDER BY timestamp DESC"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)?
-    .into_iter()
-    .map(Content::Link);
-
-    let mut contents = contents_posts
-            .chain(contents_links)
-            .collect::<Vec<_>>();
-    contents.sort(); // Sort by timestamp
-    contents.reverse(); // Newest first
-
-    Ok(Json(contents))
-}
-
 pub async fn get_post(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Path(slug_or_id): Path<String>,
-) -> Result<Json<PostFull>, StatusCode> {
-    if let Ok(post) = sqlx::query_as!(
-        PostFull,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND (p.id::varchar = $1 OR slug = $1)"#,
-        slug_or_id
-    )
-    .fetch_one(&state.db)
-    .await {
-        Ok(Json(post))
-    } else {
-        Ok(Json(
-            sqlx::query_as!(
-                PostFull,
-                r#"SELECT p.id, folder, p.slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
-                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-                    FROM posts p 
-                    JOIN post_redirects pr ON p.id = pr.post_id 
-                    WHERE NOT hidden AND (pr.slug = $1)"#,
-                slug_or_id
-            )
-            .fetch_one(&state.db)
-            .await
-            .map_err(sql_not_found)?,
-        ))
-    }
-}
+    Path(slug): Path<String>,
+) -> Result<impl IntoResponse, StatusCode> {
+    match database::get_post(&state, &slug).await.map_err(internal_error)? {
+        Some(post) => Ok(html_template(PostTemplate{ nonce, post}).into_response()),
+        None => {
+            // Check if it's a redirect
+            let redirect = database::get_post_redirect(&state, &slug).await.map_err(internal_error)?;
 
-pub async fn get_posts_hidden(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<HiddenPost>>, StatusCode> {
-    sqlx::query_as!(
-        Post,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE hidden ORDER BY timestamp DESC"#
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(|posts| posts.into_iter().map(|post| HiddenPost::from_summary(post, &state)).collect())
-    .map(Json)
+            match redirect {
+                Some(slug) => Ok(Redirect::permanent(&format!("/blog/p/{}", slug)).into_response()),
+                None => Err(StatusCode::NOT_FOUND),
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -162,41 +84,48 @@ pub struct HiddenRequest {
 }
 
 pub async fn get_post_hidden(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Path(slug_or_id): Path<String>,
+    Path(slug): Path<String>,
     Query(HiddenRequest { signature }): Query<HiddenRequest>,
-) -> Result<Json<PostFull>, StatusCode> {
-    let id = verify_signature(&slug_or_id, &signature, &state).await?;
+) -> Result<impl IntoResponse, StatusCode> {
+    let verified_id = verify_signature(&slug, &signature, &state).await?;
 
-    sqlx::query_as!(
-        PostFull,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE p.id = $1"#,
-        id
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
+    let post = database::get_post_hidden(&state, verified_id)
+        .await
+        .map_err(internal_error)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    html_template(PostTemplate {
+        nonce,
+        post
+    })
 }
 
-pub async fn get_link(State(state): State<AppState>, Path(id): Path<i32>) -> Result<Json<Link>, StatusCode> {
-    sqlx::query_as!(
-        Link,
-        "SELECT id, folder, url, title, description, img, timestamp, featured FROM links WHERE id = $1",
-        id
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)
-    .map(Json)
+pub async fn get_posts_hidden(
+    Extension(nonce): Extension<String>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let posts = database::get_hidden_posts(&state)
+        .await
+        .map_err(internal_error)?;
+
+    html_template(HiddenPostsTemplate { nonce, posts })
 }
 
-pub async fn create_post(
+pub async fn get_new_post(
+    Extension(nonce): Extension<String>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewPostTemplate { nonce, existing_post: None, folders, tags })
+}
+
+pub async fn post_new_post(
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
-) -> Result<Json<HiddenPost>, StatusCode> {
+) -> Result<Json<ResultUrl>, StatusCode> {
     let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
@@ -230,25 +159,24 @@ pub async fn create_post(
     .await
     .map_err(internal_error)?;
 
-    // Everything has changed now, revalidate NextJS
-    RevalidationRequest::new(vec![Slug::Post { slug }])
-        .execute()
-        .await
-        .map_err(internal_error)?;
-
-    get_hidden_post_summary(id, &state)
-        .await
-        .map_err(internal_error)
-        .map(Json)
+    Ok(Json(ResultUrl::post(slug)))
 }
 
-pub async fn create_link(
+pub async fn get_new_link(
+    Extension(nonce): Extension<String>,
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewLinkTemplate { nonce, existing_link: None, folders, tags })
+}
+
+pub async fn post_new_link(
     State(state): State<AppState>,
     Json(link): Json<CreateLink>,
-) -> Result<Json<Link>, StatusCode> {
-    let id = sqlx::query!(
-        "INSERT INTO links (folder, url, title, description, img, featured) VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id",
+) -> Result<Json<ResultUrl>, StatusCode> {
+    sqlx::query!(
+        "INSERT INTO links (folder, url, title, description, img, featured) VALUES ($1, $2, $3, $4, $5, $6)",
         link.folder,
         link.url,
         link.title,
@@ -256,10 +184,9 @@ pub async fn create_link(
         link.img,
         link.featured
     )
-    .fetch_one(&state.db)
+    .execute(&state.db)
     .await
-    .map_err(internal_error)?
-    .id;
+    .map_err(internal_error)?;
 
     // Get the folder slug
     let folder_slug = sqlx::query!(
@@ -271,38 +198,39 @@ pub async fn create_link(
     .map_err(internal_error)?
     .slug;
     
-    RevalidationRequest::new(vec![
-        Slug::Custom {
-            slug: format!("/blog/f/{folder_slug}"),
-        }
-    ]).execute().await.map_err(internal_error)?;
-
-    get_link(State(state), Path(id)).await
+    Ok(Json(ResultUrl::folder(folder_slug)))
 }
 
-pub async fn edit_post(
+pub async fn get_edit_post(
+    Extension(nonce): Extension<String>,
     State(state): State<AppState>,
-    Path(slug_or_id): Path<String>,
+    Path(id): Path<i32>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let existing_post = database::get_post_by_id(&state, id)
+        .await
+        .map_err(internal_error)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewPostTemplate { nonce, existing_post: Some(existing_post), folders, tags })
+}
+
+pub async fn put_edit_post(
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
     Json(post): Json<CreatePost>,
-) -> Result<Json<HiddenPost>, StatusCode> {
+) -> Result<Json<ResultUrl>, StatusCode> {
     let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
 
     let original_post = sqlx::query!(
-        "SELECT id, slug FROM posts WHERE id::varchar = $1 OR slug = $1",
-        slug_or_id
+        "SELECT id, slug FROM posts WHERE id = $1",
+        id
     )
     .fetch_one(&state.db)
     .await
     .map_err(internal_error)?;
-
-    let mut revalidations = RevalidationRequest::new(vec![
-        Slug::Post {
-            slug: original_post.slug.clone(),
-        },
-        Slug::Post { slug: slug.clone() },
-    ]);
 
     if original_post.slug != slug {
         // Add old to redirects table
@@ -314,19 +242,6 @@ pub async fn edit_post(
         .execute(&state.db)
         .await
         .map_err(internal_error)?;
-
-        let post_revalidations = sqlx::query!(
-            "SELECT slug FROM post_redirects WHERE post_id = $1",
-            original_post.id
-        )
-        .fetch_all(&state.db)
-        .await
-        .map_err(internal_error)?;
-        revalidations.slugs.extend(
-            post_revalidations
-                .into_iter()
-                .map(|record| Slug::Post { slug: record.slug }),
-        );
     }
 
     sqlx::query!(
@@ -361,20 +276,29 @@ pub async fn edit_post(
     .await
     .map_err(internal_error)?;
 
-    // Everything has changed now, revalidate NextJS
-    revalidations.execute().await.map_err(internal_error)?;
-
-    get_hidden_post_summary(original_post.id, &state)
-        .await
-        .map_err(internal_error)
-        .map(Json)
+    Ok(Json(ResultUrl::post(slug)))
+    
 }
 
-pub async fn edit_link(
+pub async fn get_edit_link(
+    Extension(nonce): Extension<String>,
+    State(state): State<AppState>,
+    Path(id): Path<i32>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let existing_link = database::get_link(&state, id)
+        .await
+        .map_err(internal_error)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewLinkTemplate { nonce, existing_link: Some(existing_link), folders, tags })
+}
+
+pub async fn put_edit_link(
     State(state): State<AppState>,
     Path(id): Path<i32>,
     Json(link): Json<CreateLink>,
-) -> Result<Json<Link>, StatusCode> {
+) -> Result<Json<ResultUrl>, StatusCode> {
     sqlx::query!(
         "UPDATE links SET folder = $1, title = $2, url = $3, description = $4, img = $5, featured = $6 WHERE id = $7",
         link.folder,
@@ -399,141 +323,49 @@ pub async fn edit_link(
     .map_err(internal_error)?
     .slug;
 
-    RevalidationRequest::new(vec![
-        Slug::Custom {
-            slug: format!("/blog/f/{folder_slug}"),
-        }
-    ]).execute().await.map_err(internal_error)?;
-
-    get_link(State(state), Path(id)).await
+    Ok(Json(ResultUrl::folder(folder_slug)))
 }
 
-pub async fn get_featured_posts(
+pub async fn post_add_view(
     State(state): State<AppState>,
-) -> Result<Json<Vec<Content>>, StatusCode> {
-    let contents_posts = sqlx::query_as!(
-        Post,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND featured ORDER BY timestamp DESC"#
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)?
-    .into_iter()
-    .map(Content::Post);
-
-    let contents_links = sqlx::query_as!(
-        Link,
-        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links 
-            WHERE featured ORDER BY timestamp DESC"
-    )
-    .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)?
-    .into_iter()
-    .map(Content::Link);
-
-    let mut contents = contents_posts
-            .chain(contents_links)
-            .collect::<Vec<_>>();
-    contents.sort(); // Sort by timestamp
-    contents.reverse(); // Newest first
-
-    Ok(Json(contents))
-}
-
-#[derive(Deserialize, JsonSchema)]
-pub struct AddViewRequest {
-    id: i32,
-    signature: Option<String>,
-}
-
-pub async fn add_view(
-    State(state): State<AppState>,
-    Json(AddViewRequest { id, signature }): Json<AddViewRequest>,
+    Path(id): Path<i32>,
 ) -> Result<(), StatusCode> {
-    let signature_valid = match signature {
-        Some(signature) => verify_signature(&id.to_string(), &signature, &state).await? == id,
-        None => false,
-    };
-
-    sqlx::query!(
-        "UPDATE posts SET views = views + 1 WHERE id = $1 AND (NOT hidden OR $2)",
-        id,
-        signature_valid
-    )
-    .execute(&state.db)
-    .await
-    .map_err(internal_error)?;
-
+    database::add_view(&state, id)
+        .await
+        .map_err(internal_error)?
+        .ok_or(StatusCode::NOT_FOUND)?;
     Ok(())
 }
 
-/// Called every minute by a cron job. This does:
-/// 1. Revalidate views
-/// 2. Auto-Release posts
-pub async fn revalidate(State(state): State<AppState>) -> Result<StatusCode, StatusCode> {
-    // Revalidate views
-    let mut revalidations =
-        sqlx::query!("SELECT slug FROM posts WHERE NOT hidden AND (views != cached_views)")
-            .fetch_all(&state.db)
-            .await
-            .map_err(internal_error)
-            .map(|records| {
-                RevalidationRequest::new(
-                    records
-                        .into_iter()
-                        .map(|record| Slug::Post { slug: record.slug })
-                        .collect(),
-                )
-            })?;
-
-    if !revalidations.slugs.is_empty() {
-        sqlx::query!("UPDATE posts SET cached_views = views")
-            .execute(&state.db)
-            .await
-            .map_err(internal_error)?;
-    }
-
+/// Called every minute. This currently only auto-releases posts
+pub async fn cron(State(state): State<AppState>) -> Result<(), sqlx::Error> {
     // Auto-Release posts
     let released_posts = sqlx::query!(
         "UPDATE posts SET hidden = false, timestamp = autorelease, autorelease = NULL WHERE autorelease <= NOW() AND hidden RETURNING slug"
     )
     .fetch_all(&state.db)
-    .await
-    .map_err(internal_error)?;
-
-    revalidations
-        .slugs
-        .extend(released_posts.iter().map(|record| Slug::Post {
-            slug: record.slug.clone(),
-        }));
-
-    if released_posts.is_empty() {
-        revalidations.views_only = true;
+    .await?;
+    if !released_posts.is_empty() {
+        for post in &released_posts {
+            println!("Cron: Releasing post {:?}", post.slug);
+        }
+    } else {
+        println!("Cron: No posts to release");
     }
-
-    println!("Revalidating {} posts", revalidations.slugs.len());
-    revalidations.execute().await.map_err(internal_error)?;
-
-    Ok(StatusCode::OK)
+    Ok(())
 }
 
-pub async fn get_tags(State(state): State<AppState>) -> Result<Json<Vec<Tag>>, StatusCode> {
-    sqlx::query_as!(Tag, "SELECT * FROM tags ORDER BY id")
-        .fetch_all(&state.db)
-        .await
-        .map_err(internal_error)
-        .map(Json)
-}
-
-pub async fn ws_search(ws: WebSocketUpgrade, state: State<AppState>) -> impl IntoApiResponse {
+pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Response {
     println!("WebSocket: Incoming connection");
     ws.on_upgrade(|socket| async move {
         println!("WebSocket: handling...");
         handle_ws_search(socket, state).await
     })
+}
+
+    
+pub async fn get_search(Extension(nonce): Extension<String>) -> impl IntoResponse {
+    html_template(SearchTemplate {nonce})
 }
 
 /// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.

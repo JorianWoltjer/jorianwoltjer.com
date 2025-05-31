@@ -1,37 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="script.js" defer></script>
-    <title>Some Folder | Jorian Woltjer</title>
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <nav>
-          <div class="logo">
-            <a href="/"><img src="/jw.webp" /></a>
-          </div>
-          <ol>
-            <li><a href="/">Home</a></li>
-            <li><a href="https://book.jorianwoltjer.com" target="_blank">Book</a></li>
-            <li><a href="/blog" class="active">Blog</a></li>
-            <li><a href="/projects">Projects</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ol>
-        </nav>
-      </header>
-      <main></main>
-      <footer>
-        <small>Copyright © <span id="year"></span> Jorian Woltjer. All rights reserved.</small><br /><small
-          >Open source on
-          <a target="_blank" href="https://github.com/JorianWoltjer/jorianwoltjer.com">GitHub</a>
-          (built with <a class="no-style" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">JavaScript</a> +
-          <a class="no-style" target="_blank" href="https://docs.rs/axum/latest/axum/">Axum</a>)</small
-        >
-      </footer>
+{% extends "base.html" %} {% block title %}CTF{% endblock %} {% block main %}
+<nav>
+  <ol class="breadcrumbs">
+    <li><a href="#~">~</a></li>
+    <h1>CTF</h1>
+  </ol>
+  <hr />
+  <p class="text-dark">
+    Writeups from Capture the Flag (CTF) events I participated in. About web, scripting, crypto, reversing and everything in between. All writeups
+    include detailed explanations of how everything works.
+  </p>
+</nav>
+<div class="card horizontal">
+  <a class="image" href="/blog/p/ctf/x3ctf-blogdog-new-css-injection-xs-leak"><img src="/blogdog.webp" /></a>
+  <div class="info">
+    <div class="body">
+      <div class="tags"><span class="tag tag-green">Web</span><span class="tag tag-blue">Scripting</span>+342 points</div>
+      <h3><a href="/blog/p/ctf/x3ctf-blogdog-new-css-injection-xs-leak">x3CTF - blogdog (+ new CSS Injection XS-Leak!)</a></h3>
+      <p>
+        A "hard web xssbot" challenge about a fun browser quirk with the is= attribute to perform CSS Injection. Bypass the strict CSP with an
+        unintended new technique to XS-Leak a selector's result by detecting the site crashing
+      </p>
     </div>
-  </body>
-</html>
+    <div class="footer text-darker">
+      <span>4 months ago</span> -
+      <span class="darken"></span>
+        <i class="fa-regular fa-eye"></i>
+        2383 views</span
+      >
+    </div>
+  </div>
+</div>
+{% endblock %}

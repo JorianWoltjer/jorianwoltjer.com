@@ -1,27 +1,22 @@
 use std::env;
 
-use aide::{
-    axum::{
-        routing::{get, post, put},
-        ApiRouter, IntoApiResponse,
-    },
-    openapi::{Info, OpenApi, Server},
+use axum::{
+    routing::{get, post},
+    Router,
 };
-use axum::{Extension, Json};
-use backend::{handler::*, is_production, AppState};
+use backend::{
+    handler::{folder::*, post::*, *},
+    AppState,
+};
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
+use tower::ServiceBuilder;
 use tower_http::{
-    cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer},
     services::ServeDir,
     trace::{self, TraceLayer},
 };
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tracing::Level;
-
-async fn serve_api(Extension(api): Extension<OpenApi>) -> impl IntoApiResponse {
-    Json(api)
-}
 
 #[tokio::main]
 async fn main() {
@@ -68,92 +63,63 @@ async fn main() {
         .init();
 
     // Router setup
-    let mut app = ApiRouter::new()
-        // Only api_route() routes will be included in documentation
-        .route("/swagger.json", get(serve_api))
+    let app = Router::new()
         .fallback_service(ServeDir::new("static"))
         .merge(
-            ApiRouter::new() // Public
-                .route("/login", post(login))
-                .route("/logout", get(logout))
-                .api_route("/projects", get(get_projects))
-                .api_route("/blog/folders", get(get_folders))
-                .api_route("/blog/posts", get(get_posts))
-                .api_route("/blog/folder/{*slug_or_id}", get(get_folder))
-                .api_route("/blog/post/{*slug_or_id}", get(get_post))
-                .api_route("/blog/link/{id}", get(get_link))
-                .api_route("/blog/hidden/{*slug_or_id}", get(get_post_hidden))
-                .route("/blog/add_view", post(add_view))
-                .api_route("/blog/featured", get(get_featured_posts))
-                .api_route("/blog/tags", get(get_tags))
-                .api_route("/blog/search", get(ws_search)),
+            Router::new() // Public
+                .route("/", get(get_home))
+                .route("/login", get(get_login).post(post_login))
+                .route("/projects", get(get_projects))
+                .route("/contact", get(get_contact))
+                .route("/blog", get(get_blog))
+                .route("/blog/f/{*slug}", get(get_folder))
+                .route("/blog/p/{*slug}", get(get_post))
+                .route("/blog/h/{*slug}", get(get_post_hidden))
+                .route("/blog/search", get(get_search))
+                .route("/blog/search_ws", get(get_search_ws))
+                .route("/blog/add_view/{id}", post(post_add_view)),
         )
         .merge(
-            ApiRouter::new() // Internal-only
-                .route("/render", post(render))
-                .route("/blog/revalidate", post(revalidate))
-                .route_layer(axum::middleware::from_fn(internal_only_middleware)),
-        )
-        .merge(
-            ApiRouter::new() // Authentication required
-                .route("/check", get(login_check).post(login_check))
-                .route("/blog/preview", post(preview))
-                .route("/blog/folders", post(create_folder))
-                .route("/blog/posts", post(create_post))
-                .route("/blog/links", post(create_link))
-                .route("/blog/hidden", get(get_posts_hidden))
-                .route("/blog/folder/{*slug_or_id}", put(edit_folder))
-                .route("/blog/post/{*slug_or_id}", put(edit_post))
-                .route("/blog/link/{id}", put(edit_link))
+            Router::new() // Authentication required
+                .route("/logout", post(post_logout))
+                .route("/blog/admin/preview", post(post_preview))
+                .route(
+                    "/blog/admin/folder",
+                    get(get_new_folder).post(post_new_folder),
+                )
+                .route("/blog/admin/post", get(get_new_post).post(post_new_post))
+                .route("/blog/admin/link", get(get_new_link).post(post_new_link))
+                .route(
+                    "/blog/admin/folder/{id}",
+                    get(get_edit_folder).put(put_edit_folder),
+                )
+                .route(
+                    "/blog/admin/post/{id}",
+                    get(get_edit_post).put(put_edit_post),
+                )
+                .route(
+                    "/blog/admin/link/{id}",
+                    get(get_edit_link).put(put_edit_link),
+                )
                 .route_layer(axum::middleware::from_fn(auth_required_middleware)),
         )
         .with_state(AppState { db, hmac_key })
         .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
-                .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
-        )
-        .layer(session_layer);
-
-    let mut api = OpenApi {
-        info: Info {
-            description: Some("Blog API (auto-generated)".to_string()),
-            ..Info::default()
-        },
-        servers: vec![
-            Server {
-                url: String::from("https://jorianwoltjer.com/api"),
-                ..Server::default()
-            },
-            Server {
-                url: String::from("http://localhost/api"),
-                ..Server::default()
-            },
-        ],
-        ..OpenApi::default()
-    };
-
-    if !is_production() {
-        println!("WARNING: Running in development mode, disabling security features.");
-        app = app.layer(
-            CorsLayer::new()
-                .allow_origin(AllowOrigin::mirror_request())
-                .allow_methods(AllowMethods::mirror_request())
-                .allow_headers(AllowHeaders::mirror_request())
-                .allow_credentials(true),
+            ServiceBuilder::new()
+                .layer(
+                    TraceLayer::new_for_http()
+                        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+                        .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
+                )
+                .layer(axum::middleware::from_fn(response_headers_middleware))
+                .layer(session_layer),
         );
-    }
+
+    // TODO: call cron()
 
     println!("Listening on :{port}...");
     let listener = TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
         .expect("Failed to bind to port");
-    axum::serve(
-        listener,
-        app.finish_api(&mut api)
-            .layer(Extension(api))
-            .into_make_service(),
-    )
-    .await
-    .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

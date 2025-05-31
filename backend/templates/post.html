@@ -1,111 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"
-      integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
-      integrity="sha512-rO+olRTkcf304DQBxSWxln8JXCzTHlKnIdnMUwYvQa9/Jd4cQaNkItIUj6Z4nvW1dqK0SKXLbn9h4KwZTNtAyw=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <script>
-      hljs.highlightAll();
-    </script>
-    <script src="script.js" defer></script>
-    <title>Some Post | Jorian Woltjer</title>
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <nav>
-          <div class="logo">
-            <a href="/"><img src="/jw.webp" /></a>
-          </div>
-          <ol>
-            <li><a href="/">Home</a></li>
-            <li><a href="https://book.jorianwoltjer.com" target="_blank">Book</a></li>
-            <li><a href="/blog" class="active">Blog</a></li>
-            <li><a href="/projects">Projects</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ol>
-        </nav>
-      </header>
-      <main>
-        <article>
-          <nav>
-            <ol class="breadcrumbs">
-              <li><a href="#~">~</a></li>
-              <li><a href="#hacking">hacking</a></li>
-            </ol>
-            <h1>x3CTF - blogdog (+ new CSS Injection XS-Leak!)</h1>
-            <div class="info">
-              <div class="text-muted">
-                <span>3 months ago</span> -
-                <span class="darken"
-                  ><svg class="inline" aria-hidden="true" focusable="false" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-                    <path
-                      fill="currentColor"
-                      d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"
-                    ></path>
-                  </svg>
-                  1337 views</span
-                >
-              </div>
-              <div class="tags"><span class="tag tag-green">Web</span><span class="tag tag-blue">Scripting</span> +42 points</div>
-            </div>
-            <hr />
-            <details open class="toc">
-              <summary tabindex="-1">Table of Contents</summary>
-              <hr />
-              <ol>
-                <li><a href="#test">The Challenge</a></li>
-                <li><a href="#test">CSS Injection</a></li>
-                <li>
-                  <a href="#test2">Timing Attack (inspiration)</a>
-                  <ul>
-                    <li><a href="#test3">3rd, bit of a longer one</a></li>
-                    <li><a href="#test4">test4</a></li>
-                  </ul>
-                </li>
-                <li><a href="#test5">And the final conclusion something</a></li>
-              </ol>
-            </details>
-          </nav>
-          <p>
-            The first challenge I looked at during <a href="https://x3c.tf/" target="_blank">x3CTF</a> was "blogdog" by
-            <a href="https://lyra.horse/" target="_blank">rebane2001</a>. It's tagged as "hard web xssbot", which is right up my alley. My goal was to
-            get the first blood, but it took me way longer than expected even though I quickly thought I had all the right ideas. This turned out to
-            be because I was working on an <em>unintended</em> solution that was a lot more complex than the intended solution, but it is a new
-            technique that can be applied in many other scenarios.
-          </p>
-          <p>
-            In summary, my new technique allows you to exfiltrate the result of CSS Injection when the Content-Security-Policy doesn't allow external
-            requests, so things like <code>background-image: url(...)</code> won't load. It is an
-            <a href="https://xsleaks.dev/" target="_blank">XS-Leak</a> possible on a window reference and only needs any URL on the website to be
-            iframable.
-          </p>
-          <h2 id="the-challenge"><a class="header-link" href="#the-challenge">The Challenge</a></h2>
-          <p>The source code of this challenge is quite simple:</p>
-          <div class="code-block">
-            <div class="code-block-header">
-              <span>Tree</span>
-              <svg aria-hidden="true" focusable="false" class="inline copy" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                <path
-                  fill="currentColor"
-                  d="M208 0L332.1 0c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9L448 336c0 26.5-21.5 48-48 48l-192 0c-26.5 0-48-21.5-48-48l0-288c0-26.5 21.5-48 48-48zM48 128l80 0 0 64-64 0 0 256 192 0 0-32 64 0 0 48c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 176c0-26.5 21.5-48 48-48z"
-                ></path>
-              </svg>
-            </div>
-            <pre><code class="hljs language-Tree">blogdog/
+{% extends "base.html" %} {% block title %}Some Post{% endblock %} {% block scripts %}
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"
+  integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
+  integrity="sha512-rO+olRTkcf304DQBxSWxln8JXCzTHlKnIdnMUwYvQa9/Jd4cQaNkItIUj6Z4nvW1dqK0SKXLbn9h4KwZTNtAyw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+<script>
+  hljs.highlightAll();
+</script>
+{% endblock %} {% block main %}
+<article>
+  <nav>
+    <ol class="breadcrumbs">
+      <li><a href="#~">~</a></li>
+      <li><a href="#hacking">hacking</a></li>
+    </ol>
+    <h1>x3CTF - blogdog (+ new CSS Injection XS-Leak!)</h1>
+    <div class="info">
+      <div class="tags"><span class="tag tag-green">Web</span><span class="tag tag-blue">Scripting</span> +42 points</div>
+      <div class="text-darker">
+        <span>3 months ago</span> -
+        <span class="darken"></span>
+          <i class="fa-regular fa-eye"></i>
+          1337 views</span
+        >
+      </div>
+    </div>
+    <hr />
+    <details open class="toc">
+      <summary tabindex="-1">Table of Contents</summary>
+      <hr />
+      <ol>
+        <li><a href="#test">The Challenge</a></li>
+        <li><a href="#test">CSS Injection</a></li>
+        <li>
+          <a href="#test2">Timing Attack (inspiration)</a>
+          <ul>
+            <li><a href="#test3">3rd, bit of a longer one</a></li>
+            <li><a href="#test4">test4</a></li>
+          </ul>
+        </li>
+        <li><a href="#test5">And the final conclusion something</a></li>
+      </ol>
+    </details>
+  </nav>
+  <p>
+    The first challenge I looked at during <a href="https://x3c.tf/" target="_blank">x3CTF</a> was "blogdog" by
+    <a href="https://lyra.horse/" target="_blank">rebane2001</a>. It's tagged as "hard web xssbot", which is right up my alley. My goal was to get the
+    first blood, but it took me way longer than expected even though I quickly thought I had all the right ideas. This turned out to be because I was
+    working on an <em>unintended</em> solution that was a lot more complex than the intended solution, but it is a new technique that can be applied
+    in many other scenarios.
+  </p>
+  <p>
+    In summary, my new technique allows you to exfiltrate the result of CSS Injection when the Content-Security-Policy doesn't allow external
+    requests, so things like <code>background-image: url(...)</code> won't load. It is an
+    <a href="https://xsleaks.dev/" target="_blank">XS-Leak</a> possible on a window reference and only needs any URL on the website to be iframable.
+  </p>
+  <h2 id="the-challenge"><a class="header-link" href="#the-challenge">The Challenge</a></h2>
+  <p>The source code of this challenge is quite simple:</p>
+  <div class="code-block">
+    <div class="code-block-header">
+      <span>Tree</span>
+      <i class="fa-solid fa-copy"></i>
+    </div>
+    <pre><code class="hljs language-Tree">blogdog/
 ├── Dockerfile
 └── src/
     ├── favicon.ico
@@ -115,20 +80,7 @@
     ├── package.json
     └── purify.min.js
 </code></pre>
-          </div>
-        </article>
-        <p class="blog-footer">
-          The end! If you have any questions feel free to ask me anywhere on my <a target="_blank" href="/contact">Contacts</a>.
-        </p>
-      </main>
-      <footer>
-        <small>Copyright © <span id="year"></span> Jorian Woltjer. All rights reserved.</small><br /><small
-          >Open source on
-          <a target="_blank" href="https://github.com/JorianWoltjer/jorianwoltjer.com">GitHub</a>
-          (built with <a class="no-style" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">JavaScript</a> +
-          <a class="no-style" target="_blank" href="https://docs.rs/axum/latest/axum/">Axum</a>)</small
-        >
-      </footer>
-    </div>
-  </body>
-</html>
+  </div>
+</article>
+<p class="blog-footer">The end! If you have any questions feel free to ask me anywhere on my <a target="_blank" href="/contact">Contacts</a>.</p>
+{% endblock %}
