@@ -1,0 +1,5 @@
+ALTER TABLE posts 
+  ADD COLUMN html TEXT NULL;
+UPDATE posts SET html = '';
+ALTER TABLE posts
+  ALTER COLUMN html SET NOT NULL;

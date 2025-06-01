@@ -64,7 +64,7 @@ pub async fn get_featured_posts(state: &AppState) -> Result<Vec<Content>, sqlx::
 pub async fn get_post(state: &AppState, slug: &str) -> Result<Option<PostFull>, sqlx::Error> {
     not_found_option(sqlx::query_as!(
         PostFull,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, html, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden AND slug = $1"#,
         slug
@@ -76,7 +76,7 @@ pub async fn get_post(state: &AppState, slug: &str) -> Result<Option<PostFull>, 
 pub async fn get_post_by_id(state: &AppState, id: i32) -> Result<Option<PostFull>, sqlx::Error> {
     not_found_option(sqlx::query_as!(
         PostFull,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, html, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE NOT hidden AND p.id = $1"#,
         id
@@ -91,7 +91,7 @@ pub async fn get_post_hidden(
 ) -> Result<Option<PostFull>, sqlx::Error> {
     not_found_option(sqlx::query_as!(
         PostFull,
-        r#"SELECT p.id, folder, slug, title, description, img, markdown, points, views, featured, hidden, autorelease, timestamp, 
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, html, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
             FROM posts p WHERE p.id = $1"#,
         verified_id.0

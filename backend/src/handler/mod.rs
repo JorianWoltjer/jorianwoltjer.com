@@ -22,22 +22,22 @@ pub fn sql_not_found(e: sqlx::Error) -> StatusCode {
     }
 }
 
-pub async fn get_home(Extension(nonce): Extension<String>) -> impl IntoResponse {
-    html_template(HomeTemplate { nonce })
+pub async fn get_home(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
+    html_template(HomeTemplate { metadata })
 }
 
 // TODO: fetch from github? maybe in a script
 pub async fn get_projects(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let projects = database::get_projects(&state)
         .await
         .map_err(internal_error)?;
 
-    html_template(ProjectsTemplate { nonce, projects })
+    html_template(ProjectsTemplate { metadata, projects })
 }
 
-pub async fn get_contact(Extension(nonce): Extension<String>) -> impl IntoResponse {
-    html_template(ContactTemplate { nonce })
+pub async fn get_contact(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
+    html_template(ContactTemplate { metadata })
 }

@@ -1,5 +1,3 @@
-use std::env;
-
 use askama::Template;
 use axum::{
     http::StatusCode,
@@ -62,6 +60,21 @@ pub fn get_domain(url: &str) -> String {
         .unwrap_or_default()
 }
 
+pub fn breadcrumbs_from_slug(slug: &str) -> Vec<(String, String)> {
+    let mut breadcrumbs = Vec::new();
+    let mut current_slug = String::new();
+    let split = slug.split('/').collect::<Vec<_>>();
+    for part in split.iter().take(split.len() - 1) {
+        if !current_slug.is_empty() {
+            current_slug.push('/');
+        }
+        current_slug.push_str(part);
+        breadcrumbs.push((current_slug.clone(), part.to_string()));
+    }
+    dbg!(&breadcrumbs);
+    breadcrumbs
+}
+
 pub async fn extend_slug(
     slug: &str,
     folder_id: i32,
@@ -71,13 +84,6 @@ pub async fn extend_slug(
         .fetch_one(&state.db)
         .await
         .map(|parent| format!("{}/{slug}", parent.slug))
-}
-
-pub fn is_production() -> bool {
-    env::var("PRODUCTION")
-        .unwrap_or(String::from("false"))
-        .parse()
-        .unwrap()
 }
 
 #[cfg(test)]

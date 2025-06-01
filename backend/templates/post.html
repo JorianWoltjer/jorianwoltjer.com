@@ -1,40 +1,43 @@
 {% extends "base.html" %} {% block title %}Some Post{% endblock %} {% block scripts %}
-<script
-  src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"
-  integrity="sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw=="
-  crossorigin="anonymous"
-  referrerpolicy="no-referrer"
-></script>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"
-  integrity="sha512-rO+olRTkcf304DQBxSWxln8JXCzTHlKnIdnMUwYvQa9/Jd4cQaNkItIUj6Z4nvW1dqK0SKXLbn9h4KwZTNtAyw=="
-  crossorigin="anonymous"
-  referrerpolicy="no-referrer"
-/>
-<script>
+<script src="/highlightjs/highlight.min.js"></script>
+<link rel="stylesheet" href="/highlightjs/github-dark.min.css" />
+<script nonce="{{ metadata.nonce }}">
+  // TODO: can this be done in rust?
   hljs.highlightAll();
 </script>
 {% endblock %} {% block main %}
 <article>
   <nav>
     <ol class="breadcrumbs">
-      <li><a href="#~">~</a></li>
-      <li><a href="#hacking">hacking</a></li>
+      <li><a href="/blog">~</a></li>
+      {% for (path, part) in crate::breadcrumbs_from_slug(post.slug) %}
+      <li><a href="/blog/f/{{ path }}">{{ part }}</a></li>
+      {% endfor %}
     </ol>
-    <h1>x3CTF - blogdog (+ new CSS Injection XS-Leak!)</h1>
+    <h1>{{ post.title }}</h1>
     <div class="info">
-      <div class="tags"><span class="tag tag-green">Web</span><span class="tag tag-blue">Scripting</span> +42 points</div>
+      <div>
+        <div class="tags">
+          {% for tag in post.tags %}
+          <span class="tag tag-{{ tag.color }}">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+        <span>{% if post.points > 0 %} +{{ post.points }} points{% endif %}</span>
+      </div>
       <div class="text-darker">
-        <span>3 months ago</span> -
-        <span class="darken"></span>
+        <span>{{ crate::relative_time(post.timestamp) }}</span> -
+        <span class="darken">
           <i class="fa-regular fa-eye"></i>
-          1337 views</span
-        >
+          {% if post.hidden %}<b>Hidden</b>{% else %}{{ post.views }} views{% endif %}
+        </span>
       </div>
     </div>
     <hr />
+    {% if metadata.logged_in %}
+    <a class="big-button" href="/blog/admin/post/{{ post.id }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+    {% endif %}
     <details open class="toc">
+      <!-- TODO: generate in rust with html parser -->
       <summary tabindex="-1">Table of Contents</summary>
       <hr />
       <ol>
@@ -51,36 +54,8 @@
       </ol>
     </details>
   </nav>
-  <p>
-    The first challenge I looked at during <a href="https://x3c.tf/" target="_blank">x3CTF</a> was "blogdog" by
-    <a href="https://lyra.horse/" target="_blank">rebane2001</a>. It's tagged as "hard web xssbot", which is right up my alley. My goal was to get the
-    first blood, but it took me way longer than expected even though I quickly thought I had all the right ideas. This turned out to be because I was
-    working on an <em>unintended</em> solution that was a lot more complex than the intended solution, but it is a new technique that can be applied
-    in many other scenarios.
-  </p>
-  <p>
-    In summary, my new technique allows you to exfiltrate the result of CSS Injection when the Content-Security-Policy doesn't allow external
-    requests, so things like <code>background-image: url(...)</code> won't load. It is an
-    <a href="https://xsleaks.dev/" target="_blank">XS-Leak</a> possible on a window reference and only needs any URL on the website to be iframable.
-  </p>
-  <h2 id="the-challenge"><a class="header-link" href="#the-challenge">The Challenge</a></h2>
-  <p>The source code of this challenge is quite simple:</p>
-  <div class="code-block">
-    <div class="code-block-header">
-      <span>Tree</span>
-      <i class="fa-solid fa-copy"></i>
-    </div>
-    <pre><code class="hljs language-Tree">blogdog/
-├── Dockerfile
-└── src/
-    ├── favicon.ico
-    ├── index.html
-    ├── index.js
-    ├── package-lock.json
-    ├── package.json
-    └── purify.min.js
-</code></pre>
-  </div>
+  {{ post.html|safe }}
 </article>
+<!-- TODO: always at the bottom, maybe set min height on article? -->
 <p class="blog-footer">The end! If you have any questions feel free to ask me anywhere on my <a target="_blank" href="/contact">Contacts</a>.</p>
 {% endblock %}

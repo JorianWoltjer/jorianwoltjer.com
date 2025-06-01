@@ -1,10 +1,14 @@
 use std::{sync::Arc, time::Duration};
 
 use axum::{
-    body::Bytes, extract::{
+    body::Bytes,
+    extract::{
         ws::{Message, WebSocket},
         Path, Query, State, WebSocketUpgrade,
-    }, http::StatusCode, response::{IntoResponse, Redirect, Response}, Extension, Json
+    },
+    http::{HeaderMap, StatusCode},
+    response::{IntoResponse, Redirect, Response},
+    Extension, Json,
 };
 use futures::{lock::Mutex, sink::SinkExt, stream::StreamExt};
 use hmac::{Hmac, Mac};
@@ -14,8 +18,16 @@ use sha2::Sha256;
 use tokio::time;
 
 use crate::{
-    extend_slug, handler::{internal_error, sql_not_found}, html_template, schema::*, templates::*, database, AppState
+    database, extend_slug,
+    handler::{internal_error, sql_not_found, MiddlewareData},
+    html_template,
+    render::markdown_to_html,
+    schema::*,
+    templates::*,
+    AppState,
 };
+
+use super::ParentParam;
 
 pub fn sign(id: i32, hmac_key: &[u8]) -> String {
     let mut mac = Hmac::<Sha256>::new_from_slice(hmac_key).unwrap();
@@ -60,15 +72,20 @@ pub async fn verify_signature(
 // Routes
 
 pub async fn get_post(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(slug): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    match database::get_post(&state, &slug).await.map_err(internal_error)? {
-        Some(post) => Ok(html_template(PostTemplate{ nonce, post}).into_response()),
+    match database::get_post(&state, &slug)
+        .await
+        .map_err(internal_error)?
+    {
+        Some(post) => Ok(html_template(PostTemplate { metadata, post }).into_response()),
         None => {
             // Check if it's a redirect
-            let redirect = database::get_post_redirect(&state, &slug).await.map_err(internal_error)?;
+            let redirect = database::get_post_redirect(&state, &slug)
+                .await
+                .map_err(internal_error)?;
 
             match redirect {
                 Some(slug) => Ok(Redirect::permanent(&format!("/blog/p/{}", slug)).into_response()),
@@ -84,7 +101,7 @@ pub struct HiddenRequest {
 }
 
 pub async fn get_post_hidden(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Query(HiddenRequest { signature }): Query<HiddenRequest>,
@@ -96,42 +113,73 @@ pub async fn get_post_hidden(
         .map_err(internal_error)?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    html_template(PostTemplate {
-        nonce,
-        post
-    })
+    html_template(PostTemplate { metadata, post })
 }
 
 pub async fn get_posts_hidden(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let posts = database::get_hidden_posts(&state)
         .await
         .map_err(internal_error)?;
 
-    html_template(HiddenPostsTemplate { nonce, posts })
+    html_template(HiddenPostsTemplate { metadata, posts })
+}
+
+pub async fn get_editor() -> impl IntoResponse {
+    // Custom security headers because we skip middleware.
+    // Lax CSP required due to https://github.com/microsoft/monaco-editor/issues/271
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Content-Security-Policy",
+        "default-src 'self'; worker-src blob:; style-src 'self' 'unsafe-inline'"
+            .parse()
+            .unwrap(),
+    );
+    headers.insert("X-Frame-Options", "SAMEORIGIN".parse().unwrap());
+    headers.insert("Referrer-Policy", "origin".parse().unwrap());
+    headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
+    headers.insert(
+        "Cross-Origin-Resource-Policy",
+        "same-origin".parse().unwrap(),
+    );
+    (headers, html_template(EditorTemplate {}))
 }
 
 pub async fn get_new_post(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
+    Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let folders = database::get_folders(&state).await.map_err(internal_error)?;
-    let tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewPostTemplate { nonce, existing_post: None, folders, tags })
+    let folders = database::get_folders(&state)
+        .await
+        .map_err(internal_error)?;
+    let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewPostTemplate {
+        metadata,
+        parent,
+        existing_post: None,
+        folders,
+        all_tags,
+    })
 }
 
 pub async fn post_new_post(
     State(state): State<AppState>,
     Json(post): Json<CreatePost>,
 ) -> Result<Json<ResultUrl>, StatusCode> {
+    dbg!(&post);
     let slug = extend_slug(&post.slug, post.folder, &state)
         .await
         .map_err(internal_error)?;
+    dbg!(&slug);
+
+    // TODO: create script to re-render all markdown to html column
+    let html = markdown_to_html(&post.markdown).map_err(internal_error)?;
 
     let id = sqlx::query!(
-        "INSERT INTO posts (folder, title, slug, description, img, points, featured, hidden, autorelease, markdown) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        "INSERT INTO posts (folder, title, slug, description, img, points, featured, hidden, autorelease, markdown, html) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING id",
         post.folder,
         post.title,
@@ -142,18 +190,18 @@ pub async fn post_new_post(
         post.featured,
         post.hidden,
         post.autorelease,
-        post.markdown
+        post.markdown,
+        html
     )
     .fetch_one(&state.db)
     .await
     .map_err(internal_error)?
     .id;
 
-    let tag_ids = post.tags.iter().map(|tag| tag.id).collect::<Vec<_>>();
     sqlx::query!(
         "INSERT INTO post_tags (post_id, tag_id) SELECT $1, id FROM tags WHERE id = ANY($2)",
         id,
-        &tag_ids
+        &post.tags
     )
     .execute(&state.db)
     .await
@@ -163,12 +211,21 @@ pub async fn post_new_post(
 }
 
 pub async fn get_new_link(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
+    Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let folders = database::get_folders(&state).await.map_err(internal_error)?;
-    let tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewLinkTemplate { nonce, existing_link: None, folders, tags })
+    let folders = database::get_folders(&state)
+        .await
+        .map_err(internal_error)?;
+    let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
+    html_template(NewLinkTemplate {
+        metadata,
+        parent,
+        existing_link: None,
+        folders,
+        all_tags,
+    })
 }
 
 pub async fn post_new_link(
@@ -189,20 +246,17 @@ pub async fn post_new_link(
     .map_err(internal_error)?;
 
     // Get the folder slug
-    let folder_slug = sqlx::query!(
-        "SELECT slug FROM folders WHERE id = $1",
-        link.folder
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)?
-    .slug;
-    
+    let folder_slug = sqlx::query!("SELECT slug FROM folders WHERE id = $1", link.folder)
+        .fetch_one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .slug;
+
     Ok(Json(ResultUrl::folder(folder_slug)))
 }
 
 pub async fn get_edit_post(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -210,9 +264,18 @@ pub async fn get_edit_post(
         .await
         .map_err(internal_error)?
         .ok_or(StatusCode::NOT_FOUND)?;
-    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let folders = database::get_folders(&state)
+        .await
+        .map_err(internal_error)?;
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewPostTemplate { nonce, existing_post: Some(existing_post), folders, tags })
+    dbg!(&existing_post);
+    html_template(NewPostTemplate {
+        metadata,
+        parent: None,
+        existing_post: Some(existing_post),
+        folders,
+        all_tags: tags,
+    })
 }
 
 pub async fn put_edit_post(
@@ -224,13 +287,10 @@ pub async fn put_edit_post(
         .await
         .map_err(internal_error)?;
 
-    let original_post = sqlx::query!(
-        "SELECT id, slug FROM posts WHERE id = $1",
-        id
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)?;
+    let original_post = sqlx::query!("SELECT id, slug FROM posts WHERE id = $1", id)
+        .fetch_one(&state.db)
+        .await
+        .map_err(internal_error)?;
 
     if original_post.slug != slug {
         // Add old to redirects table
@@ -244,8 +304,10 @@ pub async fn put_edit_post(
         .map_err(internal_error)?;
     }
 
+    let html = markdown_to_html(&post.markdown).map_err(internal_error)?;
+
     sqlx::query!(
-        "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, hidden = $8, autorelease = $9, markdown = $10 WHERE id = $11",
+        "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, hidden = $8, autorelease = $9, markdown = $10, html = $11 WHERE id = $12",
         post.folder,
         post.title,
         slug,
@@ -256,6 +318,7 @@ pub async fn put_edit_post(
         post.hidden,
         post.autorelease,
         post.markdown,
+        html,
         original_post.id
     )
     .execute(&state.db)
@@ -266,22 +329,20 @@ pub async fn put_edit_post(
         .execute(&state.db)
         .await
         .map_err(internal_error)?;
-    let tag_ids = post.tags.iter().map(|tag| tag.id).collect::<Vec<_>>();
     sqlx::query!(
         "INSERT INTO post_tags (post_id, tag_id) SELECT $1, id FROM tags WHERE id = ANY($2)",
         original_post.id,
-        &tag_ids
+        &post.tags
     )
     .execute(&state.db)
     .await
     .map_err(internal_error)?;
 
     Ok(Json(ResultUrl::post(slug)))
-    
 }
 
 pub async fn get_edit_link(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -289,9 +350,17 @@ pub async fn get_edit_link(
         .await
         .map_err(internal_error)?
         .ok_or(StatusCode::NOT_FOUND)?;
-    let folders = database::get_folders(&state).await.map_err(internal_error)?;
+    let folders = database::get_folders(&state)
+        .await
+        .map_err(internal_error)?;
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewLinkTemplate { nonce, existing_link: Some(existing_link), folders, tags })
+    html_template(NewLinkTemplate {
+        metadata,
+        parent: None,
+        existing_link: Some(existing_link),
+        folders,
+        all_tags: tags,
+    })
 }
 
 pub async fn put_edit_link(
@@ -314,14 +383,11 @@ pub async fn put_edit_link(
     .map_err(internal_error)?;
 
     // Get the folder slug
-    let folder_slug = sqlx::query!(
-        "SELECT slug FROM folders WHERE id = $1",
-        link.folder
-    )
-    .fetch_one(&state.db)
-    .await
-    .map_err(internal_error)?
-    .slug;
+    let folder_slug = sqlx::query!("SELECT slug FROM folders WHERE id = $1", link.folder)
+        .fetch_one(&state.db)
+        .await
+        .map_err(internal_error)?
+        .slug;
 
     Ok(Json(ResultUrl::folder(folder_slug)))
 }
@@ -363,9 +429,8 @@ pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Resp
     })
 }
 
-    
-pub async fn get_search(Extension(nonce): Extension<String>) -> impl IntoResponse {
-    html_template(SearchTemplate {nonce})
+pub async fn get_search(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
+    html_template(SearchTemplate { metadata })
 }
 
 /// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.
@@ -393,32 +458,39 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
         println!("WebSocket: Received {msg:?}");
         if let Message::Text(query) = msg {
             println!("           -> Query: {}", query);
-            match sqlx::query_as!(PostFull, r#"SELECT p.id, folder, slug, 
-                    ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
-                    ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
-                    ts_headline('english', plain_text, query, 'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
-                    img, points, views, featured, hidden, autorelease, timestamp, 
-                    array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-                    FROM posts p JOIN websearch_to_tsquery('english', $1) query ON (numnode(query) = 0 OR query @@ ts)
-                    WHERE NOT hidden
-                    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
-                query.to_string())
-                .fetch_all(&state.db)
-                .await {
-                    Ok(results) => {
-                        println!("           -> Sending {} results", results.len());
-                        let response = Message::Text(serde_json::to_string(&results).unwrap().into());
-            
-                        let mut tx = tx_search.lock().await;
-                        if tx.send(response).await.is_err() {
-                            break; // Connection closed
-                        };
-                    },
-                    Err(e) => {
-                        eprintln!("WebSocket Error: {}", e);
-                        break;
-                    }
+            match sqlx::query_as!(
+                PostFull,
+                r#"SELECT p.id, folder, slug, 
+        ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
+        ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
+        ts_headline('english', plain_text, query, 
+        'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
+        '' as "html!", img, points, views, featured, hidden, autorelease, timestamp, 
+        array(SELECT (t.id, t.name, t.color) FROM post_tags 
+        JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+    FROM posts p JOIN websearch_to_tsquery('english', $1) query 
+        ON (numnode(query) = 0 OR query @@ ts)
+    WHERE NOT hidden
+    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
+                query.to_string()
+            )
+            .fetch_all(&state.db)
+            .await
+            {
+                Ok(results) => {
+                    println!("           -> Sending {} results", results.len());
+                    let response = Message::Text(serde_json::to_string(&results).unwrap().into());
+
+                    let mut tx = tx_search.lock().await;
+                    if tx.send(response).await.is_err() {
+                        break; // Connection closed
+                    };
                 }
+                Err(e) => {
+                    eprintln!("WebSocket Error: {}", e);
+                    break;
+                }
+            }
         }
     }
 }

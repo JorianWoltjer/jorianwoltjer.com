@@ -1,36 +1,36 @@
 use askama::Template;
 
-use crate::schema::*;
+use crate::{handler::MiddlewareData, schema::*};
 
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct HomeTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
 }
 
 #[derive(Template)]
 #[template(path = "projects.html")]
 pub struct ProjectsTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
     pub projects: Vec<Project>,
 }
 
 #[derive(Template)]
 #[template(path = "contact.html")]
 pub struct ContactTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
 }
 
 #[derive(Template)]
 #[template(path = "login.html")]
 pub struct LoginTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
 }
 
 #[derive(Template)]
 #[template(path = "blog.html")]
 pub struct BlogTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
     pub featured_posts: Vec<Content>,
     pub categories: Vec<Folder>,
 }
@@ -38,59 +38,59 @@ pub struct BlogTemplate {
 #[derive(Template)]
 #[template(path = "search.html")]
 pub struct SearchTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
 }
 
 #[derive(Template)]
 #[template(path = "folder.html")]
 pub struct FolderTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
     pub folder: FolderContents,
 }
 
 #[derive(Template)]
 #[template(path = "post.html")]
 pub struct PostTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
     pub post: PostFull,
 }
 
 #[derive(Template)]
 #[template(path = "hidden_posts.html")]
 pub struct HiddenPostsTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
     pub posts: Vec<HiddenPost>,
 }
 
 #[derive(Template)]
+#[template(path = "editor.html")]
+pub struct EditorTemplate {}
+
+#[derive(Template)]
 #[template(path = "new_post.html")]
 pub struct NewPostTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
+    pub parent: Option<i32>,
     pub existing_post: Option<PostFull>,
     pub folders: Vec<Folder>,
-    pub tags: Vec<Tag>,
+    pub all_tags: Vec<Tag>,
 }
 
 #[derive(Template)]
 #[template(path = "new_link.html")]
 pub struct NewLinkTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
+    pub parent: Option<i32>,
     pub existing_link: Option<Link>,
     pub folders: Vec<Folder>,
-    pub tags: Vec<Tag>,
+    pub all_tags: Vec<Tag>,
 }
 
 #[derive(Template)]
 #[template(path = "new_folder.html")]
 pub struct NewFolderTemplate {
-    pub nonce: String,
+    pub metadata: MiddlewareData,
+    pub parent: Option<i32>,
     pub existing_folder: Option<Folder>,
     pub folders: Vec<Folder>,
-}
-
-#[derive(Template)]
-#[template(path = "preview_post.html")]
-pub struct PreviewPostTemplate {
-    pub nonce: String,
-    pub post: PostFull,
 }

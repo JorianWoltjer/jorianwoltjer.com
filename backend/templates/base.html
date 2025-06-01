@@ -11,7 +11,7 @@
     />
     <link rel="stylesheet" href="/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="/style.css" />
-    <script nonce="{{ nonce }}" type="speculationrules">
+    <script nonce="{{ metadata.nonce }}" type="speculationrules">
       {
         "prerender": [
           {
@@ -34,9 +34,10 @@
             <a href="/"><img src="/jw.webp" /></a>
           </div>
           <ol>
-            <li>
-              <a href="/">Home</a>
-            </li>
+            {% if metadata.logged_in %}
+            <li><a href="/logout" id="logout">Logout</a></li>
+            {% endif %}
+            <li><a href="/">Home</a></li>
             <li><a href="https://book.jorianwoltjer.com" target="_blank">Book</a></li>
             <li><a href="/blog">Blog</a></li>
             <li><a href="/projects">Projects</a></li>
@@ -55,7 +56,7 @@
         </small>
       </footer>
     </div>
-    {%- block scripts -%}{% endblock %}
+    {% block scripts %}{% endblock %}
     <script src="/script.js"></script>
   </body>
 </html>

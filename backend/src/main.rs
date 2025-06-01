@@ -111,9 +111,10 @@ async fn main() {
                         .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
                         .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
                 )
-                .layer(axum::middleware::from_fn(response_headers_middleware))
-                .layer(session_layer),
-        );
+                .layer(session_layer)
+                .layer(axum::middleware::from_fn(generic_middleware)),
+        )
+        .route("/blog/admin/editor", get(get_editor));
 
     // TODO: call cron()
 

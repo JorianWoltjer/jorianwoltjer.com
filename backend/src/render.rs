@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+use markdown::message::Message;
 use regex::Regex;
 
 lazy_static! {
@@ -14,7 +15,7 @@ fn slugify(title: &str) -> String {
         .to_lowercase()
 }
 
-pub fn markdown_to_html(markdown: &str) -> Result<String, String> {
+pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
     let mut html = markdown::to_html_with_options(
         markdown,
         &markdown::Options {
@@ -24,11 +25,10 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, String> {
                 ..markdown::CompileOptions::default()
             },
         },
-    )
-    .map_err(|e| e.to_string())?;
-    // Don't we all love parsing HTML with Regex :)
+    )?;
 
     // Add IDs and links to headings
+    // Don't we all love parsing HTML with Regex :)
     html = HEADER_REGEX
         .replace_all(&html, |caps: &regex::Captures| {
             let level = caps.get(1).unwrap().as_str();

@@ -1,17 +1,23 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Redirect},
     Extension, Json,
 };
 
 use crate::{
-    database, extend_slug, handler::internal_error, html_template, schema::*, templates::*,
+    database, extend_slug,
+    handler::{internal_error, MiddlewareData},
+    html_template,
+    schema::*,
+    templates::*,
     AppState,
 };
 
+use super::ParentParam;
+
 pub async fn get_folder(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(slug): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -24,7 +30,9 @@ pub async fn get_folder(
             let folder = FolderContents::from_folder(folder, &state)
                 .await
                 .map_err(internal_error)?;
-            Ok(html_template(FolderTemplate { nonce, folder }).into_response())
+            dbg!(&folder);
+            // TODO: render admin interface if needed
+            Ok(html_template(FolderTemplate { metadata, folder }).into_response())
         }
         None => {
             // Check if it's a redirect
@@ -41,14 +49,16 @@ pub async fn get_folder(
 }
 
 pub async fn get_new_folder(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
+    Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let folders = database::get_folders(&state)
         .await
         .map_err(internal_error)?;
     html_template(NewFolderTemplate {
-        nonce,
+        metadata,
+        parent,
         existing_folder: None,
         folders,
     })
@@ -81,7 +91,7 @@ pub async fn post_new_folder(
 }
 
 pub async fn get_edit_folder(
-    Extension(nonce): Extension<String>,
+    Extension(metadata): Extension<MiddlewareData>,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -93,7 +103,8 @@ pub async fn get_edit_folder(
         .await
         .map_err(internal_error)?;
     html_template(NewFolderTemplate {
-        nonce,
+        metadata,
+        parent: None,
         existing_folder: Some(existing_folder),
         folders,
     })

@@ -1,11 +1,27 @@
 // Set current year in footer
 document.getElementById("year").textContent = new Date().getFullYear();
 // Set active link in navigation
-const navLinks = [...document.querySelectorAll("header nav ol a")];
+const navOl = document.querySelector("header nav ol");
+const navLinks = [...navOl.getElementsByTagName("a")];
 navLinks.sort((a, b) => b.href.length - a.href.length);
 const active = navLinks.find(link => link.origin === location.origin &&
   (link.pathname === "/" ? location.pathname === "/" : location.pathname.startsWith(link.pathname)));
 if (active) active.classList.add("active");
+// Logout button functionality
+const logout = document.getElementById("logout");
+if (logout) {
+  logout.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (confirm("Are you sure you want to logout?")) {
+      await fetch("/logout", {
+        method: "POST",
+        credentials: "same-origin"
+      })
+
+      location.reload();
+    }
+  });
+}
 
 // Sticky scroll header
 let lastScrollTop = 0;
@@ -47,4 +63,14 @@ if (toc) {
   }
   mediaQuery.addEventListener("change", handleMobileToc);
   handleMobileToc(mediaQuery);
+}
+
+// Utils
+function slugify(title) {
+  const regex = /(<.*?>)|(&.*?;)|[^\w]+/g;
+  const slug = title
+    .replace(regex, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  return slug;
 }

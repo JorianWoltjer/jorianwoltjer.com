@@ -1,33 +1,79 @@
 {% extends "base.html" %} {% block title %}CTF{% endblock %} {% block main %}
 <nav>
   <ol class="breadcrumbs">
-    <li><a href="#~">~</a></li>
-    <h1>CTF</h1>
+    <li><a href="/blog">~</a></li>
+    {% for (path, part) in crate::breadcrumbs_from_slug(folder.slug) %}
+    <li><a href="/blog/f/{{ path }}">{{ part }}</a></li>
+    {% endfor %}
+    <h1>{{ folder.title }}</h1>
   </ol>
   <hr />
-  <p class="text-dark">
-    Writeups from Capture the Flag (CTF) events I participated in. About web, scripting, crypto, reversing and everything in between. All writeups
-    include detailed explanations of how everything works.
-  </p>
+  <p class="text-dark">{{ folder.description }}</p>
 </nav>
+{% if metadata.logged_in %}
+<a class="big-button" href="/blog/admin/folder/{{ folder.id }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+<a class="big-button" href="/blog/admin/post?parent={{ folder.id }}"><i class="fa-solid fa-plus"></i> New Post</a>
+<a class="big-button" href="/blog/admin/folder?parent={{ folder.id }}"><i class="fa-solid fa-folder-plus"></i> New Folder</a>
+<a class="big-button" href="/blog/admin/link?parent={{ folder.id }}"><i class="fa-solid fa-link"></i> New Link</a>
+{% endif %} {% for content in folder.contents %}
 <div class="card horizontal">
-  <a class="image" href="/blog/p/ctf/x3ctf-blogdog-new-css-injection-xs-leak"><img src="/blogdog.webp" /></a>
+  <!-- TODO: make into into a partial template like "render content" -->
+  {% match content %} {% when Content::Post with (post) %}
+  <a class="image" href="/blog/p/{{ post.slug }}"><img src="/img/blog/{{ post.img }}" /></a>
   <div class="info">
     <div class="body">
-      <div class="tags"><span class="tag tag-green">Web</span><span class="tag tag-blue">Scripting</span>+342 points</div>
-      <h3><a href="/blog/p/ctf/x3ctf-blogdog-new-css-injection-xs-leak">x3CTF - blogdog (+ new CSS Injection XS-Leak!)</a></h3>
-      <p>
-        A "hard web xssbot" challenge about a fun browser quirk with the is= attribute to perform CSS Injection. Bypass the strict CSP with an
-        unintended new technique to XS-Leak a selector's result by detecting the site crashing
-      </p>
+      <div>
+        <div class="tags">
+          {% for tag in post.tags %}
+          <span class="tag tag-{{ tag.color }}">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+        <span>{% if post.points > 0 %} +{{ post.points }} points{% endif %}</span>
+      </div>
+      <h3><a href="/blog/p/{{ post.slug }}">{{ post.title }}</a></h3>
+      <p>{{ post.description }}</p>
     </div>
     <div class="footer text-darker">
-      <span>4 months ago</span> -
-      <span class="darken"></span>
+      <span>{{ crate::relative_time(post.timestamp) }}</span> -
+      <span class="darken">
         <i class="fa-regular fa-eye"></i>
-        2383 views</span
-      >
+        <span>{{ post.views }} views</span>
+      </span>
     </div>
   </div>
+  {% when Content::Link with (link) %}
+  <a class="image" href="{{ link.url }}"><img src="/img/blog/{{ link.img }}" /></a>
+  <div class="info">
+    <div class="body">
+      <div>
+        <div class="tags">
+          <span class="tag tag-gray">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            External
+          </span>
+        </div>
+      </div>
+      <h3><a href="{{ link.url }}">{{ link.title }}</a></h3>
+      <p>{{ link.description }}</p>
+    </div>
+    <div class="footer text-darker">
+      <span>{{ crate::relative_time(link.timestamp) }}</span> -
+      <i class="fa-solid fa-link"></i>
+      {{ crate::get_domain(link.url) }}
+    </div>
+  </div>
+  {% when Content::Folder with (folder) %}
+  <a class="image" href="/blog/f/{{ folder.slug }}"><img src="/img/blog/{{ folder.img }}" /></a>
+  <div class="info">
+    <div class="body">
+      <h3><a href="/blog/f/{{ folder.slug }}">{{ folder.title }}</a></h3>
+      <p>{{ folder.description }}</p>
+    </div>
+    <div class="footer text-darker">
+      <span>{{ crate::relative_time(folder.timestamp) }}</span>
+      <!-- TODO: number of items within? -->
+    </div>
+  </div>
+  {% endmatch %}
 </div>
-{% endblock %}
+{% endfor %} {% endblock %}

@@ -55,6 +55,7 @@ pub struct PostFull {
     pub description: String,
     pub img: String,
     pub markdown: String,
+    pub html: String,
     pub points: i32,
     pub views: i32,
     pub featured: bool,
@@ -169,7 +170,7 @@ pub struct CreatePost {
     pub hidden: bool,
     pub autorelease: Option<DateTime<Utc>>,
     pub markdown: String,
-    pub tags: Vec<Tag>, // Only ids are used
+    pub tags: Vec<i32>, // Only ids are used
 }
 #[derive(Deserialize, Serialize, Debug, JsonSchema)]
 pub struct CreateLink {
