@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::{error, sync::Arc, time::Duration};
 
 use axum::{
     body::Bytes,
@@ -13,7 +13,7 @@ use axum::{
 use futures::{lock::Mutex, sink::SinkExt, stream::StreamExt};
 use hmac::{Hmac, Mac};
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use tokio::time;
 
@@ -97,6 +97,7 @@ pub async fn get_post(
 
 #[derive(Deserialize, JsonSchema)]
 pub struct HiddenRequest {
+    #[serde(rename = "s")]
     signature: String,
 }
 
@@ -113,7 +114,12 @@ pub async fn get_post_hidden(
         .map_err(internal_error)?
         .ok_or(StatusCode::NOT_FOUND)?;
 
-    html_template(PostTemplate { metadata, post })
+    if !post.hidden {
+        // If the post is not hidden anymore, redirect to the regular post
+        return Ok(Redirect::permanent(&format!("/blog/p/{}", post.slug)).into_response());
+    }
+
+    Ok(html_template(PostTemplate { metadata, post }).into_response())
 }
 
 pub async fn get_posts_hidden(
@@ -207,7 +213,12 @@ pub async fn post_new_post(
     .await
     .map_err(internal_error)?;
 
-    Ok(Json(ResultUrl::post(slug)))
+    Ok(Json(if post.hidden {
+        let signature = sign(id, &state.hmac_key);
+        ResultUrl::hidden(slug, signature)
+    } else {
+        ResultUrl::post(slug)
+    }))
 }
 
 pub async fn get_new_link(
@@ -260,7 +271,7 @@ pub async fn get_edit_post(
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let existing_post = database::get_post_by_id(&state, id)
+    let existing_post = database::get_post_as_admin(&state, id)
         .await
         .map_err(internal_error)?
         .ok_or(StatusCode::NOT_FOUND)?;
@@ -338,7 +349,12 @@ pub async fn put_edit_post(
     .await
     .map_err(internal_error)?;
 
-    Ok(Json(ResultUrl::post(slug)))
+    Ok(Json(if post.hidden {
+        let signature = sign(id, &state.hmac_key);
+        ResultUrl::hidden(slug, signature)
+    } else {
+        ResultUrl::post(slug)
+    }))
 }
 
 pub async fn get_edit_link(
@@ -421,20 +437,34 @@ pub async fn cron(State(state): State<AppState>) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Response {
-    println!("WebSocket: Incoming connection");
-    ws.on_upgrade(|socket| async move {
-        println!("WebSocket: handling...");
-        handle_ws_search(socket, state).await
-    })
-}
-
 pub async fn get_search(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
     html_template(SearchTemplate { metadata })
 }
 
-/// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.
-pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) {
+pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Response {
+    println!("WebSocket: Incoming connection");
+    ws.on_upgrade(|socket| async move {
+        println!("WebSocket: handling...");
+        handle_ws_search(socket, &state).await
+    })
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WebSocketQuery {
+    Search { query: String },
+    AllPosts { page: u32 },
+}
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WebSocketResponse {
+    /// Fuzzy search for posts by query, returning the top 5 results. '{~highlight~}' is used to highlight matches.
+    SearchResults(Vec<PostFull>),
+    /// Returns all posts for the given page, with pagination (infinite scroll).
+    AllPosts { page: u32, posts: Vec<Post> },
+}
+
+pub async fn handle_ws_search(socket: WebSocket, state: &AppState) {
     let (tx, mut rx) = socket.split();
     let tx = Arc::new(Mutex::new(tx));
 
@@ -453,44 +483,41 @@ pub async fn handle_ws_search(socket: WebSocket, State(state): State<AppState>) 
     });
 
     // Respond to incoming messages
-    let tx_search = tx.clone();
     while let Some(Ok(msg)) = rx.next().await {
         println!("WebSocket: Received {msg:?}");
-        if let Message::Text(query) = msg {
-            println!("           -> Query: {}", query);
-            match sqlx::query_as!(
-                PostFull,
-                r#"SELECT p.id, folder, slug, 
-        ts_headline('english', title, query, 'StartSel={~, StopSel=~}') as "title!", 
-        ts_headline('english', description, query, 'StartSel={~, StopSel=~}') as "description!", 
-        ts_headline('english', plain_text, query, 
-        'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
-        '' as "html!", img, points, views, featured, hidden, autorelease, timestamp, 
-        array(SELECT (t.id, t.name, t.color) FROM post_tags 
-        JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-    FROM posts p JOIN websearch_to_tsquery('english', $1) query 
-        ON (numnode(query) = 0 OR query @@ ts)
-    WHERE NOT hidden
-    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
-                query.to_string()
-            )
-            .fetch_all(&state.db)
-            .await
-            {
-                Ok(results) => {
-                    println!("           -> Sending {} results", results.len());
-                    let response = Message::Text(serde_json::to_string(&results).unwrap().into());
-
-                    let mut tx = tx_search.lock().await;
-                    if tx.send(response).await.is_err() {
-                        break; // Connection closed
-                    };
-                }
-                Err(e) => {
-                    eprintln!("WebSocket Error: {}", e);
-                    break;
-                }
-            }
+        if let Err(err) = handle_ws_one(msg, tx.clone(), state).await {
+            eprintln!("WebSocket Error: {err}");
+            break; // Exit on error
         }
     }
+}
+
+async fn handle_ws_one(
+    msg: Message,
+    tx: Arc<Mutex<futures::stream::SplitSink<WebSocket, Message>>>,
+    state: &AppState,
+) -> Result<(), Box<dyn error::Error>> {
+    if let Message::Text(query) = msg {
+        println!("           -> Query: {query}");
+
+        let response: WebSocketResponse = match serde_json::from_str::<WebSocketQuery>(&query)? {
+            WebSocketQuery::Search { query } => {
+                println!("           -> Search query: {query:?}");
+                WebSocketResponse::SearchResults(database::search_posts(state, &query).await?)
+            }
+            WebSocketQuery::AllPosts { page } => {
+                println!("           -> All posts request for page {page}");
+                let posts = database::get_posts_paginated(state, page).await?;
+                WebSocketResponse::AllPosts { page, posts }
+            }
+        };
+
+        let response = Message::Text(serde_json::to_string(&response).unwrap().into());
+
+        let mut tx = tx.lock().await;
+        if tx.send(response).await.is_err() {
+            return Err("Failed to send".into());
+        };
+    }
+    Ok(())
 }

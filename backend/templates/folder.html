@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}CTF{% endblock %} {% block main %}
+{% extends "base.html" %} {% block title %}{{ folder.title }}{% endblock %} {% block main %}
 <nav>
   <ol class="breadcrumbs">
     <li><a href="/blog">~</a></li>
@@ -8,7 +8,7 @@
     <h1>{{ folder.title }}</h1>
   </ol>
   <hr />
-  <p class="text-dark">{{ folder.description }}</p>
+  <p class="text-dark folder-description">{{ folder.description }}</p>
 </nav>
 {% if metadata.logged_in %}
 <a class="big-button" href="/blog/admin/folder/{{ folder.id }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
@@ -17,7 +17,6 @@
 <a class="big-button" href="/blog/admin/link?parent={{ folder.id }}"><i class="fa-solid fa-link"></i> New Link</a>
 {% endif %} {% for content in folder.contents %}
 <div class="card horizontal">
-  <!-- TODO: make into into a partial template like "render content" -->
   {% match content %} {% when Content::Post with (post) %}
   <a class="image" href="/blog/p/{{ post.slug }}"><img src="/img/blog/{{ post.img }}" /></a>
   <div class="info">
@@ -42,7 +41,9 @@
     </div>
   </div>
   {% when Content::Link with (link) %}
-  <a class="image" href="{{ link.url }}"><img src="/img/blog/{{ link.img }}" /></a>
+  <a class="image" href="{{ link.url }}" target="_blank" {% if metadata.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}
+    ><img src="/img/blog/{{ link.img }}"
+  /></a>
   <div class="info">
     <div class="body">
       <div>
@@ -53,20 +54,22 @@
           </span>
         </div>
       </div>
-      <h3><a href="{{ link.url }}">{{ link.title }}</a></h3>
+      <h3><a href="{{ link.url }}" target="_blank" {% if metadata.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>{{ link.title }}</a></h3>
       <p>{{ link.description }}</p>
     </div>
     <div class="footer text-darker">
       <span>{{ crate::relative_time(link.timestamp) }}</span> -
       <i class="fa-solid fa-link"></i>
-      {{ crate::get_domain(link.url) }}
+      <span>{{ crate::get_domain(link.url) }}</span>
     </div>
   </div>
   {% when Content::Folder with (folder) %}
   <a class="image" href="/blog/f/{{ folder.slug }}"><img src="/img/blog/{{ folder.img }}" /></a>
   <div class="info">
     <div class="body">
-      <h3><a href="/blog/f/{{ folder.slug }}">{{ folder.title }}</a></h3>
+      <h3>
+        <a href="/blog/f/{{ folder.slug }}"><i class="fa-solid fa-folder-closed"></i> <span>{{ folder.title }}</span></a>
+      </h3>
       <p>{{ folder.description }}</p>
     </div>
     <div class="footer text-darker">

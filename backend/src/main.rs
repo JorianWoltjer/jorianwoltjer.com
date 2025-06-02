@@ -64,12 +64,13 @@ async fn main() {
 
     // Router setup
     let app = Router::new()
+        // TODO: map to /static and stucture the rest
         .fallback_service(ServeDir::new("static"))
         .merge(
             Router::new() // Public
                 .route("/", get(get_home))
                 .route("/login", get(get_login).post(post_login))
-                .route("/projects", get(get_projects))
+                .route("/about", get(get_about))
                 .route("/contact", get(get_contact))
                 .route("/blog", get(get_blog))
                 .route("/blog/f/{*slug}", get(get_folder))
@@ -83,6 +84,7 @@ async fn main() {
             Router::new() // Authentication required
                 .route("/logout", post(post_logout))
                 .route("/blog/admin/preview", post(post_preview))
+                .route("/blog/admin/hidden", get(get_posts_hidden))
                 .route(
                     "/blog/admin/folder",
                     get(get_new_folder).post(post_new_folder),

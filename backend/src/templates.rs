@@ -9,15 +9,14 @@ pub struct HomeTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "projects.html")]
-pub struct ProjectsTemplate {
+#[template(path = "contact.html")]
+pub struct ContactTemplate {
     pub metadata: MiddlewareData,
-    pub projects: Vec<Project>,
 }
 
 #[derive(Template)]
-#[template(path = "contact.html")]
-pub struct ContactTemplate {
+#[template(path = "about.html")]
+pub struct AboutTemplate {
     pub metadata: MiddlewareData,
 }
 

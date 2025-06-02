@@ -131,15 +131,11 @@ pub struct HiddenPost {
     pub autorelease: Option<DateTime<Utc>>,
     pub timestamp: DateTime<Utc>,
     pub tags: Vec<Tag>,
-    pub signature: Option<String>,
+    pub signature: String,
 }
 impl HiddenPost {
     pub fn from_summary(post: Post, state: &AppState) -> Self {
-        // let signature = sign(post.id, &state.hmac_key);
-        let signature = match post.hidden {
-            true => Some(sign(post.id, &state.hmac_key)),
-            false => None,
-        };
+        let signature = sign(post.id, &state.hmac_key);
         Self {
             id: post.id,
             folder: post.folder,

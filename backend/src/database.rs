@@ -1,17 +1,13 @@
 use crate::{handler::VerifiedId, schema::*, AppState};
 
+const POSTS_PER_PAGE: u32 = 5;
+
 fn not_found_option<T>(result: Result<T, sqlx::Error>) -> Result<Option<T>, sqlx::Error> {
     match result {
         Ok(value) => Ok(Some(value)),
         Err(sqlx::Error::RowNotFound) => Ok(None),
         Err(e) => Err(e),
     }
-}
-
-pub async fn get_projects(state: &AppState) -> Result<Vec<Project>, sqlx::Error> {
-    sqlx::query_as!(Project, "SELECT * FROM projects ORDER BY id")
-        .fetch_all(&state.db)
-        .await
 }
 
 pub async fn get_folders(state: &AppState) -> Result<Vec<Folder>, sqlx::Error> {
@@ -73,12 +69,12 @@ pub async fn get_post(state: &AppState, slug: &str) -> Result<Option<PostFull>, 
     .await)
 }
 
-pub async fn get_post_by_id(state: &AppState, id: i32) -> Result<Option<PostFull>, sqlx::Error> {
+pub async fn get_post_as_admin(state: &AppState, id: i32) -> Result<Option<PostFull>, sqlx::Error> {
     not_found_option(sqlx::query_as!(
         PostFull,
         r#"SELECT p.id, folder, slug, title, description, img, markdown, html, points, views, featured, hidden, autorelease, timestamp, 
             array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND p.id = $1"#,
+            FROM posts p WHERE p.id = $1"#,
         id
     )
     .fetch_one(&state.db)
@@ -202,4 +198,39 @@ pub async fn get_tags(state: &AppState) -> Result<Vec<Tag>, sqlx::Error> {
     sqlx::query_as!(Tag, "SELECT id, name, color FROM tags ORDER BY name")
         .fetch_all(&state.db)
         .await
+}
+
+pub async fn search_posts(state: &AppState, query: &str) -> Result<Vec<PostFull>, sqlx::Error> {
+    sqlx::query_as!(
+        PostFull,
+        r#"SELECT p.id, folder, slug, 
+        ts_headline('english', title, query, 'StartSel={~, StopSel=~},HighlightAll=true') as "title!", 
+        ts_headline('english', description, query, 'StartSel={~, StopSel=~},HighlightAll=true') as "description!", 
+        ts_headline('english', plain_text, query, 
+        'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as "markdown!", 
+        '' as "html!", img, points, views, featured, hidden, autorelease, timestamp, 
+        array(SELECT (t.id, t.name, t.color) FROM post_tags 
+        JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+    FROM posts p JOIN websearch_to_tsquery('english', $1) query 
+        ON (numnode(query) = 0 OR query @@ ts)
+    WHERE NOT hidden
+    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5"#,
+        query
+    )
+    .fetch_all(&state.db)
+    .await
+}
+
+pub async fn get_posts_paginated(state: &AppState, page: u32) -> Result<Vec<Post>, sqlx::Error> {
+    let offset = (page - 1) * POSTS_PER_PAGE;
+    sqlx::query_as!(
+        Post,
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE NOT hidden ORDER BY timestamp DESC LIMIT $1 OFFSET $2"#,
+        POSTS_PER_PAGE as i64,
+        offset as i64
+    )
+    .fetch_all(&state.db)
+    .await
 }

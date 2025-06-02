@@ -1,1 +1,67 @@
-{% extends "base.html" %} {% block title %}Home{% endblock %} {% block main %} new_folder.html {% endblock %}
+{% extends "base.html" %}{% block title %}{% if let Some(folder) = existing_folder %}Edit {{ folder.title }}{% else %}Create Folder{% endif %}{%
+endblock %} {% block scripts %}
+<script src="/new_folder.js"></script>
+{% endblock %} {% block main %}
+<h1>Create Folder</h1>
+{% if let Some(folder) = existing_folder %}
+<form action="/blog/admin/folder/{{ folder.id }}" id="form" method="put">
+  {% else %}
+  <form action="/blog/admin/folder" id="form" method="post">
+    {% endif %}
+    <div class="input-group">
+      <input
+        type="text"
+        name="title"
+        placeholder="Title"
+        value="{% if let Some(folder) = existing_folder %}{{ folder.title }}{% endif %}"
+        required
+        autofocus
+      />
+      <input
+        type="text"
+        name="slug"
+        placeholder="URL"
+        value="{% if let Some(folder) = existing_folder %}{{ folder.slug.split('/').last().unwrap() }}{% endif %}"
+        required
+      />
+    </div>
+    <textarea name="description" placeholder="Description...">
+{% if let Some(folder) = existing_folder %}{{ folder.description }}{% endif %}</textarea
+    >
+    <input
+      type="text"
+      name="img"
+      class="full-width"
+      placeholder="Image path..."
+      value="{% if let Some(folder) = existing_folder %}{{ folder.img }}{% endif %}"
+    />
+    <div class="input-label">
+      <label for="folder">
+        <i class="fa-solid fa-folder"></i>
+      </label>
+      <select name="folder" id="folder">
+        <option value="">-</option>
+        {% for f in folders %} <option value="{{ f.id }}" {% if Some(*f.id) == parent || (existing_folder.is_some() &&
+        existing_folder.as_ref().unwrap().parent == Some(*f.id)) %}selected{% endif %}> {{ f.title }} {% endfor %}
+      </select>
+    </div>
+    <div id="card-preview" class="card horizontal">
+      <a class="image" href="#"><img src="/img/placeholder.png" /></a>
+      <div class="info">
+        <div class="body">
+          <h3>
+            <a href="#"><i class="fa-solid fa-folder-closed"></i> <span class="preview-title"></span></a>
+          </h3>
+          <p></p>
+        </div>
+        <div class="footer text-darker">
+          <span>0 seconds ago</span>
+        </div>
+      </div>
+    </div>
+    <div class="buttons-right">
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+  {% endblock %}
+</form>

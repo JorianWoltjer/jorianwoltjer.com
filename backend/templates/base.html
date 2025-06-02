@@ -9,6 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Major+Mono+Display&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
+    <!-- TODO: meta tags -->
     <link rel="stylesheet" href="/fontawesome/css/all.min.css" />
     <link rel="stylesheet" href="/style.css" />
     <script nonce="{{ metadata.nonce }}" type="speculationrules">
@@ -23,6 +24,9 @@
         ]
       }
     </script>
+    <!-- TODO: generate RSS & sitemap -->
+    <!-- TODO: favicon -->
+    <link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="Blog | Jorian Woltjer" />
     <title>{% block title %}{% endblock %} | Jorian Woltjer</title>
     {%- block head -%}{% endblock %}
   </head>
@@ -40,7 +44,7 @@
             <li><a href="/">Home</a></li>
             <li><a href="https://book.jorianwoltjer.com" target="_blank">Book</a></li>
             <li><a href="/blog">Blog</a></li>
-            <li><a href="/projects">Projects</a></li>
+            <li><a href="/about">About</a></li>
             <li><a href="/contact">Contact</a></li>
           </ol>
         </nav>

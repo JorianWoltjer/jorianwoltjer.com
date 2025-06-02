@@ -1,0 +1,105 @@
+{% extends "base.html" %} {% block title %}About Me{% endblock %} {% block main %}
+<h1>About</h1>
+<p class="text-dark">Here is a small bit of backstory about me and this website.</p>
+<h2>… Me 🧑‍💻</h2>
+<p>
+  In my younger years, I was always a curious kid, wanting to know how everything worked. From watching science videos, and taking mechanical things
+  apart, to eventually <b>finding programming</b> via <a href="https://scratch.mit.edu/" target="_blank">Scratch</a>. This was fascinating to me,
+  making the computer do what you want. I did this for a while until eventually discovering this crazy world of "code" via YouTube tutorials from
+  <a href="https://www.youtube.com/@TheCodingTrain" target="_blank">The Coding Train</a>. While I had watched a lot with no clue what's going on, at
+  one point I got started with the basics for real with <a href="https://processing.org/" target="_blank">Processing</a>, a Java-based programming
+  language for making small visual programs. To me this was a whole new world opening up, generating complex patterns and interactive little games by
+  just writing some lines of text.
+</p>
+<p>
+  At this same time, my passion was in <b>graphics design</b>, specifically video editing. The complexity but flexability of Adobe After Effects
+  fascinated me and it's what I did every chance I got. The more complex the effect, the more interesting it was to me. Its "expression language" was
+  also technically the first programming language I used, although all I did with it back then was copy-pasting code from other people's projects.
+  <br />
+  As you may notice from this website, I still get enjoyment out of designing graphics like this CSS and my personal logo. This combines well with
+  making things clear to understand, this is easier when it's pleasing to look at.
+</p>
+<p>
+  All this love for programming was eventually transferred into hacking due to my best friend telling me about it after learning the basics during a
+  summer vacation. We were just 16 years old at the time, but were already successfully finding and reporting many vulnerabilities in our
+  <b>school's websites</b>. Whenever we learned a new technique from playing CTFs, we could almost always directly apply it to a school website, which
+  was a great way to practice.
+</p>
+<p>
+  <b>CTF</b> (<a href="https://en.wikipedia.org/wiki/Capture_the_flag_(cybersecurity)" target="_blank">Capture The Flag</a>) was the next period of my
+  life, putting almost all my free time into playing challenges, reading writeups and starting to write some of my own. I think this is the single
+  best way to learn deep technical hacking skills. Because I often played alone, I had to learn all common categories in order to compete. I liked
+  basically all of it, from crypto to web to binary exploitation. Eventually, I noticed, however, that I was best at web security. It's also what I
+  started my journey with initially. I started to shift my whole focus to web security.<br />
+  Another thing I found was that I really enjoyed creating writeups, explaining my thought process and the techniques taking note of the techniques I
+  used to solve a challenge. Not only did it help others, but also myself to remember how I did something in the future. Eventually, just creating
+  writeups wasn't enough and I got started on my biggest project yet: <a href="https://book.jorianwoltjer.com/" target="_blank">My Gitbook</a>. This
+  includes essentially all the knowledge I gained from CTFs and my own experiments, and to this day I'm using and expanding it almost daily.
+</p>
+<p>
+  The biggest milestone for me was finding a genuinely <b>novel technique</b> involving an XS-Leak vulnerability in something I was very familiar
+  with: <a href="/blog/p/hacking/xs-leaking-flags-with-css-a-ctfd-0day" target="_blank">CTFd</a>. Many great hackers have likely looked at this but in
+  my ignorence I decided to follow a rabbit hole anyway, which led to this very interesting discovery. Since then my focus has been on finding small
+  new tricks that expand the boundaries of what's theoretically possible, and sharing that on my blog. All the while using my knowledge to hack and
+  report vulnerabilities to real applications!
+</p>
+<p>Right now, I'm working as a full-time pentester at <a href="https://warpnet.nl/" target="_blank">Warpnet</a> and really enjoying the community.</p>
+<h2>… This website 🌐</h2>
+<p>
+  What you're looking at right now is completely handmade HTML, JavaScript, and CSS. Everything is served and generated using the Axum framework in
+  Rust, with data stored in a PostgreSQL database. It's all hosted on my personal VPS with Cloudflare on top for caching and content delivery.
+</p>
+<p>
+  I intentionally chose not to use any frontend framework this time around, as I have gained a lot of experience in Web Development over the years of
+  hacking websites, and saw it as a fun challenge. It wasn't always like this, below are the largest iterations of technology stacks I went through:
+</p>
+<ol>
+  <li>
+    <b>PHP</b>:
+    <p>
+      <i>
+        The first useful programming project I ever did was this old version of my personal website, all the way back in 2021. This taught me a ton
+        about frontend and backend development and most of the basics of how websites work. My love for graphics design could shine through CSS,
+        although my thoughts were hard to put into code at that time.
+      </i>
+      <br />
+      <a href="https://github.com/JorianWoltjer/jorianwoltjer.com-php" target="_blank"> https://github.com/JorianWoltjer/jorianwoltjer.com-php </a>
+    </p>
+  </li>
+  <li>
+    <b>NextJS + Axum</b>:<br />
+    <p>
+      <i>
+        After a while, started to get sick of PHP's idiosyncrasies and decided I simply had to move to a more modern stack. The most popular framework
+        for blogs at the time was NextJS, which was actually quite nice to work with. Although I wanted to avoid doing everything in that single
+        framework, which led me to add a backend in Rust, the programming language I was learning at the time. While taking multiple weeks to complete
+        due to the complexity of suddenly working on multiple systems communicating with each other, I learned a lot about both technologies and
+        interaction between servers.
+      </i>
+      <br />
+      <a href="https://github.com/JorianWoltjer/jorianwoltjer.com/tree/fa18c46c5b928bd41f9453154e872cf4cef12f8a" target="_blank">
+        https://github.com/JorianWoltjer/jorianwoltjer.com/tree/fa18c46c5b928bd41f9453154e872cf4cef12f8a
+      </a>
+    </p>
+  </li>
+  <li>
+    <b>JavaScript + Axum</b>
+    <p>
+      <i>
+        While the complexity was great for learning, I wanted to simplify things and choose a stack that made sense for a "simple" website like mine.
+        That's what led me to simply keep the Axum (Rust) backend but render all HTML responses straight from there using simple templates and plain
+        JavaScript. This only took a few days to complete because the basis was already there for the backend, and I had gained a lot more experience
+        since which helped out in the frontend.
+      </i>
+      <br />
+      <a href="https://github.com/JorianWoltjer/jorianwoltjer.com" target="_blank"> https://github.com/JorianWoltjer/jorianwoltjer.com </a>
+    </p>
+  </li>
+</ol>
+<p>I hope you like the result! I'm still improving things left and right as I encounter them, and really enjoy doing so :)</p>
+<hr />
+<p>
+  <i>Serious vulnerability counter:</i> <b>2</b> (<a href="/blog/p/coding/reflected-xss-on-my-own-site" target="_blank">"XSS"</a>,
+  <a href="/blog/p/coding/cache-deception-on-my-new-site" target="_blank">Cache Deception</a>)
+</p>
+{% endblock %}

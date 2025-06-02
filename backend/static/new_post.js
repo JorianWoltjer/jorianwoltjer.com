@@ -11,36 +11,6 @@ hiddenCheckbox.addEventListener("change", function () {
   }
 });
 
-function relativeTime(timestamp) {
-  const now = new Date();
-  let duration = Math.abs(now - timestamp);
-  const seconds = Math.floor(duration / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  let value, unit;
-  if (days > 0) {
-    value = days;
-    unit = "day";
-  } else if (hours > 0) {
-    value = hours;
-    unit = "hour";
-  } else if (minutes > 0) {
-    value = minutes;
-    unit = "minute";
-  } else {
-    value = seconds;
-    unit = "second";
-  }
-  let plural = value !== 1 ? "s" : "";
-  if (now > timestamp) {
-    return `${value} ${unit}${plural} ago`;
-  } else {
-    return `in ${Math.abs(value)} ${unit}${plural}`;
-  }
-}
-
 const autoRelease = document.getElementById("autorelease");
 const autoReleaseIn = document.getElementById("autorelease-in");
 autoRelease.addEventListener("input", function () {
@@ -75,23 +45,23 @@ editorFrame.addEventListener("load", () => {
 function cancelEvent(e) {
   e.preventDefault();
 }
-const postPreview = document.getElementById("post-preview");
+const cardPreview = document.getElementById("card-preview");
 function trackValue(e) {
   if (e.isTrusted) {
     window.addEventListener("beforeunload", cancelEvent);
   }
 
   if (e.target.name === "title") {
-    postPreview.querySelector("h3 a").textContent = e.target.value;
+    cardPreview.querySelector("h3 a").textContent = e.target.value;
   } else if (e.target.name === "description") {
-    postPreview.querySelector("p").textContent = e.target.value;
+    cardPreview.querySelector("p").textContent = e.target.value;
   } else if (e.target.name === "img") {
-    postPreview.querySelector("img").src = e.target.value;
+    cardPreview.querySelector("img").src = e.target.value;
   } else if (e.target.name === "points") {
     const points = Number(e.target.value);
-    postPreview.querySelector("#preview-points").textContent = points > 0 ? `+${e.target.value} points` : "";
+    cardPreview.querySelector("#preview-points").textContent = points > 0 ? `+${e.target.value} points` : "";
   } else if (e.target.name === "hidden") {
-    postPreview.querySelector("#preview-views").innerHTML = e.target.checked ? `<b>Hidden</b>` : `0 views`;
+    cardPreview.querySelector("#preview-views").innerHTML = e.target.checked ? `<b>Hidden</b>` : `0 views`;
   }
 }
 
@@ -118,6 +88,18 @@ let tags = Array.from(tagsElem.querySelectorAll("span")).map(el => ({
   color: el.dataset.color
 }));
 
+function updateTagCollections() {
+  datalistElem.replaceChildren(
+    ...all_tags.filter(tag => !tags.includes(tag)).map(tag => {
+      const option = document.createElement("option");
+      option.value = tag.name;
+      return option;
+    })
+  );
+  cardPreview.querySelector(".tags").replaceWith(
+    tagsElem.cloneNode(true)
+  );
+}
 function handleNewTag(new_tag) {
   if (new_tag && !tags.find(tag => tag.id == new_tag.id)) {
     tags.push(new_tag);
@@ -129,17 +111,10 @@ function handleNewTag(new_tag) {
     tagSpan.addEventListener("click", function () {
       tags = tags.filter(tag => tag.id !== new_tag.id);
       tagSpan.remove();
+      updateTagCollections();
     });
   }
-  datalistElem.innerHTML = "";
-  all_tags.filter(tag => !tags.includes(tag)).forEach(tag => {
-    const option = document.createElement("option");
-    option.value = tag.name;
-    datalistElem.appendChild(option);
-  });
-  postPreview.querySelector(".tags").replaceWith(
-    tagsElem.cloneNode(true)
-  );
+  updateTagCollections();
 }
 
 tagInput.addEventListener("change", (e) => {

@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Home{% endblock %} {% block main %}
+{% extends "base.html" %} {% block title %}Blog{% endblock %} {% block main %}
 <h1>Blog</h1>
 <ul class="categories">
   {% for category in categories %}
@@ -18,6 +18,12 @@
 <a class="big-button square" href="/blog/rss.xml">
   <i class="fa-solid fa-square-rss"></i>
 </a>
+{% if metadata.logged_in %}
+<a class="big-button" href="/blog/admin/hidden">
+  <i class="fa-solid fa-eye-slash"></i>
+  Hidden Posts
+</a>
+{% endif %}
 <h2>Featured posts</h2>
 <div class="cards-2cols">
   {% for content in featured_posts %}
@@ -44,7 +50,7 @@
         </div>
       </div>
       {% when Content::Link with (link) %}
-      <a class="image" href="{{ link.url }}"><img src="/img/blog/{{ link.img }}" /></a>
+      <a class="image" href="{{ link.url }}" target="_blank"><img src="/img/blog/{{ link.img }}" /></a>
       <div class="info">
         <div class="body">
           <div class="tags">
@@ -53,7 +59,9 @@
               External
             </span>
           </div>
-          <h3><a href="{{ link.url }}">{{ link.title }}</a></h3>
+          <h3>
+            <a href="{{ link.url }}" target="_blank"> {{ link.title }} </a>
+          </h3>
           <p>{{ link.description }}</p>
         </div>
         <div class="footer text-darker">

@@ -1,1 +1,12 @@
-{% extends "base.html" %} {% block title %}Home{% endblock %} {% block main %} search.html {% endblock %}
+{% extends "base.html" %} {% block title %}Search{% endblock %} {% block scripts %}
+<script src="/search.js"></script>
+{% endblock %}{% block main %}
+<h1>Search</h1>
+<div class="input-label search-bar">
+  <label for="search"><i class="fa-solid fa-rotate"></i></label>
+  <input type="text" id="search" placeholder="Search..." autocomplete="off" autofocus />
+</div>
+<div id="search-results"></div>
+<div id="infinite-scroll-end"></div>
+<div id="no-more-posts" class="text-dark text-center hidden">No more posts to load.</div>
+{% endblock %}

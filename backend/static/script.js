@@ -64,6 +64,14 @@ if (toc) {
   mediaQuery.addEventListener("change", handleMobileToc);
   handleMobileToc(mediaQuery);
 }
+document.querySelectorAll(".folder-description").forEach(descriptionEl => {
+  const description = descriptionEl.textContent.trim().split(".");
+  const firstSentence = document.createTextNode(description.shift() + ".");
+  const remainingText = document.createElement("span")
+  remainingText.className = "description-extra";
+  remainingText.textContent = description.join(".");
+  descriptionEl.replaceChildren(firstSentence, remainingText);
+});
 
 // Utils
 function slugify(title) {
@@ -73,4 +81,93 @@ function slugify(title) {
     .replace(/^-+|-+$/g, '')
     .toLowerCase();
   return slug;
+}
+
+function relativeTime(timestamp) {
+  const now = new Date();
+  const from = new Date(timestamp);
+  let duration = Math.abs(now - from);
+  const seconds = Math.floor(duration / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  let value, unit;
+  if (days > 0) {
+    value = days;
+    unit = "day";
+  } else if (hours > 0) {
+    value = hours;
+    unit = "hour";
+  } else if (minutes > 0) {
+    value = minutes;
+    unit = "minute";
+  } else {
+    value = seconds;
+    unit = "second";
+  }
+  let plural = value !== 1 ? "s" : "";
+  if (now > from) {
+    return `${value} ${unit}${plural} ago`;
+  } else {
+    return `in ${Math.abs(value)} ${unit}${plural}`;
+  }
+}
+
+// Intercept link post clicks for admin interface
+document.querySelectorAll("a[data-admin-link-id]").forEach(link => {
+  const id = link.dataset.adminLinkId;
+  link.addEventListener("click", async (e) => {
+    e.preventDefault();
+    if (confirm("Do you want to EDIT this link? Cancel to open instead")) {
+      location.href = `/blog/admin/link/${id}`;
+    } else {
+      window.open(link.href, "_blank");
+    }
+  });
+});
+
+// Shortcut to open login (middle mouse button on logo)
+document.querySelector("header nav .logo").addEventListener("auxclick", (e) => {
+  if (e.button === 1) {
+    e.preventDefault();
+    location.href = "/login";
+  }
+});
+
+// Client-side HTML templating
+if (typeof trustedTypes === "undefined")
+  trustedTypes = { createPolicy: (n, rules) => rules };
+
+function escapeHTML(value) {
+  if (value instanceof Element) {
+    return value.outerHTML;
+  } else if (value instanceof Text) {
+    return escapeHTML(value.textContent);
+  } else if (value instanceof DocumentFragment) {
+    return Array.from(value.childNodes).map(escapeHTML).join('');
+  } else if (Array.isArray(value)) {
+    return value.map(escapeHTML).join('');
+  } else {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+}
+function templateHTML(strings, ...values) {
+  const result = strings.reduce((result, str, i) => {
+    let value = values[i - 1];
+    return result + escapeHTML(value) + str;
+  });
+  const html = trustedTypes.createPolicy("trustedHTML", {
+    createHTML: (input) => input,
+  }).createHTML(result);
+
+  const dom = new DOMParser().parseFromString(html, "text/html");
+  const fragment = document.createDocumentFragment();
+  while (dom.body.firstChild) {
+    fragment.appendChild(dom.body.firstChild);
+  }
+  return fragment;
 }

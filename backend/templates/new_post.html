@@ -9,7 +9,14 @@
   <form action="/blog/admin/post" id="form" method="post">
     {% endif %}
     <div class="input-group">
-      <input type="text" name="title" placeholder="Title" value="{% if let Some(post) = existing_post %}{{ post.title }}{% endif %}" required />
+      <input
+        type="text"
+        name="title"
+        placeholder="Title"
+        value="{% if let Some(post) = existing_post %}{{ post.title }}{% endif %}"
+        required
+        autofocus
+      />
       <input
         type="text"
         name="slug"
@@ -35,7 +42,7 @@
         existing_post.as_ref().unwrap().folder == folder.id) %}selected{% endif %}> {{ folder.title }} {% endfor %}
       </select>
     </div>
-    <div id="post-preview" class="card horizontal">
+    <div id="card-preview" class="card horizontal">
       <a class="image" href="#"><img src="/img/placeholder.png" /></a>
       <div class="info">
         <div class="body">

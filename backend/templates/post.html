@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Some Post{% endblock %} {% block scripts %}
+{% extends "base.html" %} {% block title %}{{ post.title }}{% endblock %} {% block scripts %}
 <script src="/highlightjs/highlight.min.js"></script>
 <link rel="stylesheet" href="/highlightjs/github-dark.min.css" />
 <script nonce="{{ metadata.nonce }}">
