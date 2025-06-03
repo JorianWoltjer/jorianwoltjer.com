@@ -1,6 +1,6 @@
 # [jorianwoltjer.com](https://jorianwoltjer.com/)
 
-**Personal blog website with Markdown using a [NextJS](https://nextjs.org/) frontend and [Axum](https://docs.rs/axum/latest/axum/) (Rust) backend**
+**Personal blog website with Markdown using a plain HTML/CSS/JavaScript frontend and [Axum](https://docs.rs/axum/latest/axum/) (Rust) backend**
 
 ## Setup
 

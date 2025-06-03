@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.id, folder, slug, \n        ts_headline('english', title, query, 'StartSel={~, StopSel=~},HighlightAll=true') as \"title!\", \n        ts_headline('english', description, query, 'StartSel={~, StopSel=~},HighlightAll=true') as \"description!\", \n        ts_headline('english', plain_text, query, \n        'MaxFragments=2, MaxWords=10, MinWords=5, StartSel={~, StopSel=~}') as \"markdown!\", \n        '' as \"html!\", img, points, views, featured, hidden, autorelease, timestamp, \n        array(SELECT (t.id, t.name, t.color) FROM post_tags \n        JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as \"tags!: Vec<Tag>\"\n    FROM posts p JOIN websearch_to_tsquery('english', $1) query \n        ON (numnode(query) = 0 OR query @@ ts)\n    WHERE NOT hidden\n    ORDER BY ts_rank_cd(ts, query) DESC LIMIT 5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "folder",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "slug",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "title!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "markdown!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "html!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "img",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "views",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 10,
+        "name": "featured",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "hidden",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "autorelease",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 14,
+        "name": "tags!: Vec<Tag>",
+        "type_info": "RecordArray"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "0ec8562155143fdc34833998bad56e667215f86466c6810accb45bb42c2cb339"
+}

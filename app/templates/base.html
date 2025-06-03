@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Major+Mono+Display&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- TODO: meta tags -->
+    <link rel="stylesheet" href="/assets/vendor/fontawesome/css/all.min.css" />
+    <link rel="stylesheet" href="/assets/css/style.css" />
+    <script nonce="{{ metadata.nonce }}" type="speculationrules">
+      {
+        "prerender": [
+          {
+            "where": {
+              "and": [{ "href_matches": "/*" }]
+            },
+            "eagerness": "moderate"
+          }
+        ]
+      }
+    </script>
+    <!-- TODO: generate RSS & sitemap -->
+    <!-- TODO: favicon -->
+    <link rel="alternate" type="application/rss+xml" href="/blog/rss.xml" title="Blog | Jorian Woltjer" />
+    <title>{% block title %}{% endblock %} | Jorian Woltjer</title>
+    {%- block head -%}{% endblock %}
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <nav>
+          <div class="logo">
+            <a href="/"><img src="/img/jw.png" /></a>
+          </div>
+          <ol>
+            {% if metadata.logged_in %}
+            <li><a href="/logout" id="logout">Logout</a></li>
+            {% endif %}
+            <li><a href="/">Home</a></li>
+            <li><a href="https://book.jorianwoltjer.com" target="_blank">Book</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+          </ol>
+        </nav>
+      </header>
+      <main>{% block main %}{% endblock %}</main>
+      <footer>
+        <small>Copyright © <span id="year"></span> Jorian Woltjer. All rights reserved.</small><br />
+        <small>
+          Open source on
+          <a target="_blank" href="https://github.com/JorianWoltjer/jorianwoltjer.com">GitHub</a>
+          (built with <a class="no-style" target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">JavaScript</a> +
+          <a class="no-style" target="_blank" href="https://docs.rs/axum/latest/axum/">Axum</a>)
+        </small>
+      </footer>
+    </div>
+    <script src="/assets/js/base.js"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

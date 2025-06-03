@@ -1,0 +1,10 @@
+{% extends "base.html" %} {% block title %}Login{% endblock %} {% block scripts %}
+<script src="/assets/js/login.js"></script>
+{% endblock %} {% block main %}
+<form id="login-form" class="center-box" action="/login" method="post">
+  <h1>Admin login</h1>
+  <div id="alert" class="alert error"></div>
+  <input type="password" name="password" placeholder="Password..." required autofocus />
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}
