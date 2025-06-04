@@ -3,9 +3,17 @@ pub mod post;
 
 use super::{internal_error, MiddlewareData};
 use crate::render::markdown_to_html;
-use crate::{database::*, extend_slug, html_template, schema::*, templates::*, AppState};
+use crate::{
+    database::{self, *},
+    extend_slug, html_template,
+    schema::*,
+    templates::*,
+    AppState,
+};
+use askama::Template;
+use axum::http::{header, HeaderMap};
 use axum::{extract::State, http::StatusCode, response::IntoResponse};
-use axum::{Extension, Form};
+use axum::{http, Extension, Form};
 use chrono::Utc;
 use serde::Deserialize;
 
@@ -18,14 +26,21 @@ pub struct ParentParam {
 }
 
 pub async fn get_blog(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let featured_posts = get_featured_posts(&state).await.map_err(internal_error)?;
+    let featured_posts = get_featured_content(&state).await.map_err(internal_error)?;
     let categories = get_categories(&state).await.map_err(internal_error)?;
 
     html_template(BlogTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata {
+            url,
+            title: "Blog".to_string(),
+            description: Some("Read cybersecurity-related posts containing CTF writeups, novel pieces of research and stories.".to_string()),
+            image: None,
+        },
         featured_posts,
         categories,
     })
@@ -37,7 +52,8 @@ pub struct PreviewJson {
 }
 
 pub async fn post_preview(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Form(form): Form<PreviewJson>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -72,5 +88,22 @@ pub async fn post_preview(
         timestamp: Utc::now(),
         tags,
     };
-    html_template(PostTemplate { metadata, post })
+    html_template(PostTemplate {
+        middleware,
+        metadata: Metadata::only_title(url, "Preview"),
+        post,
+    })
+}
+
+pub async fn get_rss(State(state): State<AppState>) -> Result<(HeaderMap, String), StatusCode> {
+    let template = RssTemplate {
+        latest_posts: database::get_latest_content(&state, 10)
+            .await
+            .map_err(internal_error)?,
+    };
+    let xml = template.render().map_err(internal_error)?;
+    let mut headers = HeaderMap::new();
+    headers.insert(header::CONTENT_TYPE, "application/rss+xml".parse().unwrap());
+
+    Ok((headers, xml))
 }

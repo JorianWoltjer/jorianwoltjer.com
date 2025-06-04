@@ -6,7 +6,7 @@ use axum::{
         ws::{Message, WebSocket},
         Path, Query, State, WebSocketUpgrade,
     },
-    http::{HeaderMap, StatusCode},
+    http::{self, header, HeaderMap, StatusCode},
     response::{IntoResponse, Redirect, Response},
     Extension, Json,
 };
@@ -72,7 +72,8 @@ pub async fn verify_signature(
 // Routes
 
 pub async fn get_post(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(slug): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -80,7 +81,17 @@ pub async fn get_post(
         .await
         .map_err(internal_error)?
     {
-        Some(post) => Ok(html_template(PostTemplate { metadata, post }).into_response()),
+        Some(post) => Ok(html_template(PostTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: post.title.clone(),
+                description: Some(post.description.clone()),
+                image: Some(format!("/img/blog/{}", post.img)),
+            },
+            post,
+        })
+        .into_response()),
         None => {
             // Check if it's a redirect
             let redirect = database::get_post_redirect(&state, &slug)
@@ -102,7 +113,8 @@ pub struct HiddenRequest {
 }
 
 pub async fn get_post_hidden(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Query(HiddenRequest { signature }): Query<HiddenRequest>,
@@ -119,18 +131,33 @@ pub async fn get_post_hidden(
         return Ok(Redirect::permanent(&format!("/blog/p/{}", post.slug)).into_response());
     }
 
-    Ok(html_template(PostTemplate { metadata, post }).into_response())
+    Ok(html_template(PostTemplate {
+        middleware,
+        metadata: Metadata {
+            url,
+            title: post.title.clone(),
+            description: Some(post.description.clone()),
+            image: Some(format!("/img/blog/{}", post.img)),
+        },
+        post,
+    })
+    .into_response())
 }
 
 pub async fn get_posts_hidden(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let posts = database::get_hidden_posts(&state)
         .await
         .map_err(internal_error)?;
 
-    html_template(HiddenPostsTemplate { metadata, posts })
+    html_template(HiddenPostsTemplate {
+        middleware,
+        metadata: Metadata::only_title(url, "Hidden Posts"),
+        posts,
+    })
 }
 
 pub async fn get_editor() -> impl IntoResponse {
@@ -138,13 +165,13 @@ pub async fn get_editor() -> impl IntoResponse {
     // Lax CSP required due to https://github.com/microsoft/monaco-editor/issues/271
     let mut headers = HeaderMap::new();
     headers.insert(
-        "Content-Security-Policy",
+        header::CONTENT_SECURITY_POLICY,
         "default-src 'self'; worker-src blob:; style-src 'self' 'unsafe-inline'"
             .parse()
             .unwrap(),
     );
-    headers.insert("X-Frame-Options", "SAMEORIGIN".parse().unwrap());
-    headers.insert("Referrer-Policy", "origin".parse().unwrap());
+    headers.insert(header::X_FRAME_OPTIONS, "SAMEORIGIN".parse().unwrap());
+    headers.insert(header::REFERRER_POLICY, "origin".parse().unwrap());
     headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
     headers.insert(
         "Cross-Origin-Resource-Policy",
@@ -154,7 +181,8 @@ pub async fn get_editor() -> impl IntoResponse {
 }
 
 pub async fn get_new_post(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -163,7 +191,8 @@ pub async fn get_new_post(
         .map_err(internal_error)?;
     let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
     html_template(NewPostTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, "New Post"),
         parent,
         existing_post: None,
         folders,
@@ -179,7 +208,6 @@ pub async fn post_new_post(
         .await
         .map_err(internal_error)?;
 
-    // TODO: create script to re-render all markdown to html column
     let html = markdown_to_html(&post.markdown).map_err(internal_error)?;
 
     let id = sqlx::query!(
@@ -220,7 +248,8 @@ pub async fn post_new_post(
 }
 
 pub async fn get_new_link(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -229,7 +258,8 @@ pub async fn get_new_link(
         .map_err(internal_error)?;
     let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
     html_template(NewLinkTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, "New Link"),
         parent,
         existing_link: None,
         folders,
@@ -265,7 +295,8 @@ pub async fn post_new_link(
 }
 
 pub async fn get_edit_post(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -279,7 +310,8 @@ pub async fn get_edit_post(
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
 
     html_template(NewPostTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, &format!("Edit {}", existing_post.title)),
         parent: None,
         existing_post: Some(existing_post),
         folders,
@@ -296,7 +328,7 @@ pub async fn put_edit_post(
         .await
         .map_err(internal_error)?;
 
-    let original_post = sqlx::query!("SELECT id, slug FROM posts WHERE id = $1", id)
+    let original_post = sqlx::query!("SELECT id, hidden, slug FROM posts WHERE id = $1", id)
         .fetch_one(&state.db)
         .await
         .map_err(internal_error)?;
@@ -334,6 +366,17 @@ pub async fn put_edit_post(
     .await
     .map_err(internal_error)?;
 
+    if original_post.hidden && !post.hidden {
+        // If the post was hidden and is now visible, reset the timestamp
+        sqlx::query!(
+            "UPDATE posts SET timestamp = NOW() WHERE id = $1",
+            original_post.id
+        )
+        .execute(&state.db)
+        .await
+        .map_err(internal_error)?;
+    }
+
     sqlx::query!("DELETE FROM post_tags WHERE post_id = $1", original_post.id)
         .execute(&state.db)
         .await
@@ -356,7 +399,8 @@ pub async fn put_edit_post(
 }
 
 pub async fn get_edit_link(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -369,7 +413,8 @@ pub async fn get_edit_link(
         .map_err(internal_error)?;
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
     html_template(NewLinkTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, &format!("Edit {}", existing_link.title)),
         parent: None,
         existing_link: Some(existing_link),
         folders,
@@ -418,7 +463,7 @@ pub async fn post_add_view(
 }
 
 /// Called every minute. This currently only auto-releases posts
-pub async fn cron(State(state): State<AppState>) -> Result<(), sqlx::Error> {
+pub async fn cron(state: &AppState) -> Result<(), sqlx::Error> {
     // Auto-Release posts
     let released_posts = sqlx::query!(
         "UPDATE posts SET hidden = false, timestamp = autorelease, autorelease = NULL WHERE autorelease <= NOW() AND hidden RETURNING slug"
@@ -435,8 +480,19 @@ pub async fn cron(State(state): State<AppState>) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-pub async fn get_search(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
-    html_template(SearchTemplate { metadata })
+pub async fn get_search(
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
+) -> impl IntoResponse {
+    html_template(SearchTemplate {
+        middleware,
+        metadata: Metadata {
+            url,
+            title: "Search".to_string(),
+            description: Some("Find all posts and search by text.".to_string()),
+            image: None,
+        },
+    })
 }
 
 pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Response {

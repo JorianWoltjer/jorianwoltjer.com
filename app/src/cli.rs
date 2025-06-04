@@ -18,7 +18,9 @@ pub enum Commands {
         command: ThemeCommand,
     },
     /// Update generated HTML for all posts
-    HTML,
+    Render,
+    /// Set administrator password (will be prompted)
+    Password,
 }
 
 #[derive(Parser, Debug)]

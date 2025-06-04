@@ -34,3 +34,6 @@ html-escape = "0.2.13"
 clap = { version = "4.5.39", features = ["derive"] }
 pathdiff = "0.2.3"
 indicatif = "0.17.11"
+grass = "0.13.4"
+rpassword = "7.4.0"
+urlencoding = "2.1.3"

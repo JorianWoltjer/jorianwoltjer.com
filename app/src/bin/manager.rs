@@ -27,6 +27,14 @@ lazy_static! {
 async fn main() {
     let args = Args::parse();
 
+    dotenvy::dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let db = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&database_url)
+        .await
+        .expect("Failed to connect to database");
+
     match args.command {
         Commands::Theme { command } => match command {
             ThemeCommand::List => {
@@ -56,16 +64,8 @@ async fn main() {
                 }
             }
         },
-        Commands::HTML => {
+        Commands::Render => {
             // Re-render all posts in database
-            dotenvy::dotenv().ok();
-            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-            let db = PgPoolOptions::new()
-                .max_connections(1)
-                .connect(&database_url)
-                .await
-                .expect("Failed to connect to database");
-
             let posts = sqlx::query!("SELECT id, title, markdown FROM posts")
                 .fetch_all(&db)
                 .await
@@ -89,6 +89,24 @@ async fn main() {
                 bar.inc(1);
             }
             bar.finish_with_message("Done! All posts saved to database.");
+        }
+        Commands::Password => {
+            // Set administrator password
+            let password = rpassword::prompt_password("New password: ").unwrap();
+            if password.is_empty() {
+                println!("Password cannot be empty.");
+                return;
+            }
+            let hashed_password = bcrypt::hash(password, 12).unwrap();
+            sqlx::query!(
+                "INSERT INTO secrets (name, value) VALUES ('password_hash', $1)
+                 ON CONFLICT (name) DO UPDATE SET value = $1",
+                hashed_password
+            )
+            .execute(&db)
+            .await
+            .expect("Failed to set password");
+            println!("Administrator password set successfully.");
         }
     }
 }

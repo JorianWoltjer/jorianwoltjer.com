@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, Query, State},
-    http::StatusCode,
+    http::{self, StatusCode},
     response::{IntoResponse, Redirect},
     Extension, Json,
 };
@@ -17,7 +17,8 @@ use crate::{
 use super::ParentParam;
 
 pub async fn get_folder(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(slug): Path<String>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -30,7 +31,17 @@ pub async fn get_folder(
             let folder = FolderContents::from_folder(folder, &state)
                 .await
                 .map_err(internal_error)?;
-            Ok(html_template(FolderTemplate { metadata, folder }).into_response())
+            Ok(html_template(FolderTemplate {
+                middleware,
+                metadata: Metadata {
+                    url,
+                    title: folder.title.clone(),
+                    description: Some(folder.description.clone()),
+                    image: Some(format!("/img/blog/{}", folder.img)),
+                },
+                folder,
+            })
+            .into_response())
         }
         None => {
             // Check if it's a redirect
@@ -47,7 +58,8 @@ pub async fn get_folder(
 }
 
 pub async fn get_new_folder(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Query(ParentParam { parent }): Query<ParentParam>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -55,7 +67,8 @@ pub async fn get_new_folder(
         .await
         .map_err(internal_error)?;
     html_template(NewFolderTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, "New Folder"),
         parent,
         existing_folder: None,
         folders,
@@ -89,7 +102,8 @@ pub async fn post_new_folder(
 }
 
 pub async fn get_edit_folder(
-    Extension(metadata): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
     State(state): State<AppState>,
     Path(id): Path<i32>,
 ) -> Result<impl IntoResponse, StatusCode> {
@@ -101,7 +115,8 @@ pub async fn get_edit_folder(
         .await
         .map_err(internal_error)?;
     html_template(NewFolderTemplate {
-        metadata,
+        middleware,
+        metadata: Metadata::only_title(url, &format!("Edit {}", existing_folder.title)),
         parent: None,
         existing_folder: Some(existing_folder),
         folders,

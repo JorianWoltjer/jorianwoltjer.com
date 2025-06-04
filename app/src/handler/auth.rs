@@ -1,6 +1,6 @@
 use axum::{
     extract::State,
-    http::{HeaderMap, StatusCode},
+    http::{self, HeaderMap, StatusCode},
     response::IntoResponse,
     Extension, Json,
 };
@@ -14,8 +14,14 @@ pub async fn login_check() -> StatusCode {
     StatusCode::NO_CONTENT
 }
 
-pub async fn get_login(Extension(metadata): Extension<MiddlewareData>) -> impl IntoResponse {
-    html_template(LoginTemplate { metadata })
+pub async fn get_login(
+    Extension(middleware): Extension<MiddlewareData>,
+    url: http::Uri,
+) -> impl IntoResponse {
+    html_template(LoginTemplate {
+        middleware,
+        metadata: Metadata::only_title(url, "Login"),
+    })
 }
 
 pub async fn post_login(

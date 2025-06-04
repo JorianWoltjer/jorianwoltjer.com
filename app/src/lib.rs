@@ -14,6 +14,8 @@ pub mod render;
 pub mod schema;
 pub mod templates;
 
+pub const SITE_BASE_URL: &str = "https://jorianwoltjer.com";
+
 #[derive(Clone)]
 pub struct AppState {
     pub db: PgPool,
@@ -73,6 +75,10 @@ pub fn breadcrumbs_from_slug(slug: &str) -> Vec<(String, String)> {
         breadcrumbs.push((current_slug.clone(), part.to_string()));
     }
     breadcrumbs
+}
+
+pub fn cdata_escape(input: &str) -> String {
+    format!("<![CDATA[{}]]>", input.replace("]]>", "]]]]><![CDATA[>"))
 }
 
 pub async fn extend_slug(

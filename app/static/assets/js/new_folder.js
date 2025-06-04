@@ -38,6 +38,9 @@ form.querySelectorAll("input[name=title], textarea[name=description], input[name
   el.addEventListener("input", updatePreview);
 });
 updatePreview();
+form.title.addEventListener("input", (e) => {
+  form.slug.value = slugify(e.target.value);
+});
 
 // Submit form
 form.addEventListener("submit", async (e) => {

@@ -15,6 +15,7 @@ lazy_static! {
             .build()
             .unwrap();
     static ref IMG_REGEX: Regex = Regex::new(r#"<img ([^>]*?)*src="(.*?)"(.*?) />"#).unwrap();
+    static ref VIDEO_REGEX: Regex = Regex::new(r#"<img src="(.*?)\.mp4"(.*?) />"#).unwrap();
     static ref SYNTAXES: SyntaxSet = SyntaxSet::load_defaults_newlines();
 }
 
@@ -76,9 +77,13 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
         })
         .to_string();
 
-    // Image relative paths and wrap in <picture> tag
+    // Image relative paths
     html = IMG_REGEX
         .replace_all(&html, r#"<img ${1}src="/img/blog/$2"$3 />"#)
+        .to_string();
+    // Replace .mp4 files with <video> tag
+    html = VIDEO_REGEX
+        .replace_all(&html, r#"<video controls src="$1.mp4"$2></video>"#)
         .to_string();
 
     Ok(html)

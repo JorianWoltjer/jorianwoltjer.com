@@ -16,11 +16,17 @@ document.getElementById("login-form").addEventListener("submit", (e) => {
     body: JSON.stringify({ password: password.value.trim() }),
   }).then(async (res) => {
     if (res.ok) {
-      try {
-        await navigation.back().finished;
-      } catch (e) {
-        console.error(e);
-        document.location.href = "/blog";
+      const back = new URLSearchParams(window.location.search).get("back");
+      if (back && /^\/[a-z]/.test(back)) {
+        // If there is a back URL, redirect to it
+        document.location.href = back;
+      } else {
+        try {
+          await navigation.back().finished;
+        } catch (e) {
+          console.error(e);
+          document.location.href = "/blog";
+        }
       }
     } else {
       // alertElem.innerHTML = `<div class="alert error">Invalid password</div>`;

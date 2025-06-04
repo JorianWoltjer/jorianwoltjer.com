@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}{{ folder.title }}{% endblock %} {% block main %}
+{% extends "base.html" %} {% block main %}
 <nav>
   <ol class="breadcrumbs">
     <li><a href="/blog">~</a></li>
@@ -7,7 +7,7 @@
     {% endfor %}
     <h1>{{ folder.title }}</h1>
   </ol>
-  {% if metadata.logged_in %}
+  {% if middleware.logged_in %}
   <a class="big-button" href="/blog/admin/folder/{{ folder.id }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
   <a class="big-button" href="/blog/admin/post?parent={{ folder.id }}"><i class="fa-solid fa-plus"></i> New Post</a>
   <a class="big-button" href="/blog/admin/folder?parent={{ folder.id }}"><i class="fa-solid fa-folder-plus"></i> New Folder</a>
@@ -42,7 +42,7 @@
     </div>
   </div>
   {% when Content::Link with (link) %}
-  <a class="image" href="{{ link.url }}" target="_blank" {% if metadata.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>
+  <a class="image" href="{{ link.url }}" target="_blank" {% if middleware.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>
     <img src="/img/blog/{{ link.img }}" />
   </a>
   <div class="info">
@@ -55,7 +55,9 @@
           </span>
         </div>
       </div>
-      <h3><a href="{{ link.url }}" target="_blank" {% if metadata.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>{{ link.title }}</a></h3>
+      <h3>
+        <a href="{{ link.url }}" target="_blank" {% if middleware.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>{{ link.title }}</a>
+      </h3>
       <p>{{ link.description }}</p>
     </div>
     <div class="footer text-darker">

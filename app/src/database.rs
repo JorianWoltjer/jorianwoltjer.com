@@ -10,53 +10,6 @@ fn not_found_option<T>(result: Result<T, sqlx::Error>) -> Result<Option<T>, sqlx
     }
 }
 
-pub async fn get_folders(state: &AppState) -> Result<Vec<Folder>, sqlx::Error> {
-    sqlx::query_as!(
-        Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders ORDER BY id DESC"
-    )
-    .fetch_all(&state.db)
-    .await
-}
-
-pub async fn get_categories(state: &AppState) -> Result<Vec<Folder>, sqlx::Error> {
-    sqlx::query_as!(
-        Folder,
-        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent IS NULL ORDER BY id ASC"
-    )
-    .fetch_all(&state.db)
-    .await
-}
-
-pub async fn get_featured_posts(state: &AppState) -> Result<Vec<Content>, sqlx::Error> {
-    let contents_posts = sqlx::query_as!(
-        Post,
-        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
-            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
-            FROM posts p WHERE NOT hidden AND featured ORDER BY timestamp DESC"#
-    )
-    .fetch_all(&state.db)
-    .await?
-    .into_iter()
-    .map(Content::Post);
-
-    let contents_links = sqlx::query_as!(
-        Link,
-        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links 
-            WHERE featured ORDER BY timestamp DESC"
-    )
-    .fetch_all(&state.db)
-    .await?
-    .into_iter()
-    .map(Content::Link);
-
-    let mut contents = contents_posts.chain(contents_links).collect::<Vec<_>>();
-    contents.sort(); // Sort by timestamp
-    contents.reverse(); // Newest first
-
-    Ok(contents)
-}
-
 pub async fn get_post(state: &AppState, slug: &str) -> Result<Option<PostFull>, sqlx::Error> {
     not_found_option(sqlx::query_as!(
         PostFull,
@@ -94,6 +47,17 @@ pub async fn get_post_hidden(
     )
     .fetch_one(&state.db)
     .await)
+}
+
+pub async fn get_posts(state: &AppState) -> Result<Vec<Post>, sqlx::Error> {
+    sqlx::query_as!(
+        Post,
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE NOT hidden ORDER BY timestamp DESC"#
+    )
+    .fetch_all(&state.db)
+    .await
 }
 
 pub async fn get_hidden_posts(state: &AppState) -> Result<Vec<HiddenPost>, sqlx::Error> {
@@ -171,6 +135,24 @@ pub async fn get_folder_redirect(
     )
 }
 
+pub async fn get_folders(state: &AppState) -> Result<Vec<Folder>, sqlx::Error> {
+    sqlx::query_as!(
+        Folder,
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders ORDER BY timestamp DESC"
+    )
+    .fetch_all(&state.db)
+    .await
+}
+
+pub async fn get_categories(state: &AppState) -> Result<Vec<Folder>, sqlx::Error> {
+    sqlx::query_as!(
+        Folder,
+        "SELECT id, parent, slug, title, description, img, timestamp FROM folders WHERE parent IS NULL ORDER BY id ASC"
+    )
+    .fetch_all(&state.db)
+    .await
+}
+
 pub async fn get_link(state: &AppState, id: i32) -> Result<Option<Link>, sqlx::Error> {
     not_found_option(
         sqlx::query_as!(
@@ -181,6 +163,69 @@ pub async fn get_link(state: &AppState, id: i32) -> Result<Option<Link>, sqlx::E
         .fetch_one(&state.db)
         .await,
     )
+}
+
+pub async fn get_featured_content(state: &AppState) -> Result<Vec<Content>, sqlx::Error> {
+    let contents_posts = sqlx::query_as!(
+        Post,
+        r#"SELECT p.id, folder, slug, title, description, img, points, views, featured, hidden, autorelease, timestamp, 
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE NOT hidden AND featured ORDER BY timestamp DESC"#
+    )
+    .fetch_all(&state.db)
+    .await?
+    .into_iter()
+    .map(Content::Post);
+
+    let contents_links = sqlx::query_as!(
+        Link,
+        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links 
+            WHERE featured ORDER BY timestamp DESC"
+    )
+    .fetch_all(&state.db)
+    .await?
+    .into_iter()
+    .map(Content::Link);
+
+    let mut contents = contents_posts.chain(contents_links).collect::<Vec<_>>();
+    contents.sort(); // Sort by timestamp
+    contents.reverse(); // Newest first
+
+    Ok(contents)
+}
+
+pub async fn get_latest_content(
+    state: &AppState,
+    limit: i64,
+) -> Result<Vec<ContentFull>, sqlx::Error> {
+    let contents_posts = sqlx::query_as!(
+        PostFull,
+        r#"SELECT p.id, folder, slug, title, description, img, markdown, html, points, views, featured, hidden, autorelease, timestamp, 
+            array(SELECT (t.id, t.name, t.color) FROM post_tags JOIN tags t ON t.id = tag_id WHERE post_id = p.id) as "tags!: Vec<Tag>"
+            FROM posts p WHERE NOT hidden ORDER BY timestamp DESC LIMIT $1"#,
+        limit
+    )
+    .fetch_all(&state.db)
+    .await?
+    .into_iter()
+    .map(ContentFull::Post);
+
+    let contents_links = sqlx::query_as!(
+        Link,
+        "SELECT id, folder, url, title, description, img, featured, timestamp FROM links 
+           ORDER BY timestamp DESC LIMIT $1",
+        limit
+    )
+    .fetch_all(&state.db)
+    .await?
+    .into_iter()
+    .map(ContentFull::Link);
+
+    let mut contents = contents_posts.chain(contents_links).collect::<Vec<_>>();
+    contents.sort(); // Sort by timestamp
+    contents.reverse(); // Newest first
+
+    Ok(contents.into_iter().take(limit as usize).collect())
 }
 
 pub async fn add_view(state: &AppState, id: i32) -> Result<Option<i32>, sqlx::Error> {

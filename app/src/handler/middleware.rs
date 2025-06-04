@@ -1,8 +1,8 @@
 use axum::{
     body::Body,
-    http::{Method, Request, StatusCode},
+    http::{header, Method, Request, StatusCode},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Redirect, Response},
     Extension, RequestPartsExt,
 };
 use rand::RngCore;
@@ -19,11 +19,13 @@ pub struct MiddlewareData {
 pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     let (mut parts, body) = req.into_parts();
 
+    // Extract parts for later
     let is_same_origin = parts
         .headers
         .get("Sec-Fetch-Site")
         .and_then(|v| v.to_str().ok())
         == Some("same-origin");
+    let uri = parts.uri.to_string();
     // Generate CSP nonce
     let mut bytes = [0; 16];
     rand::rng().fill_bytes(&mut bytes);
@@ -47,9 +49,9 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
     let headers = response.headers_mut();
 
     // Set security headers
-    headers.insert("X-Content-Type-Options", "nosniff".parse().unwrap());
-    headers.insert("X-Frame-Options", "DENY".parse().unwrap());
-    headers.insert("Referrer-Policy", "origin".parse().unwrap());
+    headers.insert(header::X_CONTENT_TYPE_OPTIONS, "nosniff".parse().unwrap());
+    headers.insert(header::X_FRAME_OPTIONS, "DENY".parse().unwrap());
+    headers.insert(header::REFERRER_POLICY, "same-origin".parse().unwrap()); // Required for view transitions
     if !is_same_origin {
         // Set conditionally, because page transitions don't support it
         headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
@@ -59,7 +61,7 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
         "same-origin".parse().unwrap(),
     );
     headers.insert(
-            "Content-Security-Policy",
+            header::CONTENT_SECURITY_POLICY,
             format!("\
 default-src 'self'; \
 script-src 'self' 'nonce-{nonce}'; \
@@ -76,6 +78,13 @@ require-trusted-types-for 'script'")
                 .parse()
                 .unwrap(),
         );
+    // TODO: cache control headers (allow normally, but not if logged in, 1m ttl)
+
+    // Redirect to login if 401
+    if response.status() == StatusCode::UNAUTHORIZED {
+        let redirect = format!("/login?back={}", urlencoding::encode(&uri));
+        response = Redirect::temporary(&redirect).into_response()
+    }
 
     Ok(response)
 }

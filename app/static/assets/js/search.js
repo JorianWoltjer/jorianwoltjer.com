@@ -27,17 +27,9 @@ const input = document.querySelector(".search-bar input");
 const resultsEl = document.getElementById("search-results");
 const noMorePosts = document.getElementById("no-more-posts");
 
-let q = new URLSearchParams(window.location.search).get("q") || "";
-let page = 1;
-let ws;
-input.value = q;
-input.addEventListener("input", (e) => {
-  q = e.target.value.trim();
-  if (ws) {
-    history.replaceState({}, "", `?q=${encodeURIComponent(q)}`);
-    updateResults(q);
-  }
-});
+var q = new URLSearchParams(window.location.search).get("q") || "";
+var page = 1;
+var ws;
 
 function resultsToHTML(results) {
   return results.map((post) => t`
@@ -82,15 +74,12 @@ function updateResults(query) {
       }
     })
   }
+
 }
 
 const createSocket = () => {
   icon.classList = "fa-solid fa-rotate";
-  ws = new WebSocket("/blog/search_ws");
-
-  ws.onopen = () => {
-    updateResults(q);
-  };
+  ws = new WebSocket(location.protocol === "https:" ? "wss://" : `ws://${location.host}/blog/search_ws`);
 
   ws.send = new Proxy(ws.send, {
     apply: (target, thisArg, args) => {
@@ -99,6 +88,10 @@ const createSocket = () => {
       return Reflect.apply(target, thisArg, args);
     }
   });
+
+  ws.onopen = () => {
+    updateResults(q);
+  };
 
   ws.onmessage = (e) => {
     const data = JSON.parse(e.data);
@@ -140,6 +133,15 @@ const createSocket = () => {
   };
 };
 createSocket();
+
+input.value = q;
+input.addEventListener("input", (e) => {
+  q = e.target.value.trim();
+  if (ws) {
+    history.replaceState({}, "", `?q=${encodeURIComponent(q)}`);
+    updateResults(q);
+  }
+});
 
 const observer = new IntersectionObserver((e) => {
   e.forEach((entry) => {

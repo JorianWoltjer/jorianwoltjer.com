@@ -1,5 +1,4 @@
-{% extends "base.html" %}{% block title %}{% if let Some(link) = existing_link %}Edit {{ link.title }}{% else %}Create Link{% endif %}{% endblock %}
-{% block scripts %}
+{% extends "base.html" %} {% block scripts %}
 <script src="/assets/js/new_link.js"></script>
 {% endblock %} {% block main %}
 <h1>Create Link</h1>

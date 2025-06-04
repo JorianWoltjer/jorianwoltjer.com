@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Hidden Posts{% endblock %} {% block main %}
+{% extends "base.html" %} {% block main %}
 <h1>Hidden Posts</h1>
 {% for post in posts %}
 <div class="card horizontal">
@@ -18,7 +18,7 @@
     </div>
     <div class="footer text-darker">
       {{ crate::relative_time(post.timestamp) }} -
-      <span class="darken">
+      <span class="darken" title="{% if let Some(autorelease) = post.autorelease %}Auto-Release: {{ crate::relative_time(autorelease) }}{% endif %}">
         <i class="fa-regular fa-eye"></i>
         <b>Hidden</b>
       </span>

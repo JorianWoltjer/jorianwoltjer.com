@@ -1,5 +1,4 @@
-{% extends "base.html" %}{% block title %}{% if let Some(post) = existing_post %}Edit {{ post.title }}{% else %}Create Post{% endif %}{% endblock %}
-{% block scripts %}
+{% extends "base.html" %} {% block scripts %}
 <script src="/assets/js/new_post.js"></script>
 {% endblock %} {% block main %}
 <h1>Create Post</h1>

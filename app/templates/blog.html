@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Blog{% endblock %} {% block main %}
+{% extends "base.html" %} {% block main %}
 <h1>Blog</h1>
 <ul class="categories">
   {% for category in categories %}
@@ -18,7 +18,7 @@
 <a class="big-button square" href="/blog/rss.xml">
   <i class="fa-solid fa-square-rss"></i>
 </a>
-{% if metadata.logged_in %}
+{% if middleware.logged_in %}
 <a class="big-button" href="/blog/admin/hidden">
   <i class="fa-solid fa-eye-slash"></i>
   Hidden Posts
@@ -70,7 +70,7 @@
           {{ crate::get_domain(link.url) }}
         </div>
       </div>
-      {% when Content::Folder with (folder) %}{% endmatch %}
+      {% else %}{% endmatch %}
     </div>
   </div>
   {% endfor %}

@@ -1,8 +1,7 @@
-// TODO: click on image to enlarge it
-
 // Table of Contents
 const article = document.querySelector('article');
-const tocElem = document.getElementById('toc');
+const tocOl = document.getElementById('toc');
+const tocWrapper = document.querySelector('details.toc');
 
 let lastLi = null;
 
@@ -18,7 +17,7 @@ article.querySelectorAll('h2, h3').forEach(header => {
   li.appendChild(a);
 
   if (level === 2) {
-    tocElem.appendChild(li);
+    tocOl.appendChild(li);
     lastLi = li;
   } else if (level === 3 && lastLi) {
     let sublist = lastLi.querySelector('ul');
@@ -28,6 +27,15 @@ article.querySelectorAll('h2, h3').forEach(header => {
     }
     sublist.appendChild(li);
   }
+});
+if (tocOl.querySelectorAll("li").length > 0) {
+  tocWrapper.classList.remove('hidden');
+}
+
+// Make headers clickable
+article.querySelectorAll('h2, h3, h4, h5, h6').forEach(header => {
+  if (!header.id) return;
+  header.replaceChildren(t`<a href="#${header.id}">${header.childNodes}</a>`);
 });
 
 // Code blocks
@@ -57,11 +65,47 @@ article.querySelectorAll('.code-block .copy').forEach(button => {
 });
 
 // Image alternative text
-article.querySelectorAll('img').forEach(img => {
-  if (img.alt) {
+article.querySelectorAll('img, video').forEach(el => {
+  const alt = el.getAttribute("alt");
+  if (alt) {
     const p = document.createElement('p');
-    p.className = 'img-alt';
-    p.textContent = img.alt;
-    img.insertAdjacentElement('afterend', p);
+    p.className = 'alt';
+    p.textContent = alt;
+    el.insertAdjacentElement('afterend', p);
   }
 });
+// Click on image to enlarge
+const enlargedImage = document.getElementById('enlarged-image');
+article.querySelectorAll('img').forEach(img => {
+  img.addEventListener('click', (e) => {
+    enlargedImage.replaceChildren(img.cloneNode());
+    enlargedImage.classList.add('visible');
+    document.body.style.overflow = "hidden";
+    function removeEnlargedImage() {
+      enlargedImage.classList.remove('visible');
+      enlargedImage.replaceChildren();
+      document.body.style.overflow = "";
+    }
+    document.addEventListener('click', removeEnlargedImage, { once: true });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        removeEnlargedImage();
+      }
+    });
+    e.stopPropagation();
+  });
+});
+
+// Add to view counter
+function addView() {
+  setTimeout(() => {
+    navigator.sendBeacon(`/blog/add_view/${article.dataset.id}`);
+  }, 5000);
+}
+if (document.prerendering) {
+  document.addEventListener("prerenderingchange", addView, {
+    once: true,
+  });
+} else {
+  addView();
+}

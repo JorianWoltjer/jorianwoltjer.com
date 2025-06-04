@@ -1,3 +1,40 @@
+// View Transition
+window.addEventListener("pagereveal", async (e) => {
+  if (e.viewTransition) {
+    const from = navigation.activation?.from?.url;
+    const to = navigation.currentEntry?.url;
+
+    let transition;
+    console.log("View Transition:", from, "->", to);
+    if (from && to) {
+      let fromPath = new URL(from).pathname;
+      let toPath = new URL(to).pathname;
+      if (fromPath.startsWith("/blog") && toPath.startsWith("/blog")) {
+        // Find direction of the navigation
+        toPath = toPath.replace("/blog/f", "/blog/p");
+        fromPath = fromPath.replace("/blog/f", "/blog/p");
+        console.log(fromPath, "->", toPath);
+        if (fromPath === toPath) {
+        } else if (toPath.startsWith(fromPath)) {
+          transition = "right";
+        } else if (fromPath.startsWith(toPath)) {
+          transition = "left";
+        }
+      }
+    }
+
+    console.log("Transition:", transition);
+    if (!transition) {
+      e.viewTransition.skipTransition();
+    } else {
+      const main = document.getElementsByTagName("main")[0];
+      main.style.viewTransitionName = transition;
+      await e.viewTransition.ready;
+      main.style.viewTransitionName = "";
+    }
+  }
+});
+
 // Set current year in footer
 document.getElementById("year").textContent = new Date().getFullYear();
 // Set active link in navigation
@@ -38,6 +75,14 @@ window.addEventListener("scroll", () => {
 requestAnimationFrame(function checkScroll() {
   if (didScroll) {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // If close to the top, always show
+    if (scrollTop < navbarHeight) {
+      header.classList.remove("nav-hidden");
+      lastScrollTop = 0;
+      didScroll = false;
+      return;
+    }
 
     // If scrolled far down enough, hide the header, but show again when scrolling up
     const delta = header.classList.contains("nav-hidden") ? deltaUp : deltaDown;
@@ -148,6 +193,8 @@ function escapeHTML(value) {
     return Array.from(value.childNodes).map(escapeHTML).join('');
   } else if (Array.isArray(value)) {
     return value.map(escapeHTML).join('');
+  } else if (value instanceof NodeList) {
+    return escapeHTML(Array.from(value));
   } else {
     return String(value)
       .replace(/&/g, '&amp;')

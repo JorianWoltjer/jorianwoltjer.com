@@ -46,7 +46,7 @@ pub struct Tag {
     pub color: String,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, JsonSchema)]
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct PostFull {
     pub id: i32,
     pub folder: i32,
@@ -96,6 +96,31 @@ impl Ord for Content {
     }
 }
 impl PartialOrd for Content {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub enum ContentFull {
+    Folder(Folder),
+    Post(PostFull),
+    Link(Link),
+}
+impl ContentFull {
+    pub fn timestamp(&self) -> DateTime<Utc> {
+        match self {
+            ContentFull::Folder(folder) => folder.timestamp,
+            ContentFull::Post(post) => post.timestamp,
+            ContentFull::Link(link) => link.timestamp,
+        }
+    }
+}
+impl Ord for ContentFull {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.timestamp().cmp(&other.timestamp())
+    }
+}
+impl PartialOrd for ContentFull {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }

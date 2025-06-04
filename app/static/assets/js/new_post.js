@@ -10,6 +10,7 @@ hiddenCheckbox.addEventListener("change", function () {
     autoReleaseSection.classList.add("hidden");
   }
 });
+hiddenCheckbox.dispatchEvent(new Event("change"));
 
 const autoRelease = document.getElementById("autorelease");
 const autoReleaseIn = document.getElementById("autorelease-in");
@@ -42,6 +43,14 @@ editorFrame.addEventListener("load", () => {
 });
 
 // Update preview
+const tagInput = document.getElementById("tag-add");
+const tagsElem = document.querySelector(".tags-input .tags");
+const datalistElem = document.getElementById("all-tags");
+let tags = Array.from(tagsElem.querySelectorAll("span")).map(el => ({
+  name: el.textContent,
+  id: el.dataset.id,
+  color: el.dataset.color
+}));
 const cardPreview = document.getElementById("card-preview");
 function updatePreview() {
   const post = {
@@ -89,25 +98,17 @@ form.querySelectorAll("input, textarea, select").forEach((el) => {
 form.querySelectorAll("input[name=title], textarea[name=description], input[name=img], input[name=points], input[name=hidden]").forEach((el) => {
   el.addEventListener("input", updatePreview);
 });
+updatePreview();
 form.title.addEventListener("input", (e) => {
   form.slug.value = slugify(e.target.value);
 });
 
 // Tag input
-const tagInput = document.getElementById("tag-add");
-const tagsElem = document.querySelector(".tags-input .tags");
-const datalistElem = document.getElementById("all-tags");
 const all_tags = Array.from(datalistElem.querySelectorAll("option")).map(el => ({
   name: el.value,
   id: el.dataset.id,
   color: el.dataset.color
 }));
-let tags = Array.from(tagsElem.querySelectorAll("span")).map(el => ({
-  name: el.textContent,
-  id: el.dataset.id,
-  color: el.dataset.color
-}));
-
 function updateTags() {
   console.log("Updating tags", tags);
   tagsElem.replaceChildren(
@@ -174,7 +175,7 @@ form.addEventListener("submit", async (e) => {
       points: Number(form.points.value),
       featured: form.featured.checked,
       hidden: form.hidden.checked,
-      auto_release: form.autoreleasecheck.checked ? new Date(form.autorelease.value) : null,
+      autorelease: form.autoreleasecheck.checked ? new Date(form.autorelease.value) : null,
       markdown: await getMonacoEditorValue(),
       tags: tags.map(tag => Number(tag.id)),
     };

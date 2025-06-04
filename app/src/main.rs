@@ -1,15 +1,16 @@
-use std::env;
+use std::{env, time::Duration};
 
-use axum::{
-    routing::{get, post},
-    Router,
-};
 use app::{
     handler::{folder::*, post::*, *},
     AppState,
 };
+use axum::{
+    handler::HandlerWithoutStateExt,
+    routing::{get, post},
+    Router,
+};
 use sqlx::postgres::PgPoolOptions;
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, time};
 use tower::ServiceBuilder;
 use tower_http::{
     services::ServeDir,
@@ -63,8 +64,8 @@ async fn main() {
         .init();
 
     // Router setup
+    let state = AppState { db, hmac_key };
     let app = Router::new()
-        // TODO: map to /static and stucture the rest
         .merge(
             Router::new() // Public
                 .route("/", get(get_home))
@@ -77,7 +78,9 @@ async fn main() {
                 .route("/blog/h/{*slug}", get(get_post_hidden))
                 .route("/blog/search", get(get_search))
                 .route("/blog/search_ws", get(get_search_ws))
-                .route("/blog/add_view/{id}", post(post_add_view)),
+                .route("/blog/add_view/{id}", post(post_add_view))
+                .route("/blog/rss.xml", get(get_rss))
+                .route("/sitemap.xml", get(get_sitemap)),
         )
         .merge(
             Router::new() // Authentication required
@@ -104,8 +107,9 @@ async fn main() {
                 )
                 .route_layer(axum::middleware::from_fn(auth_required_middleware)),
         )
-        .fallback_service(ServeDir::new("static"))
-        .with_state(AppState { db, hmac_key })
+        .with_state(state.clone())
+        .route("/assets/css/style.css", get(get_style_css))
+        .fallback_service(ServeDir::new("static").not_found_service(error_404.into_service()))
         .layer(
             ServiceBuilder::new()
                 .layer(
@@ -116,10 +120,20 @@ async fn main() {
                 .layer(session_layer)
                 .layer(axum::middleware::from_fn(generic_middleware)),
         )
+        // Routes without middleware
         .route("/blog/admin/editor", get(get_editor));
 
-    // TODO: call cron()
-
+    // Start background task
+    tokio::spawn(async move {
+        let mut interval = time::interval(Duration::from_secs(60));
+        loop {
+            interval.tick().await;
+            if let Err(err) = cron(&state).await {
+                tracing::error!("Cron job failed: {err}");
+            };
+        }
+    });
+    // Start server
     println!("Listening on :{port}...");
     let listener = TcpListener::bind(format!("0.0.0.0:{port}"))
         .await
