@@ -74,12 +74,12 @@ function updateResults(query) {
       }
     })
   }
-
 }
 
 const createSocket = () => {
   icon.classList = "fa-solid fa-rotate";
-  ws = new WebSocket(location.protocol === "https:" ? "wss://" : `ws://${location.host}/blog/search_ws`);
+  const protocol = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(`${protocol}://${location.host}/blog/search_ws`);
 
   ws.send = new Proxy(ws.send, {
     apply: (target, thisArg, args) => {
