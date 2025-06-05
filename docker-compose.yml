@@ -12,7 +12,7 @@ services:
     networks:
       - website
     ports:
-      - "80:80"
+      - "${HOST}:${PORT}:80"
     volumes:
       - ./app/static/img:/app/static/img
 
