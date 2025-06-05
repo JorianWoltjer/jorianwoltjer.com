@@ -826,6 +826,9 @@ iframe {
       &::-webkit-scrollbar-corner {
         background-color: transparent;
       }
+      &.wrap {
+        white-space: pre-wrap;
+      }
     }
   }
 }

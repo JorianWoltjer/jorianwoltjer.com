@@ -3,6 +3,7 @@ use std::{
     fs::File,
     io::{BufWriter, Write},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
 use app::{
@@ -11,17 +12,14 @@ use app::{
 };
 use clap::Parser;
 use indicatif::ProgressBar;
-use lazy_static::lazy_static;
 use sqlx::postgres::PgPoolOptions;
 use syntect::{highlighting::ThemeSet, html::css_for_theme_with_class_style};
 
-lazy_static! {
-    static ref THEME_SET: ThemeSet = ThemeSet::load_defaults();
-    static ref TARGET_PATH: PathBuf = {
-        let cargo_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-        cargo_dir.join("static/assets/css/theme.css")
-    };
-}
+static THEME_SET: LazyLock<ThemeSet> = LazyLock::new(ThemeSet::load_defaults);
+static TARGET_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    let cargo_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    cargo_dir.join("static/assets/css/theme.css")
+});
 
 #[tokio::main]
 async fn main() {

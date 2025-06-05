@@ -1,32 +1,30 @@
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
+
+use fancy_regex::Regex;
 use markdown::message::Message;
-use regex::{Regex, RegexBuilder};
 use syntect::{
     html::{ClassStyle, ClassedHTMLGenerator},
     parsing::{SyntaxSet, SyntaxSetBuilder},
     util::LinesWithEndings,
 };
 
-lazy_static! {
-    static ref HEADER_REGEX: Regex = Regex::new(r"<h([1-6])>(.*?)</h[1-6]>").unwrap();
-    static ref CODE_BLOCK_REGEX: Regex =
-        RegexBuilder::new(r#"<pre><code class="language-(.*?)">(.*?)</code></pre>"#)
-            .dot_matches_new_line(true)
-            .build()
-            .unwrap();
-    static ref IMG_REGEX: Regex = Regex::new(r#"<img ([^>]*?)*src="(.*?)"(.*?) />"#).unwrap();
-    static ref VIDEO_REGEX: Regex = Regex::new(r#"<img src="(.*?)\.mp4"(.*?) />"#).unwrap();
-    static ref ANCHOR_REGEX: Regex = RegexBuilder::new(r#"<a href="(.*?)">(.*?)</a>"#)
-        .dot_matches_new_line(true)
-        .build()
-        .unwrap();
-    static ref SYNTAXES: SyntaxSet = {
-        let mut syntax_builder = SyntaxSetBuilder::new();
-        syntax_builder.add_from_folder("syntaxes", true).unwrap();
-        syntax_builder.add_plain_text_syntax();
-        syntax_builder.build()
-    };
-}
+static HEADER_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"<h([1-6])>(.*?)</h[1-6]>").unwrap());
+static CODE_BLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"<pre><code class="language-(.*?)">([\S\s]*?)</code></pre>"#).unwrap()
+});
+static IMG_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<img ([^>]*?)*src="(.*?)"(.*?) />"#).unwrap());
+static VIDEO_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<img src="(.*?)\.mp4"(.*?) />"#).unwrap());
+static ANCHOR_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r#"<a href="(.*?)">([\S\s]*?)</a>"#).unwrap());
+static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(|| {
+    let mut syntax_builder = SyntaxSetBuilder::new();
+    syntax_builder.add_from_folder("syntaxes", true).unwrap();
+    syntax_builder.add_plain_text_syntax();
+    syntax_builder.build()
+});
 
 fn slugify(title: &str) -> String {
     Regex::new(r"((<.*?>)|(&.*?;)|[^\w])+")
@@ -50,11 +48,10 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
         },
     )?;
 
-    // TODO: implement this in markdown parser
     // Add IDs and links to headings
     // PS. Don't we all love parsing HTML with Regex :)
     html = HEADER_REGEX
-        .replace_all(&html, |caps: &regex::Captures| {
+        .replace_all(&html, |caps: &fancy_regex::Captures| {
             let level = caps.get(1).unwrap().as_str();
             let title = caps.get(2).unwrap().as_str();
             let id = slugify(title);
@@ -62,15 +59,18 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
         })
         .to_string();
 
-    // TODO: attempt syntax highlighting on inline code
     // Syntax highlighting in code blocks
     html = CODE_BLOCK_REGEX
-        .replace_all(&html, |caps: &regex::Captures| {
-            let lang = caps.get(1).unwrap().as_str();
+        .replace_all(&html, |caps: &fancy_regex::Captures| {
+            let mut lang = caps.get(1).unwrap().as_str();
+            let wrap = lang.ends_with("+wrap");
+            if wrap {
+                lang = &lang[..lang.len() - 5]; // Remove +wrap suffix
+            }
             let code = caps.get(2).unwrap().as_str();
             let code = html_escape::decode_html_entities(code);
 
-            // TODO: detect +wrap suffix and apply text-wrap class, and remove it when displaying
+            // Look up language by name
             let syntax = SYNTAXES
                 .find_syntax_by_token(lang)
                 .unwrap_or_else(|| SYNTAXES.find_syntax_plain_text());
@@ -86,10 +86,12 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
             }
             let code = rs_html_generator.finalize();
 
-            format!(r#"<pre><code data-lang="{lang}">{code}</code></pre>"#)
+            format!(
+                r#"<pre><code data-lang="{lang}"{}>{code}</code></pre>"#,
+                if wrap { " class=\"wrap\"" } else { "" }
+            )
         })
         .to_string();
-
     // Image relative paths
     html = IMG_REGEX
         .replace_all(&html, r#"<img ${1}src="/img/blog/$2"$3 />"#)

@@ -2,6 +2,8 @@ pub mod auth;
 pub mod blog;
 pub mod middleware;
 
+use std::sync::LazyLock;
+
 use crate::{database, html_template, templates::*, AppState};
 use askama::Template;
 use axum::extract::State;
@@ -10,19 +12,20 @@ use axum::Extension;
 use axum::{http::StatusCode, response::IntoResponse};
 use chrono::Utc;
 use grass::InputSyntax;
-use lazy_static::lazy_static;
 
 pub use self::auth::*;
 pub use self::blog::*;
 pub use self::middleware::*;
 
-lazy_static! {
-    pub static ref COMPILED_CSS: String = {
-        let scss = include_str!("../../static/assets/css/style.css");
-        // Unfortunately have to compile here because older iOS devices don't support CSS nesting (https://caniuse.com/css-nesting)
-        grass::from_string(scss, &grass::Options::default().input_syntax(InputSyntax::Scss)).unwrap()
-    };
-}
+pub static COMPILED_CSS: LazyLock<String> = LazyLock::new(|| {
+    let scss = include_str!("../../static/assets/css/style.css");
+    // Unfortunately have to compile here because older iOS devices don't support CSS nesting (https://caniuse.com/css-nesting)
+    grass::from_string(
+        scss,
+        &grass::Options::default().input_syntax(InputSyntax::Scss),
+    )
+    .unwrap()
+});
 
 pub fn internal_error(e: impl std::fmt::Display) -> StatusCode {
     eprintln!("500 Internal Server Error: {}", e);
