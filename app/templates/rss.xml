@@ -15,7 +15,7 @@
     {%- match content -%}
       {%- when ContentFull::Post with (post) %}
       <title>{{ post.title }}</title>
-      <link>{{ crate::SITE_BASE_URL }}/blog/{{ post.slug }}</link>
+      <link>{{ crate::SITE_BASE_URL }}/blog/p/{{ post.slug }}</link>
       <guid isPermaLink="true">{{ crate::SITE_BASE_URL }}/blog/p/{{ post.slug }}</guid>
       <media:thumbnail url="{{ crate::SITE_BASE_URL }}/img/blog/{{ post.img }}" />
       <description>{{ post.description }}</description>
