@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO secrets (name, value) VALUES ('password_hash', $1)\n                 ON CONFLICT (name) DO UPDATE SET value = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9bfc671abbb856ce6a646fd4d761b8523a4400edee8928e313a5a4156f17ed69"
+}

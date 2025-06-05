@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.slug FROM posts p \n                JOIN post_redirects pr ON p.id = pr.post_id \n                WHERE pr.slug = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8775bbc749f1a79e3f6f8f8c736d8782148425d283796e3bd51d72be158a703f"
+}

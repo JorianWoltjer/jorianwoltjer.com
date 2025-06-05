@@ -1,0 +1,78 @@
+{% extends "base.html" %} {% block main %}
+<h1>Blog</h1>
+<ul class="categories">
+  {% for category in categories %}
+  <li>
+    <a class="big-button" href="/blog/f/{{ category.slug }}">
+      <i class="{{ category.img }}"></i>
+      {{ category.title }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+<hr />
+<a class="big-button wide" href="/blog/search">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  Search
+</a>
+<a class="big-button square" href="/blog/rss.xml">
+  <i class="fa-solid fa-square-rss"></i>
+</a>
+{% if middleware.logged_in %}
+<a class="big-button" href="/blog/admin/hidden">
+  <i class="fa-solid fa-eye-slash"></i>
+  Hidden Posts
+</a>
+{% endif %}
+<h2>Featured posts</h2>
+<div class="cards-2cols">
+  {% for content in featured_posts %}
+  <div class="col">
+    <div class="card">
+      {% match content %} {% when Content::Post with (post) %}
+      <a class="image" href="/blog/p/{{ post.slug }}"><img src="/img/blog/{{ post.img }}" /></a>
+      <div class="info">
+        <div class="body">
+          <div class="tags">
+            {% for tag in post.tags %}
+            <span class="tag tag-{{ tag.color }}">{{ tag.name }}</span>
+            {% endfor %} {% if post.points > 0 %} +{{ post.points }} points{% endif %}
+          </div>
+          <h3><a href="/blog/p/{{ post.slug }}">{{ post.title }}</a></h3>
+          <p>{{ post.description }}</p>
+        </div>
+        <div class="footer text-darker">
+          {{ crate::relative_time(post.timestamp) }} -
+          <span class="darken">
+            <i class="fa-regular fa-eye"></i>
+            {{ post.views }} views
+          </span>
+        </div>
+      </div>
+      {% when Content::Link with (link) %}
+      <a class="image" href="{{ link.url }}" target="_blank"><img src="/img/blog/{{ link.img }}" /></a>
+      <div class="info">
+        <div class="body">
+          <div class="tags">
+            <span class="tag tag-gray">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              External
+            </span>
+          </div>
+          <h3>
+            <a href="{{ link.url }}" target="_blank"> {{ link.title }} </a>
+          </h3>
+          <p>{{ link.description }}</p>
+        </div>
+        <div class="footer text-darker">
+          {{ crate::relative_time(link.timestamp) }} -
+          <i class="fa-solid fa-link"></i>
+          {{ crate::get_domain(link.url) }}
+        </div>
+      </div>
+      {% else %}{% endmatch %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

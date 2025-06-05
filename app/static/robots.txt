@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Disallow: /login
+Disallow: /blog/admin
+Disallow: /blog/admin/*
+
+# Host
+Host: https://jorianwoltjer.com
+
+# Sitemaps
+Sitemap: https://jorianwoltjer.com/sitemap.xml

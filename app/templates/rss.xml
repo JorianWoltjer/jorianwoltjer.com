@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Blog | Jorian Woltjer</title>
+    <link>{{ crate::SITE_BASE_URL }}/blog</link>
+    <atom:link href="{{ crate::SITE_BASE_URL }}/blog/rss.xml" rel="self" type="application/rss+xml" />
+    <description>A blog with cybersecurity-related articles. Writeups of challenges in Capture The Flag (CTF) events, stories about hacking and guides with code examples and detailed explanations.</description>
+    <image>
+      <title>Blog | Jorian Woltjer</title>
+      <url>{{ crate::SITE_BASE_URL }}/img/logo.png</url>
+      <link>{{ crate::SITE_BASE_URL }}/blog</link>
+    </image>
+    {%- for content in latest_posts %}
+    <item>
+    {%- match content -%}
+      {%- when ContentFull::Post with (post) %}
+      <title>{{ post.title }}</title>
+      <link>{{ crate::SITE_BASE_URL }}/blog/{{ post.slug }}</link>
+      <guid isPermaLink="true">{{ crate::SITE_BASE_URL }}/blog/p/{{ post.slug }}</guid>
+      <media:thumbnail url="{{ crate::SITE_BASE_URL }}/img/blog/{{ post.img }}" />
+      <description>{{ post.description }}</description>
+      <pubDate>{{ post.timestamp.to_rfc2822() }}</pubDate>
+      <content:encoded>{{ crate::cdata_escape(post.html)|safe }}</content:encoded>
+      {%- when ContentFull::Link with (link) %}
+      <title>{{ link.title }}</title>
+      <link>{{ link.url }}</link>
+      <guid isPermaLink="true">{{ link.url }}</guid>
+      <media:thumbnail url="{{ crate::SITE_BASE_URL }}/img/blog/{{ link.img }}" />
+      <description>{{ link.description }}</description>
+      <pubDate>{{ link.timestamp.to_rfc2822() }}</pubDate>
+      {%- else -%}
+    {%- endmatch %}
+    </item>
+    {%- endfor %}
+  </channel>
+</rss>

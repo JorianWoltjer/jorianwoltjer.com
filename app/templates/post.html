@@ -1,0 +1,47 @@
+{% extends "base.html" %} {% block scripts %}
+<link rel="stylesheet" href="/assets/css/theme.css" />
+<script src="/assets/js/post.js"></script>
+{% endblock %} {% block main %}
+<article data-id="{{ post.id }}">
+  <nav>
+    <ol class="breadcrumbs">
+      <li><a href="/blog">~</a></li>
+      {% for (path, part) in crate::breadcrumbs_from_slug(post.slug) %}
+      <li><a href="/blog/f/{{ path }}">{{ part }}</a></li>
+      {% endfor %}
+    </ol>
+    <h1>{{ post.title }}</h1>
+    <div class="info">
+      <div>
+        <div class="tags">
+          {% for tag in post.tags %}
+          <span class="tag tag-{{ tag.color }}">{{ tag.name }}</span>
+          {% endfor %}
+        </div>
+        <span>{% if post.points > 0 %} +{{ post.points }} points{% endif %}</span>
+      </div>
+      <div class="text-darker">
+        {{ crate::relative_time(post.timestamp) }} -
+        <span class="darken">
+          <i class="fa-regular fa-eye"></i>
+          {% if post.hidden %}<b>Hidden</b>{% else %}{{ post.views }} views{% endif %}
+        </span>
+      </div>
+    </div>
+    {% if middleware.logged_in %}
+    <a class="big-button" href="/blog/admin/post/{{ post.id }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+    {% endif %}
+    <hr />
+    <details open class="toc hidden">
+      <summary tabindex="-1">Table of Contents</summary>
+      <hr />
+      <div>
+        <ol id="toc"></ol>
+      </div>
+    </details>
+  </nav>
+  {{ post.html|safe }}
+</article>
+<div id="enlarged-image"></div>
+<p class="blog-footer">The end! If you have any questions feel free to ask me anywhere on my <a target="_blank" href="/contact">Contacts</a>.</p>
+{% endblock %}

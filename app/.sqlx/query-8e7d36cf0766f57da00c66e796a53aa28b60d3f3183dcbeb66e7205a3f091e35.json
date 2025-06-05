@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT p.slug FROM folders p \n                JOIN folder_redirects pr ON p.id = pr.folder_id \n                WHERE pr.slug = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "slug",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8e7d36cf0766f57da00c66e796a53aa28b60d3f3183dcbeb66e7205a3f091e35"
+}

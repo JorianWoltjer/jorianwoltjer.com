@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET folder = $1, title = $2, slug = $3, description = $4, img = $5, points = $6, featured = $7, hidden = $8, autorelease = $9, markdown = $10, html = $11 WHERE id = $12",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b774033a1a09a32677cd1d499c4db93eff9e18ed922d9a33dbfcdb2cfe657aca"
+}

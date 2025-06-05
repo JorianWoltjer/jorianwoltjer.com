@@ -1,0 +1,104 @@
+{% extends "base.html" %} {% block scripts %}
+<script src="/assets/js/new_post.js"></script>
+{% endblock %} {% block main %}
+<h1>Create Post</h1>
+{% if let Some(post) = existing_post %}
+<form action="/blog/admin/post/{{ post.id }}" id="form" method="put">
+  {% else %}
+  <form action="/blog/admin/post" id="form" method="post">
+    {% endif %}
+    <div class="input-group">
+      <input
+        type="text"
+        name="title"
+        placeholder="Title"
+        value="{% if let Some(post) = existing_post %}{{ post.title }}{% endif %}"
+        required
+        autofocus
+      />
+      <input
+        type="text"
+        name="slug"
+        placeholder="URL"
+        value="{% if let Some(post) = existing_post %}{{ post.slug.split('/').last().unwrap() }}{% endif %}"
+        required
+      />
+    </div>
+    <textarea name="description" placeholder="Description...">{% if let Some(post) = existing_post %}{{ post.description }}{% endif %}</textarea>
+    <input
+      type="text"
+      name="img"
+      class="full-width"
+      placeholder="Image path..."
+      value="{% if let Some(post) = existing_post %}{{ post.img }}{% else %}placeholder.png{% endif %}"
+    />
+    <div class="input-label">
+      <label for="folder">
+        <i class="fa-solid fa-folder"></i>
+      </label>
+      <select name="folder" id="folder">
+        {% for folder in folders %} <option value="{{ folder.id }}" {% if Some(*folder.id) == parent || (existing_post.is_some() &&
+        existing_post.as_ref().unwrap().folder == folder.id) %}selected{% endif %}> {{ folder.title }} {% endfor %}
+      </select>
+    </div>
+    <div id="card-preview"></div>
+    <iframe
+      src="/blog/admin/editor"
+      name="editor"
+      frameborder="0"
+      width="100%"
+      height="400px"
+      data-value="{% if let Some(post) = existing_post %}{{ post.markdown }}{% endif %}"
+    ></iframe>
+    <div class="input-label">
+      <label for="points">Points</label>
+      <input
+        type="number"
+        name="points"
+        id="points"
+        class="full-width"
+        value="{% if let Some(post) = existing_post %}{{ post.points }}{% else %}0{% endif %}"
+      />
+    </div>
+    <div class="tags-input">
+      <label for="tag-add">Tags:</label>
+      <div class="tags">
+        {% if let Some(post) = existing_post %} {% for tag in post.tags %}
+        <span class="tag tag-{{ tag.color }}" data-id="{{ tag.id }}" data-color="{{ tag.color }}">{{ tag.name }}</span>
+        {% endfor %} {% endif %}
+      </div>
+      <input type="text" class="tag tag-add" id="tag-add" list="all-tags" placeholder="+ Add" autocomplete="off" />
+      <datalist id="all-tags">
+        {% for tag in all_tags %}
+        <option value="{{ tag.name }}" data-id="{{ tag.id }}" data-color="{{ tag.color }}"></option>
+        {% endfor %}
+      </datalist>
+    </div>
+    <!-- prettier-ignore -->
+    <input type="checkbox" name="featured" id="featured" {% if let Some(post) = existing_post %}{% if post.featured %}checked{% endif %}{% endif %} />
+    <label for="featured">Featured</label>
+    <!-- prettier-ignore -->
+    <input type="checkbox" name="hidden" id="hidden" {% if let Some(post) = existing_post %}{% if post.hidden %}checked{% endif %}{% endif %} />
+    <label for="hidden">Hidden</label>
+    <div id="auto-release" class="hidden">
+      <!-- prettier-ignore -->
+      <input type="checkbox" name="autoreleasecheck" id="autoreleasecheck" {% if let Some(post) = existing_post %}{% if post.autorelease.is_some() %}checked{% endif %}{% endif %} />
+      <label for="autoreleasecheck">Auto Release</label>
+      <label for="autorelease">at</label>
+      <input
+        type="datetime-local"
+        name="autorelease"
+        id="autorelease"
+        class="inline"
+        value='{% if let Some(post) = existing_post %}{% if post.autorelease.is_some() %}{{ post.autorelease.unwrap().format("%Y-%m-%dT%H:%M") }}{% endif %}{% else %}{{
+        (chrono::Utc::now() + chrono::Duration::hours(1)).format("%Y-%m-%dT%H:%M") }}{% endif %}'
+      />
+      (<span id="autorelease-in"></span>)
+    </div>
+    <div class="buttons-right">
+      <button type="submit" name="save" class="primary">Save</button>
+      <button type="submit" name="preview">Preview</button>
+    </div>
+  </form>
+  {% endblock %}
+</form>

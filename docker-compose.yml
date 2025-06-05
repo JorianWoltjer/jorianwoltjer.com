@@ -1,39 +1,20 @@
 services:
-  frontend:
-    build: ./frontend
-    depends_on:
-      - backend
-    restart: unless-stopped
-    container_name: jw-frontend
-    hostname: frontend
-    environment:
-      - NODE_ENV=production
-      - BACKEND=http://backend
-      - NEXT_PUBLIC_BACKEND_API=/api
-      - NEXT_PUBLIC_SITE_URL=https://jorianwoltjer.com
-      - NEXT_PUBLIC_CDN=http://nginx
-      - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
-      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
-      - PORT=80
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN}
-    networks:
-      - website
-
-  backend:
-    build: ./backend
+  app:
+    build: ./app
     depends_on:
       - db
+    container_name: jw-app
+    hostname: app
     restart: unless-stopped
-    container_name: jw-backend
-    hostname: backend
     environment:
-      - DATABASE_URL=postgresql://backend:${BACKEND_PASSWORD}@db/postgres
-      - FRONTEND=http://frontend
-      - PRODUCTION=true
+      - DATABASE_URL=postgresql://app:${DB_PASSWORD}@db/postgres
       - PORT=80
-      - INTERNAL_TOKEN=${INTERNAL_TOKEN}
     networks:
       - website
+    ports:
+      - "80:80"
+    volumes:
+      - ./app/static/img:/app/static/img
 
   db:
     image: postgres:latest
@@ -41,25 +22,13 @@ services:
     hostname: db
     restart: unless-stopped
     environment:
-      - BACKEND_PASSWORD=${BACKEND_PASSWORD}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${SUPERUSER_PASSWORD}
     networks:
       - website
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./config/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
-
-  nginx:
-    image: nginx:latest
-    restart: unless-stopped
-    container_name: jw-nginx
-    networks:
-      - website
-    ports:
-      - ${HOST}:${PORT}:80
-    volumes:
-      - ./config/nginx-default.conf:/etc/nginx/conf.d/default.conf
-      - ./img:/usr/share/nginx/html/img
+      - ./db/init.sh:/docker-entrypoint-initdb.d/init.sh
 
 networks:
   website:

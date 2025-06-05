@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE posts SET views = views + 1 WHERE id = $1 RETURNING views",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "views",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9bca5d3500987bec710d70439ca3fdf9c152feb7f11924ee3f3baa0b00dec4cd"
+}
