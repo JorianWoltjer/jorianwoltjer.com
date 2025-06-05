@@ -18,10 +18,13 @@ pub async fn get_login(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(LoginTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "Login"),
-    })
+    html_template(
+        middleware.logged_in,
+        LoginTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "Login"),
+        },
+    )
 }
 
 pub async fn post_login(

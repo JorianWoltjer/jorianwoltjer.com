@@ -1,0 +1,231 @@
+%YAML 1.2
+---
+name: Crontab
+file_extensions:
+  - tab
+  - crontab
+  - cron.d
+scope: source.crontab
+
+variables:
+  minute:       '[1-5]?\d'                # 0-59
+  hour:         '(?:1?\d|2[0-3])'         # 0-23
+  day_of_month: '(?:[1-9]|[1-2]\d|3[01])' # 1-31
+  month:        '(?:[1-9]|1[0-2])'        # 1-12
+  day_of_week:  '[0-7]'                   # 0-7
+  words_month: '(?i:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
+  words_day_of_week: '(?i:Sun|Mon|Tue|Wed|Thu|Fri|Sat)'
+  keywords: (?:reboot|yearly|annually|monthly|weekly|daily|midnight|hourly)
+  cron_illegal_punctuation: (?:\*{2,}|[/,?-]{2,}|,(?=[ \t]))
+
+contexts:
+  main:
+    - include: comments
+    - include: variables
+    - include: at-syntax
+    - include: cron-syntax
+    # Don't `invalid.illegal` in-process completions
+    - match: |-
+        (?x)
+          c(?:r(?:o(?:n)?)?)?|
+          r(?:e(?:b(?:o(?:o(?:t)?)?)?)?)?|
+          y(?:e(?:a(?:r(?:l(?:y)?)?)?)?)?|
+          a(?:n(?:n(?:u(?:a(?:l(?:l(?:y)?)?)?)?)?)?)?|
+          m(?:o(?:n(?:t(?:h(?:l(?:y)?)?)?)?)?)?|
+          w(?:e(?:e(?:k(?:l(?:y)?)?)?)?)?|
+          d(?:a(?:i(?:l(?:y)?)?)?)?|
+          m(?:i(?:d(?:n(?:i(?:g(?:h(?:t)?)?)?)?)?)?)?|
+          h(?:o(?:u(?:r(?:l(?:y)?)?)?)?)?
+    - match: ^\s*\w+
+      scope: invalid.illegal.crontab
+
+  pop-nl:
+    - match: \n
+      pop: true
+
+  pop-before-nl:
+    - match: (?=\n)
+      pop: true
+
+  variables:
+    - match: ^([A-Z]+)(=)
+      captures:
+        1: variable.other.readwrite.crontab
+        2: keyword.operator.assignment.crontab
+      push:
+        - include: comments
+        - match: .*
+          scope: string.unquoted.crontab
+        - include: pop-nl
+
+  todo:
+    - meta_scope: invalid.deprecated.todo.crontab
+    - include: pop-before-nl
+
+  cron-syntax:
+    - match: ^\s*(?=[*\d/,-]+)
+      set: cron-minute
+
+  cron-initial-comma:
+    - match: \,
+      scope: invalid.illegal.crontab
+
+  cron-common:
+    - match: \*
+      scope: constant.language.any-value.crontab
+    - match: /(?=\d)
+      scope: punctuation.separator.step.crontab
+    - match: \,
+      scope: punctuation.separator.sequence.crontab
+    - match: \bH\b
+      scope: invalid.deprecated.non-standard.crontab
+
+  cron-minute:
+    - meta_content_scope: meta.string.cron-expression.crontab meta.sequence.cron.minute.crontab
+    - include: pop-nl
+    - match: '{{cron_illegal_punctuation}}'
+      scope: invalid.illegal.crontab
+    - include: cron-common
+    - match: \b({{minute}})(-)({{minute}})\b
+      scope: constant.other.range.crontab
+    - match: \b{{minute}}\b
+      scope: constant.numeric.integer.decimal.crontab
+    - match: (?=[ \t])
+      set: cron-hour-is-next
+    - match: \S+
+      scope: invalid.illegal.crontab
+
+  cron-hour-is-next:
+    - meta_content_scope: meta.string.cron-expression.crontab
+    - include: pop-nl
+    - include: cron-initial-comma
+    - match: (?=\S)
+      set: cron-hour
+
+  cron-hour:
+    - meta_content_scope: meta.string.cron-expression.crontab meta.sequence.cron.hour.crontab
+    - include: pop-nl
+    - match: '{{cron_illegal_punctuation}}'
+      scope: invalid.illegal.crontab
+    - include: cron-common
+    - match: \b({{hour}})(-)({{hour}})\b
+      scope: constant.other.range.crontab
+    - match: \b{{hour}}\b
+      scope: constant.numeric.integer.decimal.crontab
+    - match: (?=[ \t])
+      set: cron-day-of-month-is-next
+    - match: \S+
+      scope: invalid.illegal.crontab
+
+  cron-day-of-month-is-next:
+    - meta_content_scope: meta.string.cron-expression.crontab
+    - include: pop-nl
+    - include: cron-initial-comma
+    - match: (?=\S)
+      set: cron-day-of-month
+
+  cron-day-of-month:
+    - meta_content_scope: meta.string.cron-expression.crontab meta.sequence.cron.day-of-month.crontab
+    - include: pop-nl
+    - match: '{{cron_illegal_punctuation}}'
+      scope: invalid.illegal.crontab
+    - include: cron-common
+    - match: \b({{day_of_month}})(-)({{day_of_month}})\b
+      scope: constant.other.range.crontab
+    - match: \b({{day_of_month}})([LW])?\b
+      captures:
+        1: constant.numeric.integer.decimal.crontab
+        2: invalid.deprecated.non-standard.crontab
+    - match: \?
+      scope: invalid.deprecated.non-standard.crontab
+    - match: (?=[ \t])
+      set: cron-month-is-next
+    - match: \S+
+      scope: invalid.illegal.crontab
+
+  cron-month-is-next:
+    - meta_content_scope: meta.string.cron-expression.crontab
+    - include: pop-nl
+    - include: cron-initial-comma
+    - match: (?=\S)
+      set: cron-month
+
+  cron-month:
+    - meta_content_scope: meta.string.cron-expression.crontab meta.sequence.cron.month.crontab
+    - include: pop-nl
+    - match: '{{cron_illegal_punctuation}}'
+      scope: invalid.illegal.crontab
+    - include: cron-common
+    - match: \b({{month}})(-)({{month}})\b
+      scope: constant.other.range.crontab
+    - match: \b{{month}}\b
+      scope: constant.numeric.integer.decimal.crontab
+    - match: \b{{words_month}}\b
+      scope: support.constant.month-name.crontab
+    - match: (?=[ \t])
+      set: cron-day-of-week-is-next
+    - match: '[^a-zA-Z]'
+      scope: invalid.illegal.crontab
+
+  cron-day-of-week-is-next:
+    - meta_content_scope: meta.string.cron-expression.crontab
+    - include: pop-nl
+    - include: cron-initial-comma
+    - match: (?=\S)
+      set: cron-day-of-week
+
+  cron-day-of-week:
+    - meta_content_scope: meta.string.cron-expression.crontab meta.sequence.cron.day-of-week.crontab
+    - include: pop-nl
+    - match: '{{cron_illegal_punctuation}}'
+      scope: invalid.illegal.crontab
+    - include: cron-common
+    - match: \b({{day_of_week}})(-)({{day_of_week}})\b
+      scope: constant.other.range.crontab
+    - match: \b({{day_of_week}})(L)?\b
+      captures:
+        1: constant.numeric.integer.decimal.crontab
+        2: invalid.deprecated.non-standard.crontab
+    - match: \b{{words_day_of_week}}\b
+      scope: support.constant.day-of-week-name.crontab
+    - match: \?|#
+      scope: invalid.deprecated.non-standard.crontab
+    - match: (?=[ \t])
+      set: command-is-next
+    - match: '[^a-zA-Z]'
+      scope: invalid.illegal.crontab
+
+  command-is-next:
+    - include: pop-nl
+    - match: \s+
+      embed: scope:source.shell
+      escape: (?=\n|$)
+
+  at-syntax:
+    # Keyword, then script embed
+    - match: ^\s*((@){{keywords}})[ \t]+
+      captures:
+        1: constant.language.schedule.crontab
+        2: punctuation.definition.variable.crontab
+      embed: scope:source.shell
+      escape: $
+    # Don't unhighlight keywords just because EOL
+    - match: ^\s*((@){{keywords}})\b
+      captures:
+        1: constant.language.schedule.crontab
+        2: punctuation.definition.variable.crontab
+    # Set up autocomplete for keywords
+    - match: ^\s*(@)(\w*(?:[\n\s]|$))
+      captures:
+        1: punctuation.definition.variable.crontab
+        2: meta.completion.at.crontab
+
+  comments:
+    - match: \s*(#)
+      captures:
+        1: punctuation.definition.comment.crontab
+      push:
+        - meta_scope: comment.line.number-sign.crontab
+        - include: pop-before-nl
+        - match: TODO
+          push: todo

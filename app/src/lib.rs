@@ -22,8 +22,14 @@ pub struct AppState {
     pub hmac_key: [u8; 32],
 }
 
-pub fn html_template(template: impl Template) -> Result<impl IntoResponse, StatusCode> {
-    Ok(Html(template.render().map_err(internal_error)?))
+pub fn html_template(
+    logged_in: bool,
+    template: impl Template,
+) -> Result<impl IntoResponse, StatusCode> {
+    // Bit of a hacky way until askama supports mutable variables
+    let mut response = Html(template.render().map_err(internal_error)?).into_response();
+    response.extensions_mut().insert(logged_in);
+    Ok(response)
 }
 
 pub fn relative_time(timestamp: &DateTime<Utc>) -> String {

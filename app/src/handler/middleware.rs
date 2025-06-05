@@ -15,6 +15,11 @@ pub struct MiddlewareData {
     pub logged_in: bool,
     pub nonce: String,
 }
+impl MiddlewareData {
+    pub fn new(logged_in: bool, nonce: String) -> Self {
+        MiddlewareData { logged_in, nonce }
+    }
+}
 
 pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Response, StatusCode> {
     let (mut parts, body) = req.into_parts();
@@ -38,14 +43,13 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
             .unwrap_or(false),
         Err(_) => false,
     };
-    parts.extensions.insert(MiddlewareData {
-        logged_in,
-        nonce: nonce.clone(),
-    });
+    let middleware_data = MiddlewareData::new(logged_in, nonce.clone());
+    parts.extensions.insert(middleware_data.clone());
 
     let req = Request::from_parts(parts, body);
 
     let mut response = next.run(req).await;
+    let logged_in = response.extensions().get::<bool>().copied();
     let headers = response.headers_mut();
 
     // Set security headers
@@ -61,8 +65,9 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
         "same-origin".parse().unwrap(),
     );
     headers.insert(
-            header::CONTENT_SECURITY_POLICY,
-            format!("\
+        header::CONTENT_SECURITY_POLICY,
+        format!(
+            "\
 default-src 'self'; \
 script-src 'self' 'nonce-{nonce}'; \
 style-src 'self' https://fonts.googleapis.com; \
@@ -70,18 +75,26 @@ object-src 'none'; \
 connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; \
 font-src 'self' https://fonts.gstatic.com; \
 img-src 'self' data:; \
-frame-src 'self' https://www.youtube-nocookie.com https://yeswehack.github.io/Dom-Explorer/dom-explorer/frame; \
+frame-src 'self' https://www.youtube-nocookie.com https://yeswehack.github.io/Dom-Explorer/frame; \
 frame-ancestors 'none'; \
 base-uri 'self'; \
 form-action 'self'; \
-require-trusted-types-for 'script'")
-                .parse()
-                .unwrap(),
-        );
-    // TODO: cache control headers (allow normally, but not if logged in, 1m ttl)
+require-trusted-types-for 'script'"
+        )
+        .parse()
+        .unwrap(),
+    );
+    headers.insert(
+        header::CACHE_CONTROL,
+        match logged_in {
+            Some(true) => "private, max-age=0".parse().unwrap(),
+            Some(false) => "public, max-age=60".parse().unwrap(),
+            None => "public, max-age=3600".parse().unwrap(),
+        },
+    );
 
     // Redirect to login if 401
-    if response.status() == StatusCode::UNAUTHORIZED {
+    if response.status() == StatusCode::UNAUTHORIZED && uri.split('?').next().unwrap() != "/login" {
         let redirect = format!("/login?back={}", urlencoding::encode(&uri));
         response = Redirect::temporary(&redirect).into_response()
     }
@@ -90,17 +103,14 @@ require-trusted-types-for 'script'")
 }
 
 pub async fn auth_required_middleware(
-    Extension(MiddlewareData {
-        logged_in,
-        nonce: _,
-    }): Extension<MiddlewareData>,
+    Extension(middleware): Extension<MiddlewareData>,
     req: Request<Body>,
     next: Next,
 ) -> Result<Response, StatusCode> {
     let (parts, body) = req.into_parts();
 
     // Check if user is logged in
-    if !logged_in {
+    if !middleware.logged_in {
         return Err(StatusCode::UNAUTHORIZED);
     }
 
@@ -114,5 +124,8 @@ pub async fn auth_required_middleware(
         return Err(StatusCode::FORBIDDEN);
     }
 
-    Ok(next.run(Request::from_parts(parts, body)).await)
+    let mut response = next.run(Request::from_parts(parts, body)).await;
+    response.extensions_mut().insert(middleware.logged_in);
+
+    Ok(response)
 }

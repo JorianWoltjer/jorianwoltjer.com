@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, parent, slug, title, description, img, timestamp FROM folders ORDER BY id DESC",
+  "query": "SELECT id, folder, url, title, description, img, featured, timestamp FROM links \n           ORDER BY timestamp DESC LIMIT $1",
   "describe": {
     "columns": [
       {
@@ -10,13 +10,13 @@
       },
       {
         "ordinal": 1,
-        "name": "parent",
+        "name": "folder",
         "type_info": "Int4"
       },
       {
         "ordinal": 2,
-        "name": "slug",
-        "type_info": "Varchar"
+        "name": "url",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
@@ -35,16 +35,24 @@
       },
       {
         "ordinal": 6,
+        "name": "featured",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
         "name": "timestamp",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int8"
+      ]
     },
     "nullable": [
       false,
-      true,
+      false,
+      false,
       false,
       false,
       false,
@@ -52,5 +60,5 @@
       false
     ]
   },
-  "hash": "cfb72aa96720a42c45afcceff90f983f17da88f8f0baacfad9807e12c6dbb3d7"
+  "hash": "9c5e05c1c0274c6ce1bdb0945616fff6b8e5d5e2c03d3f2067e80131d53cce4d"
 }

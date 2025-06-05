@@ -107,6 +107,6 @@ async fn main() {
             .await
             .expect("Failed to set password");
             println!("Administrator password set successfully.");
-        }
+        } // TODO: export command to write blog folders, posts and images to filesystem
     }
 }

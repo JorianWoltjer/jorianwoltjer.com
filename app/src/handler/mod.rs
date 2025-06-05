@@ -40,64 +40,77 @@ pub async fn get_home(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(HomeTemplate {
-        middleware,
-        metadata: Metadata {
-            url,
-            title: "Home".to_string(),
-            description: Some(
-                "My personal website. Here you can read the blog, find links, and more."
-                    .to_string(),
-            ),
-            image: None,
+    html_template(
+        middleware.logged_in,
+        HomeTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: "Home".to_string(),
+                description: Some(
+                    "My personal website. Here you can read the blog, find links, and more."
+                        .to_string(),
+                ),
+                image: None,
+            },
         },
-    })
+    )
 }
 
 pub async fn get_about(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(AboutTemplate {
-        middleware,
-        metadata: Metadata {
-            url,
-            title: "About".to_string(),
-            description: Some(
-                "Some backstory about who I am and how I got started, as well as this website."
-                    .to_string(),
-            ),
-            image: None,
+    html_template(
+        middleware.logged_in,
+        AboutTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: "About".to_string(),
+                description: Some(
+                    "Some backstory about who I am and how I got started, as well as this website."
+                        .to_string(),
+                ),
+                image: None,
+            },
         },
-    })
+    )
 }
 
 pub async fn get_contact(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(ContactTemplate {
-        middleware,
-        metadata: Metadata {
-            url,
-            title: "Contact".to_string(),
-            description: Some(
-                "Links to my social media profiles in order to get in contact with me.".to_string(),
-            ),
-            image: None,
+    html_template(
+        middleware.logged_in,
+        ContactTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: "Contact".to_string(),
+                description: Some(
+                    "Links to my social media profiles in order to get in contact with me."
+                        .to_string(),
+                ),
+                image: None,
+            },
         },
-    })
+    )
 }
 
 pub async fn error_404(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(Error404Template {
-        middleware,
-        metadata: Metadata::only_title(url.clone(), "404 Not Found"),
-        url: url.to_string(),
-    })
+    html_template(
+        middleware.logged_in,
+        Error404Template {
+            middleware,
+            metadata: Metadata::only_title(url.clone(), "404 Not Found"),
+            url: url.to_string(),
+        },
+    )
 }
 
 pub async fn get_style_css() -> impl IntoResponse {

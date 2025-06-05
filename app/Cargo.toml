@@ -29,7 +29,7 @@ schemars = { version = "0.8.22", features = ["chrono"] }
 futures = "0.3.31"
 askama = "0.14.0"
 tower = "0.5.2"
-syntect = "5.0"
+syntect = { version = "5.0", features = ["default-fancy"] }
 html-escape = "0.2.13"
 clap = { version = "4.5.39", features = ["derive"] }
 pathdiff = "0.2.3"

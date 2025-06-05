@@ -31,16 +31,19 @@ pub async fn get_folder(
             let folder = FolderContents::from_folder(folder, &state)
                 .await
                 .map_err(internal_error)?;
-            Ok(html_template(FolderTemplate {
-                middleware,
-                metadata: Metadata {
-                    url,
-                    title: folder.title.clone(),
-                    description: Some(folder.description.clone()),
-                    image: Some(format!("/img/blog/{}", folder.img)),
+            Ok(html_template(
+                middleware.logged_in,
+                FolderTemplate {
+                    middleware,
+                    metadata: Metadata {
+                        url,
+                        title: folder.title.clone(),
+                        description: Some(folder.description.clone()),
+                        image: Some(format!("/img/blog/{}", folder.img)),
+                    },
+                    folder,
                 },
-                folder,
-            })
+            )
             .into_response())
         }
         None => {
@@ -66,13 +69,16 @@ pub async fn get_new_folder(
     let folders = database::get_folders(&state)
         .await
         .map_err(internal_error)?;
-    html_template(NewFolderTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "New Folder"),
-        parent,
-        existing_folder: None,
-        folders,
-    })
+    html_template(
+        middleware.logged_in,
+        NewFolderTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "New Folder"),
+            parent,
+            existing_folder: None,
+            folders,
+        },
+    )
 }
 
 pub async fn post_new_folder(
@@ -114,13 +120,16 @@ pub async fn get_edit_folder(
     let folders = database::get_folders(&state)
         .await
         .map_err(internal_error)?;
-    html_template(NewFolderTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, &format!("Edit {}", existing_folder.title)),
-        parent: None,
-        existing_folder: Some(existing_folder),
-        folders,
-    })
+    html_template(
+        middleware.logged_in,
+        NewFolderTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, &format!("Edit {}", existing_folder.title)),
+            parent: None,
+            existing_folder: Some(existing_folder),
+            folders,
+        },
+    )
 }
 
 pub async fn put_edit_folder(

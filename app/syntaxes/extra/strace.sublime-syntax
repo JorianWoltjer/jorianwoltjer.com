@@ -1,0 +1,25 @@
+%YAML 1.2
+---
+name: Strace
+file_extensions: [strace]
+scope: source.strace
+
+contexts:
+  main:
+    - match: \b(\d\d:\d\d:\d\d)\b
+      scope: constant.numeric.strace
+    - match: ^([a-z\d_]+)\b
+      scope: keyword.control.strace
+    - match: '"'
+      push: string
+    - match: \b(-?\dx?[\da-f]*)\b
+      scope: constant.numeric.strace
+    - match: \b[A-Z\d_]+\b
+      scope: storage.type.strace
+
+  string:
+    - meta_scope: string.quoted.double.strace
+    - match: \\.
+      scope: constant.character.escape.strace
+    - match: '"'
+      pop: true

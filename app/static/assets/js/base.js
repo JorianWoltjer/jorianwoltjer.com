@@ -76,14 +76,6 @@ requestAnimationFrame(function checkScroll() {
   if (didScroll) {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    // If close to the top, always show
-    if (scrollTop < navbarHeight) {
-      header.classList.remove("nav-hidden");
-      lastScrollTop = 0;
-      didScroll = false;
-      return;
-    }
-
     // If scrolled far down enough, hide the header, but show again when scrolling up
     const delta = header.classList.contains("nav-hidden") ? deltaUp : deltaDown;
     if (Math.abs(lastScrollTop - scrollTop) >= delta) {

@@ -13,6 +13,8 @@ services:
       - website
     ports:
       - "80:80"
+    volumes:
+      - ./app/static/img:/app/static/img
 
   db:
     image: postgres:latest

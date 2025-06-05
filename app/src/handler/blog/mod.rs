@@ -33,7 +33,7 @@ pub async fn get_blog(
     let featured_posts = get_featured_content(&state).await.map_err(internal_error)?;
     let categories = get_categories(&state).await.map_err(internal_error)?;
 
-    html_template(BlogTemplate {
+    html_template(middleware.logged_in,BlogTemplate {
         middleware,
         metadata: Metadata {
             url,
@@ -88,11 +88,14 @@ pub async fn post_preview(
         timestamp: Utc::now(),
         tags,
     };
-    html_template(PostTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "Preview"),
-        post,
-    })
+    html_template(
+        middleware.logged_in,
+        PostTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "Preview"),
+            post,
+        },
+    )
 }
 
 pub async fn get_rss(State(state): State<AppState>) -> Result<(HeaderMap, String), StatusCode> {

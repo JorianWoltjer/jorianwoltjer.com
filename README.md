@@ -4,71 +4,63 @@
 
 ## Setup
 
-A [`.env`](.env.example) file should be created with two strong randomly generated passwords for the database. The 'internal token' variable should only contain alphanumeric characters. 
+Clone this repository **including submodules** to make syntax highlighting work.
 
-The following environment variables are required to use [BuildKit](https://docs.docker.com/build/buildkit/#getting-started) with docker-compose:
-
-```Shell
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
+```bash
+git clone --recurse-submodules --shallow-submodules https://github.com/JorianWoltjer/jorianwoltjer.com
 ```
 
-Then running the following command will build and start the containers (note that it takes a few minutes to fully start up):
+A [`.env`](.env.example) file should be created with two strong randomly generated passwords for the database.
 
-```Shell
+The following command will build and start the containers:
+
+```bash
 docker-compose up -d --build
 
 # View logs temporarely
 docker-compose logs --tail=10 --follow
 ```
 
-Finally, use the [password.sh](scripts/password.sh) script to set a strong password for logging in as an Admin.
+While it is running, use the [`manager`](app/src/bin/manager.rs) binary to perform some administrative actions.
 
-See [this gist](https://gist.github.com/JorianWoltjer/3409ef1c7b59c7c5e7b80a294f5564d0) to see how I automatically pull changes from GitHub push webhooks.
+```shell
+$ docker compose exec -it app manager
+Perform simple management tasks on the website
+
+Usage: manager <COMMAND>
+
+Commands:
+  theme     Syntax highlighing themes
+  render    Update generated HTML for all posts
+  password  Set administrator password (will be prompted)
+  help      Print this message or the help of the given subcommand(s)
+```
+
+The most imporant to start with is `password` to set a new strong password for the `/login` page (default is "secret").  
+Any changes to the [render code](app/src/render.rs) should be followed by running the `render` management command to refresh all HTML in the database.
 
 ## Development
 
-Rebuild only one specific container while running:
-
-```Shell
-docker-compose up --build --force-recreate --no-deps -d backend
-```
-
 Run database server for testing
 
-```Shell
+```bash
 docker run --name postgres-dev -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
 ```
 
 Run and create tables on local database
 
-```Shell
+```bash
 sqlx database drop && sqlx database create && sqlx migrate run
 ```
 
-Transfer old MySQL data to new PostgreSQL format:
+Create database dump:
 
-```sql
-SELECT id, parent, url as slug, title, description, COALESCE(icon, img) as img, timestamp FROM folders;
-SELECT id, title, text, img, href, category FROM projects;
-SELECT id, url as slug, title, description, img, markdown, timestamp, parent as folder, points, views, featured, (hidden IS NOT NULL) as hidden FROM posts;
-SELECT post as post_id, tag as tag_id FROM post_tags;
-
--- replace strings in *.sql files:
-$ sed "s/\\\\'/''/g" | sed 's/\\"/"/g' | sed "s/\\\\r/'||chr(13)||'/g" | sed "s/\\\\n/'||chr(10)||'/g" | sed 's/\\\\/\\/g' | sed 's/\/img\/blog\///g'
--- *manually remove ` backticks from statements*
--- *manually set featured and hidden to ::bool*
+```bash
+docker exec -it jw-db pg_dump -U postgres > app.dump
 ```
 
-#### Scripts
+Restore database dump:
 
-* [revalidate.sh](scripts/revalidate.sh): Revalidate a custom URL on the frontend
-* [sign.sh](scripts/sign.sh): Create a HMAC signature for a specific hidden blog post ID
-
-## Resources
-
-* http://www.craigwardman.com/Blogging/BlogEntry/ssg-isr-and-environment-variables-in-next-js-and-docker
-* https://github.com/launchbadge/realworld-axum-sqlx
-* https://github.com/launchbadge/sqlx/issues/1014
-
-This website is a successor to my original [jorianwoltjer.com (PHP)](https://github.com/JorianWoltjer/jorianwoltjer.com-php) repository.
+```bash
+docker exec -i jw-db psql -U postgres < app.dump
+```

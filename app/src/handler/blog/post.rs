@@ -81,16 +81,19 @@ pub async fn get_post(
         .await
         .map_err(internal_error)?
     {
-        Some(post) => Ok(html_template(PostTemplate {
-            middleware,
-            metadata: Metadata {
-                url,
-                title: post.title.clone(),
-                description: Some(post.description.clone()),
-                image: Some(format!("/img/blog/{}", post.img)),
+        Some(post) => Ok(html_template(
+            middleware.logged_in,
+            PostTemplate {
+                middleware,
+                metadata: Metadata {
+                    url,
+                    title: post.title.clone(),
+                    description: Some(post.description.clone()),
+                    image: Some(format!("/img/blog/{}", post.img)),
+                },
+                post,
             },
-            post,
-        })
+        )
         .into_response()),
         None => {
             // Check if it's a redirect
@@ -131,16 +134,19 @@ pub async fn get_post_hidden(
         return Ok(Redirect::permanent(&format!("/blog/p/{}", post.slug)).into_response());
     }
 
-    Ok(html_template(PostTemplate {
-        middleware,
-        metadata: Metadata {
-            url,
-            title: post.title.clone(),
-            description: Some(post.description.clone()),
-            image: Some(format!("/img/blog/{}", post.img)),
+    Ok(html_template(
+        middleware.logged_in,
+        PostTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: post.title.clone(),
+                description: Some(post.description.clone()),
+                image: Some(format!("/img/blog/{}", post.img)),
+            },
+            post,
         },
-        post,
-    })
+    )
     .into_response())
 }
 
@@ -153,11 +159,14 @@ pub async fn get_posts_hidden(
         .await
         .map_err(internal_error)?;
 
-    html_template(HiddenPostsTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "Hidden Posts"),
-        posts,
-    })
+    html_template(
+        middleware.logged_in,
+        HiddenPostsTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "Hidden Posts"),
+            posts,
+        },
+    )
 }
 
 pub async fn get_editor() -> impl IntoResponse {
@@ -177,7 +186,7 @@ pub async fn get_editor() -> impl IntoResponse {
         "Cross-Origin-Resource-Policy",
         "same-origin".parse().unwrap(),
     );
-    (headers, html_template(EditorTemplate {}))
+    (headers, html_template(false, EditorTemplate {}))
 }
 
 pub async fn get_new_post(
@@ -190,14 +199,17 @@ pub async fn get_new_post(
         .await
         .map_err(internal_error)?;
     let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewPostTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "New Post"),
-        parent,
-        existing_post: None,
-        folders,
-        all_tags,
-    })
+    html_template(
+        middleware.logged_in,
+        NewPostTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "New Post"),
+            parent,
+            existing_post: None,
+            folders,
+            all_tags,
+        },
+    )
 }
 
 pub async fn post_new_post(
@@ -257,14 +269,17 @@ pub async fn get_new_link(
         .await
         .map_err(internal_error)?;
     let all_tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewLinkTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, "New Link"),
-        parent,
-        existing_link: None,
-        folders,
-        all_tags,
-    })
+    html_template(
+        middleware.logged_in,
+        NewLinkTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, "New Link"),
+            parent,
+            existing_link: None,
+            folders,
+            all_tags,
+        },
+    )
 }
 
 pub async fn post_new_link(
@@ -309,14 +324,17 @@ pub async fn get_edit_post(
         .map_err(internal_error)?;
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
 
-    html_template(NewPostTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, &format!("Edit {}", existing_post.title)),
-        parent: None,
-        existing_post: Some(existing_post),
-        folders,
-        all_tags: tags,
-    })
+    html_template(
+        middleware.logged_in,
+        NewPostTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, &format!("Edit {}", existing_post.title)),
+            parent: None,
+            existing_post: Some(existing_post),
+            folders,
+            all_tags: tags,
+        },
+    )
 }
 
 pub async fn put_edit_post(
@@ -412,14 +430,17 @@ pub async fn get_edit_link(
         .await
         .map_err(internal_error)?;
     let tags = database::get_tags(&state).await.map_err(internal_error)?;
-    html_template(NewLinkTemplate {
-        middleware,
-        metadata: Metadata::only_title(url, &format!("Edit {}", existing_link.title)),
-        parent: None,
-        existing_link: Some(existing_link),
-        folders,
-        all_tags: tags,
-    })
+    html_template(
+        middleware.logged_in,
+        NewLinkTemplate {
+            middleware,
+            metadata: Metadata::only_title(url, &format!("Edit {}", existing_link.title)),
+            parent: None,
+            existing_link: Some(existing_link),
+            folders,
+            all_tags: tags,
+        },
+    )
 }
 
 pub async fn put_edit_link(
@@ -484,15 +505,18 @@ pub async fn get_search(
     Extension(middleware): Extension<MiddlewareData>,
     url: http::Uri,
 ) -> impl IntoResponse {
-    html_template(SearchTemplate {
-        middleware,
-        metadata: Metadata {
-            url,
-            title: "Search".to_string(),
-            description: Some("Find all posts and search by text.".to_string()),
-            image: None,
+    html_template(
+        middleware.logged_in,
+        SearchTemplate {
+            middleware,
+            metadata: Metadata {
+                url,
+                title: "Search".to_string(),
+                description: Some("Find all posts and search by text.".to_string()),
+                image: None,
+            },
         },
-    })
+    )
 }
 
 pub async fn get_search_ws(ws: WebSocketUpgrade, state: State<AppState>) -> Response {
