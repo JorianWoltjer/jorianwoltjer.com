@@ -1,9 +1,83 @@
 // Welcome animation
 const welcome = document.getElementById("welcome");
+const fakeCalc = document.querySelector(".fake-calc");
 const nav = document.querySelector("header nav ol");
 let timeout;
-if (welcome) {
-  welcome.addEventListener("mousedown", () => {
+let i = 0;
+// OS detection
+function getOS() {
+  // Mobile is considered Windows, otherwise detect desktop OS
+  let userAgent = navigator.userAgent;
+  userAgent += (navigator.userAgentData?.platform || navigator.platform);
+  userAgent = userAgent.toLowerCase();
+  if (userAgent.includes("android") || userAgent.includes("iphone") || userAgent.includes("ipad") || userAgent.includes("win")) {
+    return "windows";
+  } else if (userAgent.includes("mac")) {
+    if (navigator.maxTouchPoints > 0) {
+      return "windows";
+    }
+    return "macos";
+  } else if (userAgent.includes("linux")) {
+    return "linux";
+  }
+  return "windows";
+}
+const os = getOS();
+fakeCalc.classList.add(os);
+if (os !== "windows") {
+  fakeCalc.querySelector("#calc").src = `/img/calc/${os}.png`;
+}
+fakeCalc.querySelector("#x").addEventListener("click", () => {
+  fakeCalc.classList.add("exiting");
+  setTimeout(() => {
+    fakeCalc.classList.remove("exiting");
+    fakeCalc.classList.add("hidden");
+  }, 300);
+});
+fakeCalc.querySelector("#square").addEventListener("click", () => {
+  if (os === "windows") {
+    location = "ms-calculator://";
+  } else if (os === "macos") {
+    location = "itms-apps://itunes.apple.com/app/id1069511488";
+  }
+});
+fakeCalc.querySelector(".grab-area").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (e.button !== 0) return; // Only left click
+
+  const calc = fakeCalc.querySelector("#calc");
+  const offsetX = e.clientX - calc.getBoundingClientRect().left;
+  const offsetY = e.clientY - calc.getBoundingClientRect().top;
+
+  function move(e) {
+    fakeCalc.style.left = `${e.clientX - offsetX}px`;
+    fakeCalc.style.top = `${e.clientY - offsetY}px`;
+  }
+  function moveTouch(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return move(e.targetTouches[0]);
+  }
+  function stop() {
+    e.target.removeEventListener("touchmove", moveTouch);
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", stop);
+  }
+
+  e.target.addEventListener("touchmove", moveTouch);
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", stop);
+});
+welcome.addEventListener("click", async () => {
+  // Either do the navbar animation, or show a fake calculator
+  if (Math.random() < 0.5) {
+    if (!fakeCalc.classList.contains("hidden")) {
+      // If already visible, re-open
+      fakeCalc.classList.add("hidden");
+      fakeCalc.offsetWidth;
+    }
+    fakeCalc.classList.remove("hidden");
+  } else {
     if (timeout) clearTimeout(timeout);
     nav.classList.remove("welcome-animation");
     nav.offsetWidth;
@@ -11,8 +85,8 @@ if (welcome) {
     timeout = setTimeout(() => {
       nav.classList.remove("welcome-animation");
     }, 1000);
-  });
-}
+  }
+});
 
 // Particles.js in background
 tsParticles.load({

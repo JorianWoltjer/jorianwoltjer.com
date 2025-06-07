@@ -221,7 +221,7 @@ header {
           animation: none;
         }
         a {
-          animation: 0.3s ease-in-out 3 normal welcome-animation;
+          animation: 0.3s ease-in-out 2 normal welcome-animation;
         }
         li:nth-child(3) a {
           animation-delay: 0.07s;
@@ -304,6 +304,19 @@ summary {
     }
   }
 }
+@media (max-width: 768px) {
+  .home-page {
+    h1 {
+      font-size: 1.5rem;
+    }
+    img {
+      width: 200px;
+    }
+    h2 {
+      font-size: 1.2rem;
+    }
+  }
+}
 .img-88x31 {
   position: absolute;
   display: flex;
@@ -317,7 +330,126 @@ summary {
     opacity: 100%;
   }
 }
+@keyframes openWindow {
+  from {
+    transform: scale(0.85);
+    opacity: 0.75;
+    filter: brightness(0.7);
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+@keyframes closeWindow {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+.fake-calc {
+  z-index: 9999;
+  position: fixed;
+  image-rendering: pixelated;
+  left: 20px;
+  top: 20px;
+  border: 1.5px solid #474747;
+  border-radius: 9px;
+  box-shadow: 0 5px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  overflow: hidden;
+  touch-action: none;
 
+  animation: openWindow 0.2s cubic-bezier(0.03, 0.82, 1, 0.99) forwards;
+
+  &.exiting {
+    animation: closeWindow 0.2s cubic-bezier(0.03, 0.82, 1, 0.99) forwards;
+  }
+  img {
+    width: 100%;
+  }
+  .grab-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .buttons {
+    position: absolute;
+    display: flex;
+    top: 0;
+    right: 0;
+
+    button {
+      opacity: 0;
+      width: 46px;
+      height: 32px;
+      cursor: default;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+
+      &#x {
+        background: url("/img/calc/windows-x.png") no-repeat center center;
+      }
+      &#square {
+        background: url("/img/calc/windows-square.png") no-repeat center center;
+      }
+    }
+  }
+
+  &.windows .buttons button:hover {
+    opacity: 1;
+  }
+  &.macos .buttons,
+  &.linux .buttons {
+    top: 12px;
+
+    button {
+      cursor: pointer;
+      position: absolute;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  &.macos {
+    border: 1px solid black;
+
+    &:after {
+      content: "";
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      box-shadow: inset 0px 0 2px #ffffff63;
+      pointer-events: none;
+    }
+    .buttons {
+      left: 0;
+      right: auto;
+
+      #x {
+        left: 12px;
+      }
+      #square {
+        left: 40px;
+      }
+    }
+  }
+  &.linux .buttons {
+    #x {
+      right: 12px;
+    }
+    #square {
+      right: 40px;
+    }
+  }
+}
 .contact-buttons {
   a {
     text-decoration: none;
