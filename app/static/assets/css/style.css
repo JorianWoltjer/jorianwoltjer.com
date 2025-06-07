@@ -355,7 +355,6 @@ summary {
 .fake-calc {
   z-index: 9999;
   position: fixed;
-  image-rendering: pixelated;
   left: 20px;
   top: 20px;
   border: 1.5px solid #474747;
