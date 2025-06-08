@@ -22,11 +22,11 @@
   <a class="image" href="/blog/p/{{ post.slug }}">
     <img
       srcset="
-        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ post.img }} 330w,
-        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ post.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=400/img/blog/{{ post.img }} 400w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=800/img/blog/{{ post.img }} 800,
         /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ post.img }} 1920w
       "
-      sizes="(max-width: 768px) 100vw, 330px"
+      sizes="(max-width: 768px) 100vw, 400px"
       src="/cdn-cgi/image/format=auto/img/blog/{{ post.img }}"
     />
   </a>
@@ -55,11 +55,11 @@
   <a class="image" href="{{ link.url }}" target="_blank" {% if middleware.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>
     <img
       srcset="
-        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ link.img }} 330w,
-        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ link.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=400/img/blog/{{ link.img }} 400w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=800/img/blog/{{ link.img }} 800,
         /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ link.img }} 1920w
       "
-      sizes="(max-width: 768px) 100vw, 330px"
+      sizes="(max-width: 768px) 100vw, 400px"
       src="/cdn-cgi/image/format=auto/img/blog/{{ link.img }}"
     />
   </a>
@@ -88,11 +88,11 @@
   <a class="image" href="/blog/f/{{ folder.slug }}">
     <img
       srcset="
-        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ folder.img }} 330w,
-        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ folder.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=400/img/blog/{{ folder.img }} 400w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=800/img/blog/{{ folder.img }} 800,
         /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ folder.img }} 1920w
       "
-      sizes="(max-width: 768px) 100vw, 330px"
+      sizes="(max-width: 768px) 100vw, 400px"
       src="/cdn-cgi/image/format=auto/img/blog/{{ folder.img }}"
     />
   </a>
