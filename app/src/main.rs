@@ -109,6 +109,10 @@ async fn main() {
         )
         .with_state(state.clone())
         .route("/assets/css/style.css", get(get_style_css))
+        .route(
+            "/cdn-cgi/image/{options}/img/blog/{*path}",
+            get(get_cdn_image),
+        )
         .fallback_service(ServeDir::new("static").not_found_service(error_404.into_service()))
         .layer(
             ServiceBuilder::new()

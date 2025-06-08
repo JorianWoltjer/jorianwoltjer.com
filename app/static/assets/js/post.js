@@ -78,7 +78,10 @@ article.querySelectorAll('img, video').forEach(el => {
 const enlargedImage = document.getElementById('enlarged-image');
 article.querySelectorAll('img').forEach(img => {
   img.addEventListener('click', (e) => {
-    enlargedImage.replaceChildren(img.cloneNode());
+    const img = document.createElement('img');
+    img.src = e.target.src;  // Copy src instead of srcset to get full size
+    img.alt = e.target.alt || '';
+    enlargedImage.replaceChildren(img);
     enlargedImage.classList.add('visible');
     document.body.style.overflow = "hidden";
     function removeEnlargedImage() {

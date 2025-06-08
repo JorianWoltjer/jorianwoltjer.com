@@ -19,7 +19,17 @@
 {% for content in folder.contents %}
 <div class="card horizontal">
   {% match content %} {% when Content::Post with (post) %}
-  <a class="image" href="/blog/p/{{ post.slug }}"><img src="/img/blog/{{ post.img }}" /></a>
+  <a class="image" href="/blog/p/{{ post.slug }}">
+    <img
+      srcset="
+        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ post.img }} 330w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ post.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ post.img }} 1920w
+      "
+      sizes="(max-width: 768px) 100vw, 330px"
+      src="/cdn-cgi/image/format=auto/img/blog/{{ post.img }}"
+    />
+  </a>
   <div class="info">
     <div class="body">
       <div>
@@ -43,7 +53,15 @@
   </div>
   {% when Content::Link with (link) %}
   <a class="image" href="{{ link.url }}" target="_blank" {% if middleware.logged_in %}data-admin-link-id="{{ link.id }}" {% endif %}>
-    <img src="/img/blog/{{ link.img }}" />
+    <img
+      srcset="
+        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ link.img }} 330w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ link.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ link.img }} 1920w
+      "
+      sizes="(max-width: 768px) 100vw, 330px"
+      src="/cdn-cgi/image/format=auto/img/blog/{{ link.img }}"
+    />
   </a>
   <div class="info">
     <div class="body">
@@ -67,7 +85,17 @@
     </div>
   </div>
   {% when Content::Folder with (folder) %}
-  <a class="image" href="/blog/f/{{ folder.slug }}"><img src="/img/blog/{{ folder.img }}" /></a>
+  <a class="image" href="/blog/f/{{ folder.slug }}">
+    <img
+      srcset="
+        /cdn-cgi/image/format=auto,fit=scale-down,width=330/img/blog/{{ folder.img }} 330w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=660/img/blog/{{ folder.img }} 660w,
+        /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ folder.img }} 1920w
+      "
+      sizes="(max-width: 768px) 100vw, 330px"
+      src="/cdn-cgi/image/format=auto/img/blog/{{ folder.img }}"
+    />
+  </a>
   <div class="info">
     <div class="body">
       <h3>

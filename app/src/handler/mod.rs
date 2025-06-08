@@ -6,11 +6,13 @@ use std::sync::LazyLock;
 
 use crate::{database, html_template, templates::*, AppState};
 use askama::Template;
-use axum::extract::State;
+use axum::extract::{Path, State};
 use axum::http::{self, header, HeaderMap};
+use axum::response::Redirect;
 use axum::Extension;
 use axum::{http::StatusCode, response::IntoResponse};
 use chrono::Utc;
+use fancy_regex::Regex;
 use grass::InputSyntax;
 
 pub use self::auth::*;
@@ -26,6 +28,8 @@ pub static COMPILED_CSS: LazyLock<String> = LazyLock::new(|| {
     )
     .unwrap()
 });
+pub static IMG_SRC_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9\-_/]+\.[a-zA-Z0-9]+$").unwrap());
 
 pub fn internal_error(e: impl std::fmt::Display) -> StatusCode {
     eprintln!("500 Internal Server Error: {}", e);
@@ -120,6 +124,16 @@ pub async fn get_style_css() -> impl IntoResponse {
     let mut headers = HeaderMap::new();
     headers.insert(header::CONTENT_TYPE, "text/css".parse().unwrap());
     (headers, COMPILED_CSS.to_string())
+}
+
+/// Mock for if Cloudflare isn't available
+pub async fn get_cdn_image(
+    Path((_options, path)): Path<(String, String)>,
+) -> Result<impl IntoResponse, StatusCode> {
+    if !IMG_SRC_REGEX.is_match(&path).unwrap() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    Ok(Redirect::temporary(&format!("/img/blog/{path}")))
 }
 
 pub async fn get_sitemap(State(state): State<AppState>) -> Result<(HeaderMap, String), StatusCode> {

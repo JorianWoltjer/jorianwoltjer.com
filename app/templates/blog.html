@@ -30,7 +30,17 @@
   <div class="col">
     <div class="card">
       {% match content %} {% when Content::Post with (post) %}
-      <a class="image" href="/blog/p/{{ post.slug }}"><img src="/img/blog/{{ post.img }}" /></a>
+      <a class="image" href="/blog/p/{{ post.slug }}">
+        <img
+          srcset="
+            /cdn-cgi/image/format=auto,fit=scale-down,width=640/img/blog/{{ post.img }} 640w,
+            /cdn-cgi/image/format=auto,fit=scale-down,width=1280/img/blog/{{ post.img }} 1280w,
+            /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ post.img }} 1920w
+          "
+          sizes="(max-width: 768px) 100vw, 640px"
+          src="/cdn-cgi/image/format=auto/img/blog/{{ post.img }}"
+        />
+      </a>
       <div class="info">
         <div class="body">
           <div class="tags">
@@ -50,7 +60,17 @@
         </div>
       </div>
       {% when Content::Link with (link) %}
-      <a class="image" href="{{ link.url }}" target="_blank"><img src="/img/blog/{{ link.img }}" /></a>
+      <a class="image" href="{{ link.url }}" target="_blank">
+        <img
+          srcset="
+            /cdn-cgi/image/format=auto,fit=scale-down,width=640/img/blog/{{ link.img }} 640w,
+            /cdn-cgi/image/format=auto,fit=scale-down,width=1280/img/blog/{{ link.img }} 1280w,
+            /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{{ link.img }} 1920w
+          "
+          sizes="(max-width: 768px) 100vw, 640px"
+          src="/cdn-cgi/image/format=auto/img/blog/{{ link.img }}"
+        />
+      </a>
       <div class="info">
         <div class="body">
           <div class="tags">

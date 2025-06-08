@@ -289,6 +289,10 @@ summary {
       transform: translateY(1px);
       box-shadow: 0 4px #0a0a0a;
     }
+
+    &.loading {
+      cursor: progress !important;
+    }
   }
 
   img {

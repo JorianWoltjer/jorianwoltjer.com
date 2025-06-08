@@ -71,12 +71,18 @@ fakeCalc.querySelector(".grab-area").addEventListener("pointerdown", (e) => {
 welcome.addEventListener("click", async () => {
   // Either do the navbar animation, or show a fake calculator
   if (Math.random() < 0.5) {
+    document.getElementById("welcome").classList.add("loading");
     if (!fakeCalc.classList.contains("hidden")) {
       // If already visible, re-open
       fakeCalc.classList.add("hidden");
       fakeCalc.offsetWidth;
     }
-    fakeCalc.classList.remove("hidden");
+    setTimeout(() => {
+      fakeCalc.classList.remove("hidden");
+    }, 200);
+    setTimeout(() => {
+      document.getElementById("welcome").classList.remove("loading");
+    }, 500);
   } else {
     if (timeout) clearTimeout(timeout);
     nav.classList.remove("welcome-animation");
