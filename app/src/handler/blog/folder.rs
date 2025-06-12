@@ -21,16 +21,16 @@ pub async fn get_folder(
     url: http::Uri,
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse, impl IntoResponse> {
     match database::get_folder(&state, &slug)
         .await
-        .map_err(internal_error)?
+        .map_err(|e| internal_error(e).into_response())?
     {
         Some(folder) => {
             // Add contents to the folder
             let folder = FolderContents::from_folder(folder, &state)
                 .await
-                .map_err(internal_error)?;
+                .map_err(|e| internal_error(e).into_response())?;
             Ok(html_template(
                 middleware.logged_in,
                 FolderTemplate {
@@ -50,11 +50,11 @@ pub async fn get_folder(
             // Check if it's a redirect
             let redirect = database::get_folder_redirect(&state, &slug)
                 .await
-                .map_err(internal_error)?;
+                .map_err(|e| internal_error(e).into_response())?;
 
             match redirect {
                 Some(slug) => Ok(Redirect::permanent(&format!("/blog/f/{}", slug)).into_response()),
-                None => Err(StatusCode::NOT_FOUND),
+                None => Err(Redirect::temporary("/blog").into_response()),
             }
         }
     }

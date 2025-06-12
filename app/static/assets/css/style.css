@@ -802,11 +802,23 @@ article {
   }
   img,
   video {
-    max-width: min(100%, 700px);
-    max-height: 500px;
-    display: block;
-    margin: 0 auto;
-    margin-bottom: 1rem;
+    max-width: 40rem;
+    max-height: 20rem;
+    /* width and height will be increased by JS */
+    object-fit: contain;
+    border: 2px solid var(--gray-3);
+  }
+  figure {
+    margin: 1rem 0;
+    text-align: center;
+
+    figcaption {
+      font-family: var(--font-light);
+      color: var(--gray-7);
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
   }
   img {
     cursor: zoom-in;
@@ -816,14 +828,6 @@ article {
   }
   iframe {
     width: 100%;
-  }
-
-  .alt {
-    font-family: var(--font-light);
-    color: var(--gray-7);
-    font-size: 0.8rem;
-    margin-top: -0.5rem;
-    text-align: center;
   }
 }
 @keyframes zoomIn {
@@ -854,9 +858,9 @@ article {
   }
 
   img {
-    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
     max-height: calc(100% - 40px);
-    border-radius: 10px;
+    object-fit: contain;
     cursor: zoom-out;
     animation: zoomIn 0.1s ease-out;
   }
@@ -970,6 +974,7 @@ iframe {
 blockquote {
   width: fit-content;
   display: flex;
+  flex-direction: column;
   padding: 0.3rem 0.6rem;
   margin: 0;
   margin-bottom: 1rem;

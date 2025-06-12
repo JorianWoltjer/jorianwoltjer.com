@@ -74,7 +74,7 @@ style-src 'self' https://fonts.googleapis.com; \
 object-src 'none'; \
 connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; \
 font-src 'self' https://fonts.gstatic.com; \
-img-src 'self' data:; \
+img-src 'self' data: https:; \
 frame-src 'self' https://www.youtube-nocookie.com https://yeswehack.github.io/Dom-Explorer/frame; \
 frame-ancestors 'none'; \
 base-uri 'self'; \

@@ -14,9 +14,7 @@ static CODE_BLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r#"<pre><code class="language-(.*?)">([\S\s]*?)</code></pre>"#).unwrap()
 });
 static IMG_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<img ([^>]*?)*src="(.*?)"(.*?) />"#).unwrap());
-static VIDEO_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<img src="(.*?)\.mp4"(.*?) />"#).unwrap());
+    LazyLock::new(|| Regex::new(r#"<img src="(.*?)" alt="(.*?)" />"#).unwrap());
 static ANCHOR_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<a href="(.*?)">([\S\s]*?)</a>"#).unwrap());
 static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(|| {
@@ -92,23 +90,34 @@ pub fn markdown_to_html(markdown: &str) -> Result<String, Message> {
             )
         })
         .to_string();
-    // Image relative paths
+    // Figures (images and videos)
     html = IMG_REGEX
-        .replace_all(
-            &html,
-            r#"<img ${1}srcset="
-    /cdn-cgi/image/format=auto,fit=scale-down,width=640/img/blog/$2 640w,
-    /cdn-cgi/image/format=auto,fit=scale-down,width=1280/img/blog/$2 1280w,
-    /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/$2 1920w
-  "
-  sizes="50vw"
-  src="/cdn-cgi/image/format=auto/img/blog/$2"$3
-/>"#,
-        )
-        .to_string();
-    // Replace .mp4 files with <video> tag
-    html = VIDEO_REGEX
-        .replace_all(&html, r#"<video controls src="$1.mp4"$2></video>"#)
+        .replace_all(&html, |caps: &fancy_regex::Captures| {
+            let src = caps.get(1).unwrap().as_str();
+            let alt = caps.get(2).unwrap().as_str();
+            let content = if src.ends_with(".mp4") {
+                // If it's a video, use <video> tag
+                format!(r#"<video controls src="/img/blog/{src}"></video>"#)
+            } else if src.contains(':') || src.starts_with('/') {
+                // Absolute URL or path, use as is
+                format!(r#"<img src="{src}" alt="{alt}" />"#)
+            } else {
+                // Use CDN for regular images
+                format!(
+                    r#"<img srcset="
+    /cdn-cgi/image/format=auto,fit=scale-down,width=640/img/blog/{src} 640w,
+    /cdn-cgi/image/format=auto,fit=scale-down,width=1280/img/blog/{src} 1280w,
+    /cdn-cgi/image/format=auto,fit=scale-down,width=1920/img/blog/{src} 1920w
+    "
+    sizes="50vw"
+    src="/cdn-cgi/image/format=auto/img/blog/{src}"
+    alt="{alt}"
+/>"#
+                )
+            };
+
+            format!("<figure>{content}<figcaption>{alt}</figcaption></figure>")
+        })
         .to_string();
     // Make all links external
     html = ANCHOR_REGEX

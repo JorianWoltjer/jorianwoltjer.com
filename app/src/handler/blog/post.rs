@@ -76,10 +76,10 @@ pub async fn get_post(
     url: http::Uri,
     State(state): State<AppState>,
     Path(slug): Path<String>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<impl IntoResponse, impl IntoResponse> {
     match database::get_post(&state, &slug)
         .await
-        .map_err(internal_error)?
+        .map_err(|e| internal_error(e).into_response())?
     {
         Some(post) => Ok(html_template(
             middleware.logged_in,
@@ -99,11 +99,12 @@ pub async fn get_post(
             // Check if it's a redirect
             let redirect = database::get_post_redirect(&state, &slug)
                 .await
-                .map_err(internal_error)?;
+                .map_err(|e| internal_error(e).into_response())?;
 
             match redirect {
                 Some(slug) => Ok(Redirect::permanent(&format!("/blog/p/{}", slug)).into_response()),
-                None => Err(StatusCode::NOT_FOUND),
+                // If not found, return 404
+                None => Err(Redirect::temporary("/blog").into_response()),
             }
         }
     }
@@ -121,13 +122,15 @@ pub async fn get_post_hidden(
     State(state): State<AppState>,
     Path(slug): Path<String>,
     Query(HiddenRequest { signature }): Query<HiddenRequest>,
-) -> Result<impl IntoResponse, StatusCode> {
-    let verified_id = verify_signature(&slug, &signature, &state).await?;
+) -> Result<impl IntoResponse, Response> {
+    let verified_id = verify_signature(&slug, &signature, &state)
+        .await
+        .map_err(IntoResponse::into_response)?;
 
     let post = database::get_post_hidden(&state, verified_id)
         .await
-        .map_err(internal_error)?
-        .ok_or(StatusCode::NOT_FOUND)?;
+        .map_err(|e| internal_error(e).into_response())?
+        .ok_or_else(|| Redirect::temporary("/blog").into_response())?;
 
     if !post.hidden {
         // If the post is not hidden anymore, redirect to the regular post

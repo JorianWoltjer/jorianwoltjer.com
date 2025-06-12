@@ -64,17 +64,29 @@ article.querySelectorAll('.code-block .copy').forEach(button => {
   });
 });
 
-// Image alternative text
-article.querySelectorAll('img, video').forEach(el => {
-  const alt = el.getAttribute("alt");
-  if (alt) {
-    const p = document.createElement('p');
-    p.className = 'alt';
-    p.textContent = alt;
-    el.insertAdjacentElement('afterend', p);
+// Fit images to reasonable size
+function updateImageSize(elem) {
+  const ratio = (elem.naturalWidth || elem.videoWidth) / (elem.naturalHeight || elem.videoHeight);
+  const style = getComputedStyle(elem);
+  const maxWidth = Math.min(parseFloat(style.maxWidth), elem.parentElement.clientWidth);
+  const maxRatio = parseFloat(maxWidth) / parseFloat(style.maxHeight);
+  if (ratio > maxRatio) {
+    elem.style.width = '100%';
+    elem.style.height = 'auto';
+  } else {
+    elem.style.height = style.maxHeight;
+    elem.style.width = 'auto';
   }
+}
+article.querySelectorAll('figure img, figure video').forEach(elem => {
+  // Set width or height depending on aspect ratio
+  elem.addEventListener('load', (e) => updateImageSize(e.target));
+  elem.addEventListener('loadeddata', (e) => updateImageSize(e.target));
+  window.addEventListener('resize', () => updateImageSize(elem));
+  updateImageSize(elem);
 });
-// Click on image to enlarge
+
+// Click to enlarge
 const enlargedImage = document.getElementById('enlarged-image');
 article.querySelectorAll('img').forEach(img => {
   img.addEventListener('click', (e) => {
