@@ -21,6 +21,11 @@ pub enum Commands {
     Render,
     /// Set administrator password (will be prompted)
     Password,
+    /// Write Google Fonts to local assets folder
+    Fonts {
+        /// URL to download the fonts from
+        url: String,
+    },
 }
 
 #[derive(Parser, Debug)]

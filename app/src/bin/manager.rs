@@ -11,14 +11,17 @@ use app::{
     render::markdown_to_html,
 };
 use clap::Parser;
+use fancy_regex::{Captures, Regex};
 use indicatif::ProgressBar;
 use sqlx::postgres::PgPoolOptions;
 use syntect::{highlighting::ThemeSet, html::css_for_theme_with_class_style};
+use tokio::task;
 
 static THEME_SET: LazyLock<ThemeSet> = LazyLock::new(ThemeSet::load_defaults);
-static TARGET_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let cargo_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    cargo_dir.join("static/assets/css/theme.css")
+static BASE_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf());
+static FONT_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?P<before_url>/\*\s*(?P<variant>[\w-]+)\s*\*/\s*@font-face\s*\{\s*font-family:\s*'(?P<name>[^']+)';\s*font-style:\s*(?P<style>\w+);\s*[^}]*?src:\s*url\()(?P<url>[^)]+)(?P<after_url>\)[^}]*\})"#).unwrap()
 });
 
 #[tokio::main]
@@ -43,12 +46,12 @@ async fn main() {
             }
             ThemeCommand::Set { name } => {
                 if let Some(theme) = THEME_SET.themes.get(&name) {
-                    let target_path = TARGET_PATH.as_path();
+                    let theme_path = BASE_DIR.join("static/assets/css/theme.css");
                     let diff_path =
-                        pathdiff::diff_paths(target_path, env::current_dir().unwrap()).unwrap();
+                        pathdiff::diff_paths(&theme_path, env::current_dir().unwrap()).unwrap();
                     println!("Writing theme {name:?} to {diff_path:?}...");
 
-                    let file = File::create(target_path).unwrap();
+                    let file = File::create(theme_path).unwrap();
                     let mut writer = BufWriter::new(&file);
                     let css = css_for_theme_with_class_style(
                         theme,
@@ -105,6 +108,62 @@ async fn main() {
             .await
             .expect("Failed to set password");
             println!("Administrator password set successfully.");
+        }
+        Commands::Fonts { url } => {
+            // Download CSS & fonts locally from Google Fonts
+            println!("Downloading CSS...");
+            let client = reqwest::Client::new();
+            let mut css = client
+                .get(&url)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0")
+                .send()
+                .await
+                .expect("Failed to download CSS")
+                .text()
+                .await
+                .expect("Failed to read CSS text");
+            css = task::spawn_blocking(move || {
+                FONT_REGEX
+                    .replace_all(&css, |caps: &Captures| {
+                        let before_url = caps.name("before_url").unwrap().as_str();
+                        let variant = caps.name("variant").unwrap().as_str();
+                        let name = caps.name("name").unwrap().as_str();
+                        let style = caps.name("style").unwrap().as_str();
+                        let url = caps.name("url").unwrap().as_str();
+                        let after_url = caps.name("after_url").unwrap().as_str();
+
+                        // Download the font file
+                        let font_name = format!(
+                            "{name}_{variant}{}.woff2",
+                            if style != "normal" {
+                                format!("_{style}")
+                            } else {
+                                String::new()
+                            }
+                        );
+                        let font_path = BASE_DIR.join(format!("static/assets/fonts/{font_name}"));
+                        let mut font_file = File::create(&font_path).unwrap();
+                        println!("Downloading {font_name:?} from {url}...");
+                        let font_data = reqwest::blocking::get(url)
+                            .expect("Failed to download font")
+                            .bytes()
+                            .expect("Failed to read font bytes");
+                        font_file.write_all(&font_data).unwrap();
+
+                        // Return the updated CSS rule
+                        format!("{before_url}'/assets/fonts/{font_name}'{after_url}")
+                    })
+                    .to_string()
+            })
+            .await
+            .unwrap();
+            let css_path = BASE_DIR.join("static/assets/css/fonts.css");
+            let mut css_file = File::create(css_path).expect("Failed to create CSS file");
+            css_file
+                .write_all(css.as_bytes())
+                .expect("Failed to write CSS file");
+
+            println!("Fonts downloaded and CSS updated successfully.");
         } // TODO: export command to write blog folders, posts and images to filesystem
     }
 }
