@@ -25,6 +25,7 @@ function getOS() {
 const os = getOS();
 fakeCalc.classList.add(os);
 if (os !== "windows") {
+  fakeCalc.querySelector("#calc").srcset = ""
   fakeCalc.querySelector("#calc").src = `/img/calc/${os}.png`;
 }
 fakeCalc.querySelector("#x").addEventListener("click", () => {
