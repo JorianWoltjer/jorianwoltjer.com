@@ -55,7 +55,7 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
     // Set security headers
     headers.insert(header::X_CONTENT_TYPE_OPTIONS, "nosniff".parse().unwrap());
     headers.insert(header::X_FRAME_OPTIONS, "DENY".parse().unwrap());
-    headers.insert(header::REFERRER_POLICY, "same-origin".parse().unwrap()); // Required for view transitions
+    headers.insert(header::REFERRER_POLICY, "same-origin".parse().unwrap()); // Required for view transitions (Navigation API)
     if !is_same_origin {
         // Set conditionally, because page transitions don't support it
         headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
@@ -64,22 +64,33 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
         "Cross-Origin-Resource-Policy",
         "same-origin".parse().unwrap(),
     );
+    // Cross-Origin-Embedder-Policy is not possible due to third-party iframes and lacking support for `credentialless`
     headers.insert(
         header::CONTENT_SECURITY_POLICY,
         format!(
             "\
-default-src 'self'; \
+default-src 'none'; \
 script-src 'self' 'nonce-{nonce}'; \
-object-src 'none'; \
+style-src 'self'; \
+connect-src 'self'; \
 img-src 'self' data:; \
+font-src 'self'; \
 frame-src 'self' https://www.youtube-nocookie.com https://yeswehack.github.io/Dom-Explorer/frame; \
+media-src 'self'; \
+manifest-src 'self'; \
 frame-ancestors 'none'; \
-base-uri 'self'; \
+base-uri 'none'; \
 form-action 'self'; \
 require-trusted-types-for 'script'"
         )
         .parse()
         .unwrap(),
+    );
+    headers.insert(
+        "Permissions-Policy",
+        "display-capture=(), geolocation=(), camera=(), microphone=(), payment=(), bluetooth=(), clipboard-read=()"
+            .parse()
+            .unwrap(),
     );
     headers.insert(
         header::CACHE_CONTROL,

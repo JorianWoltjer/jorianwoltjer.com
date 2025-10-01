@@ -21,10 +21,9 @@ document.getElementById("login-form").addEventListener("submit", (e) => {
         // If there is a back URL, redirect to it
         document.location.href = back;
       } else {
-        try {
-          await navigation.back().finished;
-        } catch (e) {
-          console.error(e);
+        if ("navigation" in window && navigation.canGoBack) {
+          navigation.back();
+        } else {
           document.location.href = "/blog";
         }
       }

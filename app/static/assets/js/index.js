@@ -39,7 +39,7 @@ fakeCalc.querySelector("#square").addEventListener("click", () => {
   if (os === "windows") {
     location = "ms-calculator://";
   } else if (os === "macos") {
-    location = "itms-apps://itunes.apple.com/app/id1069511488";
+    location = "calc://";
   }
 });
 fakeCalc.querySelector(".grab-area").addEventListener("pointerdown", (e) => {
