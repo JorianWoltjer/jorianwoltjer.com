@@ -16,7 +16,7 @@ static CODE_BLOCK_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 static IMG_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"<img src="(.*?)" alt="(.*?)" />"#).unwrap());
 static ANCHOR_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r#"<a href="(.*?)">([\S\s]*?)</a>"#).unwrap());
+    LazyLock::new(|| Regex::new(r#"<a href="([^#].*?)">([\S\s]*?)</a>"#).unwrap());
 static SYNTAXES: LazyLock<SyntaxSet> = LazyLock::new(|| {
     let mut syntax_builder = SyntaxSetBuilder::new();
     syntax_builder.add_from_folder("syntaxes", true).unwrap();
