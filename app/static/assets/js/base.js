@@ -120,34 +120,38 @@ function slugify(title) {
   return slug;
 }
 
+// Reference: app/src/lib.rs#L35
 function relativeTime(timestamp) {
   const now = new Date();
   const from = new Date(timestamp);
-  let duration = Math.abs(now - from);
-  const seconds = Math.floor(duration / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  const duration = Math.abs(now - from) / 1000; // in seconds
 
   let value, unit;
-  if (days > 0) {
-    value = days;
-    unit = "day";
-  } else if (hours > 0) {
-    value = hours;
-    unit = "hour";
-  } else if (minutes > 0) {
-    value = minutes;
-    unit = "minute";
-  } else {
-    value = seconds;
+  if (duration < 60) {
+    value = Math.floor(duration);
     unit = "second";
+  } else if (duration < 60 * 60) {
+    value = Math.floor(duration / 60);
+    unit = "minute";
+  } else if (duration < 60 * 60 * 24) {
+    value = Math.floor(duration / (60 * 60));
+    unit = "hour";
+  } else if (duration < 60 * 60 * 24 * 30) {
+    value = Math.floor(duration / (60 * 60 * 24));
+    unit = "day";
+  } else if (duration < 60 * 60 * 24 * 365) {
+    value = Math.floor(duration / (60 * 60 * 24 * 30));
+    unit = "month";
+  } else {
+    value = Math.floor(duration / (60 * 60 * 24 * 365));
+    unit = "year";
   }
-  let plural = value !== 1 ? "s" : "";
+
+  const plural = value !== 1 ? "s" : "";
   if (now > from) {
     return `${value} ${unit}${plural} ago`;
   } else {
-    return `in ${Math.abs(value)} ${unit}${plural}`;
+    return `in ${value} ${unit}${plural}`;
   }
 }
 
