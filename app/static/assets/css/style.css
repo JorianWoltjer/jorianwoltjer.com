@@ -726,6 +726,10 @@ article {
     }
   }
 
+  pre {
+    overflow-x: auto;
+  }
+
   h2,
   h3,
   h4,
