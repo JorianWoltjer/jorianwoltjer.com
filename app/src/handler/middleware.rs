@@ -5,7 +5,7 @@ use axum::{
     response::{IntoResponse, Redirect, Response},
     Extension, RequestPartsExt,
 };
-use rand::RngCore;
+use rand::Rng;
 use tower_sessions::Session;
 
 use crate::handler::internal_error;
