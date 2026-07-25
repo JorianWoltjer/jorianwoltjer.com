@@ -25,6 +25,7 @@ window.addEventListener("pagereveal", async (e) => {
 
     console.log("Transition:", transition);
     if (!transition) {
+      e.viewTransition.ready.catch(console.error);
       e.viewTransition.skipTransition();
     } else {
       const main = document.getElementsByTagName("main")[0];

@@ -28,8 +28,7 @@ pub async fn generic_middleware(req: Request<Body>, next: Next) -> Result<Respon
     let is_same_origin = parts
         .headers
         .get("Sec-Fetch-Site")
-        .and_then(|v| v.to_str().ok())
-        == Some("same-origin");
+        .is_some_and(|v| v == "same-origin" || v == "none");
     let uri = parts.uri.to_string();
     // Generate CSP nonce
     let mut bytes = [0; 16];

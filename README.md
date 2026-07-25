@@ -36,7 +36,7 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 ```
 
-The most imporant to start with is `password` to set a new strong password for the `/login` page (default is "secret").  
+The most important to start with is `password` to set a new strong password for the `/login` page (default is "secret").  
 Any changes to the [render code](app/src/render.rs) should be followed by running the `render` management command to refresh all HTML in the database.
 
 ## Development
