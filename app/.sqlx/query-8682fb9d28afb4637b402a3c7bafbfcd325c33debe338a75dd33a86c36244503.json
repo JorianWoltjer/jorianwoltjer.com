@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO posts (folder, title, slug, description, img, points, featured, hidden, markdown, html)\n         VALUES ($1, 'Hidden Draft', 'ctf/sample-ctf/hidden-draft',\n                 'Hidden post for testing signed URLs.',\n                 'placeholder.png', 0, false, true, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8682fb9d28afb4637b402a3c7bafbfcd325c33debe338a75dd33a86c36244503"
+}

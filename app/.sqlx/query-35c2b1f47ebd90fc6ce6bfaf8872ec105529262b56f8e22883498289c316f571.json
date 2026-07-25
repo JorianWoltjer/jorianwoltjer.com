@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id FROM posts WHERE slug = 'ctf/sample-ctf/hello-world'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "35c2b1f47ebd90fc6ce6bfaf8872ec105529262b56f8e22883498289c316f571"
+}

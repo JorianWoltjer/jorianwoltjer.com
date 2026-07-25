@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_tags (post_id, tag_id)\n         SELECT $1, id FROM tags WHERE name = ANY(ARRAY['Web', 'Scripting'])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3e5c5228e1e2136ed979c71ba8ac48bb5ee16c7ceb0158bae24454f9130a0161"
+}

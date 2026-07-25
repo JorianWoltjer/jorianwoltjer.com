@@ -33,6 +33,8 @@ Commands:
   theme     Syntax highlighing themes
   render    Update generated HTML for all posts
   password  Set administrator password (will be prompted)
+  seed      Insert a basic folder/post hierarchy for local testing
+  export    Export blog folders, posts, and images as Markdown files
   help      Print this message or the help of the given subcommand(s)
 ```
 

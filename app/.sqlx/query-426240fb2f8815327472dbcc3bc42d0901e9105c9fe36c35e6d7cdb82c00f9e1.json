@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO links (folder, url, title, description, img, featured)\n         VALUES ($1, 'https://example.com', 'Example Link', 'A sample link card.', 'placeholder.png', false)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "426240fb2f8815327472dbcc3bc42d0901e9105c9fe36c35e6d7cdb82c00f9e1"
+}

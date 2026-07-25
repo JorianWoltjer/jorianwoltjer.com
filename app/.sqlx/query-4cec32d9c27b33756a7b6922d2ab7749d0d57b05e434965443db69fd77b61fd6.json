@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title, markdown FROM posts",
+  "query": "SELECT id, title, markdown, html FROM posts",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "markdown",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "html",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -25,8 +30,9 @@
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "9f292e27819e5fed103fc338bc4b8a2ef87c2f5dfe529156c0942c172f6fd126"
+  "hash": "4cec32d9c27b33756a7b6922d2ab7749d0d57b05e434965443db69fd77b61fd6"
 }

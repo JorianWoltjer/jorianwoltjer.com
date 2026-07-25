@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO folders (parent, slug, title, description, img)\n         VALUES ($1, 'ctf/sample-ctf', 'Sample CTF', 'A nested folder created by manager seed for testing.', 'fa-solid fa-flag')\n         RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "67b87481d2731fd29ef630412bf14dc999037c1fb5c24c0829b1eafb70f61bf5"
+}
